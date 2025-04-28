@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   dashboard:
     build:
@@ -33,3 +31,4 @@ secrets:
 networks:
   fortinet_net:
     driver: bridge
+

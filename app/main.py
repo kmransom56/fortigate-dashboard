@@ -10,6 +10,7 @@ load_dotenv()
 
 from app.api import fortigate  # your existing fortigate routes
 from app.services.fortigate_service import get_interfaces  # to get interfaces for dashboard
+from app.services.fortiswitch_service import get_fortiswitches  # to get FortiSwitch information
 
 app = FastAPI()
 
@@ -32,3 +33,9 @@ async def read_home(request: Request):
 async def show_dashboard(request: Request):
     interfaces = get_interfaces()
     return templates.TemplateResponse("dashboard.html", {"request": request, "interfaces": interfaces})
+
+# 🔄 Route for FortiSwitch Dashboard "/switches"
+@app.get("/switches", response_class=HTMLResponse)
+async def show_switches(request: Request):
+    switches = get_fortiswitches()
+    return templates.TemplateResponse("switches.html", {"request": request, "switches": switches})

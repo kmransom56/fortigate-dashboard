@@ -80,6 +80,8 @@ http://localhost:8001/dashboard
 
 ### Dashboard Features
 
+#### FortiGate Dashboard
+
 1. **Interface Overview**: The dashboard displays all FortiGate interfaces with their status, IP addresses, and link speeds.
 
 2. **WAN Status Monitoring**: The dashboard highlights WAN interfaces and shows alerts if any WAN links are down.
@@ -89,6 +91,16 @@ http://localhost:8001/dashboard
 4. **Network Map**: A visual representation of your network interfaces and their connections.
 
 5. **Auto-Refresh**: The dashboard automatically refreshes every 10 seconds to show the latest data.
+
+#### FortiSwitch Dashboard
+
+1. **Switch Overview**: View all FortiSwitches managed by your FortiGate, including model, serial number, and status.
+
+2. **Connected Devices**: See all devices connected to each FortiSwitch, including device name, MAC address, IP address, and port.
+
+3. **Network Map**: A visual representation of your FortiSwitches and connected devices.
+
+4. **Auto-Refresh**: The dashboard automatically refreshes every 10 seconds to show the latest data.
 
 ### API Endpoints
 
@@ -100,17 +112,29 @@ The application provides the following API endpoints:
    ```
    Returns JSON data with information about all FortiGate interfaces.
 
-2. **Dashboard Page**:
+2. **FortiSwitch Information**:
+   ```
+   GET /fortigate/api/switches
+   ```
+   Returns JSON data with information about all FortiSwitches and connected devices.
+
+3. **FortiGate Dashboard Page**:
    ```
    GET /dashboard
    ```
-   Renders the HTML dashboard with interface information.
+   Renders the HTML dashboard with FortiGate interface information.
 
-3. **Home Page**:
+4. **FortiSwitch Dashboard Page**:
+   ```
+   GET /switches
+   ```
+   Renders the HTML dashboard with FortiSwitch information.
+
+5. **Home Page**:
    ```
    GET /
    ```
-   Renders the application home page.
+   Renders the application home page with links to both dashboards.
 
 ### Troubleshooting
 

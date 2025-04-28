@@ -47,15 +47,39 @@ def get_interfaces():
     }
     
     logger.info("Using Authorization header with Bearer token instead of query parameter")
-    
     logger.info(f"Making request to FortiGate API: {url}")
     logger.info(f"Request parameters: {params}")
     
-    # Disable SSL verification since we've confirmed it's causing issues
-    logger.warning("Disabling SSL verification due to certificate issues")
+    # Variable to store the response
+    response = None
+    
     try:
-        response = requests.get(url, headers=headers, params=params, verify=False, timeout=10)
+        # Check if certificate file exists
+        if CERT_PATH and os.path.exists(CERT_PATH):
+            logger.info(f"Using certificate file for SSL verification: {CERT_PATH}")
+            # Check if the file is readable
+            try:
+                with open(CERT_PATH, 'r') as f:
+                    cert_content = f.read()
+                    logger.info(f"Certificate file is readable, content length: {len(cert_content)} bytes")
+                    
+                # Try to create an SSL context with the certificate
+                import ssl
+                context = ssl.create_default_context(cafile=CERT_PATH)
+                logger.info("Successfully created SSL context with certificate")
+                
+                # Use the certificate for verification
+                response = requests.get(url, headers=headers, params=params, verify=CERT_PATH, timeout=10)
+                logger.info("Request with certificate verification successful")
+            except Exception as cert_error:
+                logger.error(f"Error using certificate file: {cert_error}")
+                logger.warning("Falling back to disabling SSL verification")
+                response = requests.get(url, headers=headers, params=params, verify=False, timeout=10)
+        else:
+            logger.warning(f"Certificate file not found at {CERT_PATH}, disabling SSL verification")
+            response = requests.get(url, headers=headers, params=params, verify=False, timeout=10)
         
+        # Log response information
         logger.info(f"FortiGate API response status code: {response.status_code}")
         logger.info(f"FortiGate API response content: {response.text[:500]}")
         
@@ -65,45 +89,32 @@ def get_interfaces():
             logger.error(f"API Token used: {API_TOKEN}")
             logger.error("This suggests the API token is invalid or expired")
             logger.error("Please check the token in the .env file or generate a new one")
-    except Exception as e:
-        logger.error(f"Error making request to FortiGate API: {e}")
-        # Try one more time without SSL verification as a last resort
-        try:
-            logger.warning("Attempting request without SSL verification as a last resort")
-            response = requests.get(url, headers=headers, params=params, verify=False, timeout=10)
-            logger.info(f"Last resort request status code: {response.status_code}")
-            logger.info(f"Last resort response content: {response.text[:500]}")
+        
+        # Check if the response is successful
+        if response.status_code >= 400:
+            logger.error(f"FortiGate API returned error status code: {response.status_code}")
+            logger.error(f"Response content: {response.text[:1000]}...")  # Truncate for readability
             
             if response.status_code == 401:
-                logger.error("Authentication still failed with 401 Unauthorized")
-                logger.error("This confirms the API token is likely invalid or expired")
-        except Exception as last_err:
-            logger.error(f"Last resort request also failed: {last_err}")
+                logger.error("Authentication failed (401 Unauthorized)")
+                logger.error("Possible causes:")
+                logger.error("1. Invalid API token")
+                logger.error("2. IP restrictions: Only 192.168.0.0/24 network is allowed (trusthost)")
+                logger.error("3. CORS restrictions: Only https://192.168.0.20:80 is allowed")
+                logger.error("Check your client IP and ensure it's within the allowed network")
+                
+            raise Exception(f"FortiGate API error: {response.status_code} - {response.text}")
         
-        # Re-raise the original exception
+        # Parse the response
+        data = response.json()
+        logger.info(f"FortiGate API response data type: {type(data)}")
+        
+        # Process the response based on its format
+        return process_interface_data(data)
+        
+    except Exception as e:
+        logger.error(f"Error making request to FortiGate API: {e}")
         raise
-    
-    # Check if the response is successful
-    if response.status_code >= 400:
-        logger.error(f"FortiGate API returned error status code: {response.status_code}")
-        logger.error(f"Response content: {response.text[:1000]}...")  # Truncate for readability
-        
-        if response.status_code == 401:
-            logger.error("Authentication failed (401 Unauthorized)")
-            logger.error("Possible causes:")
-            logger.error("1. Invalid API token")
-            logger.error("2. IP restrictions: Only 192.168.0.0/24 network is allowed (trusthost)")
-            logger.error("3. CORS restrictions: Only https://192.168.0.20:80 is allowed")
-            logger.error("Check your client IP and ensure it's within the allowed network")
-            
-        raise Exception(f"FortiGate API error: {response.status_code} - {response.text}")
-    
-    # Parse the response
-    data = response.json()
-    logger.info(f"FortiGate API response data type: {type(data)}")
-    
-    # Process the response based on its format
-    return process_interface_data(data)
 
 def process_interface_data(data):
     """
