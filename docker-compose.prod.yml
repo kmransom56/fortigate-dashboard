@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    restart: always  # 🔥 Auto-restart if crash or reboot
+    networks:
+      - fortinet_net
+    secrets:
+      - fortigate_api_token
+    volumes:
+      - ./app/certs:/app/certs
+    environment:
+      - FORTIGATE_API_TOKEN_FILE=/run/secrets/fortigate_api_token
+      - FORTIGATE_CERT_PATH=/app/certs/fortigate.pem
+
+  wan_monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile.wan_monitor
+    restart: always
+    networks:
+      - fortinet_net
+
+secrets:
+  fortigate_api_token:
+    file: ./secrets/fortigate_api_token.txt
+
+networks:
+  fortinet_net:
+    driver: bridge

@@ -1,0 +1,10 @@
+FROM python:3.12-slim
+
+WORKDIR /monitor
+
+COPY wan_monitor.py .
+
+RUN pip install requests
+
+CMD ["python", "wan_monitor.py"]
+
