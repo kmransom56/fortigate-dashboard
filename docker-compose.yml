@@ -15,6 +15,8 @@ services:
     environment:
       - FORTIGATE_API_TOKEN_FILE=/run/secrets/fortigate_api_token
       - FORTIGATE_CERT_PATH=/app/certs/fortigate.pem
+      - FORTIGATE_HOST=https://192.168.0.254
+      - LOG_LEVEL=DEBUG
 
   wan_monitor:
     build:
@@ -23,6 +25,9 @@ services:
     restart: always
     networks:
       - fortinet_net
+    environment:
+      - FORTIGATE_HOST=https://192.168.0.254
+      - API_TOKEN=hmNqQ0st7xrjnyQHt8dzpnkqm5hw5N
 
 secrets:
   fortigate_api_token:
@@ -31,4 +36,3 @@ secrets:
 networks:
   fortinet_net:
     driver: bridge
-

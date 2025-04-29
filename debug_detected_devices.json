@@ -1,0 +1,66 @@
+{
+  "http_method": "GET",
+  "results": [
+    {
+      "mac": "10:7c:61:3f:2b:5d",
+      "port_name": "port19",
+      "switch_id": "S124EPTQ22000276",
+      "vlan_id": 1000,
+      "port_id": 19,
+      "last_seen": 30,
+      "vdom": "root"
+    },
+    {
+      "mac": "38:14:28:d5:ed:34",
+      "port_name": "port21",
+      "switch_id": "S124EPTQ22000276",
+      "vlan_id": 1000,
+      "port_id": 21,
+      "last_seen": 30,
+      "vdom": "root"
+    },
+    {
+      "mac": "c4:8b:a3:4b:df:5f",
+      "port_name": "port1",
+      "switch_id": "S124EPTQ22000276",
+      "vlan_id": 1000,
+      "port_id": 1,
+      "last_seen": 30,
+      "vdom": "root"
+    },
+    {
+      "mac": "dc:a6:32:eb:46:f7",
+      "port_name": "port22",
+      "switch_id": "S124EPTQ22000276",
+      "vlan_id": 1000,
+      "port_id": 22,
+      "last_seen": 30,
+      "vdom": "root"
+    },
+    {
+      "mac": "fc:8c:11:b9:ee:de",
+      "port_name": "port2",
+      "switch_id": "S124EPTQ22000276",
+      "vlan_id": 1000,
+      "port_id": 2,
+      "last_seen": 64861,
+      "vdom": "root"
+    },
+    {
+      "mac": "94:ff:3c:c2:8d:7a",
+      "port_name": "internal",
+      "switch_id": "S124EPTQ22000276",
+      "vlan_id": 4094,
+      "port_id": 0,
+      "last_seen": 30,
+      "vdom": "root"
+    }
+  ],
+  "vdom": "root",
+  "path": "switch-controller",
+  "name": "detected-device",
+  "status": "success",
+  "serial": "FGT61FTK20020975",
+  "version": "v7.6.3",
+  "build": 3510
+}

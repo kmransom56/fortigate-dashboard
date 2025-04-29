@@ -24,19 +24,17 @@ logger.info(f"Certificate path: {CERT_PATH}")
 
 def test_api():
     url = f"{FORTIGATE_HOST}/api/v2/monitor/system/interface"
-    params = {"access_token": API_TOKEN}
-    headers = {"Accept": "application/json"}
+    # UPDATED: Removed query parameter authentication
+    headers = {"Accept": "application/json", "Authorization": f"Bearer {API_TOKEN}"}
     
     logger.info(f"Making request to: {url}")
-    logger.info(f"With params: {params}")
-    
     try:
         if CERT_PATH and os.path.exists(CERT_PATH):
             logger.info(f"Using certificate: {CERT_PATH}")
-            response = requests.get(url, headers=headers, params=params, verify=CERT_PATH)
+            response = requests.get(url, headers=headers, verify=CERT_PATH)
         else:
             logger.warning("No certificate path found or file doesn't exist. Disabling SSL verification.")
-            response = requests.get(url, headers=headers, params=params, verify=False)
+            response = requests.get(url, headers=headers, verify=False)
         
         logger.info(f"Status code: {response.status_code}")
         logger.info(f"Response: {response.text[:200]}...")

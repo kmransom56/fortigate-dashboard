@@ -23,8 +23,8 @@ def test_token_format(description, token_value, auth_method="query"):
     url = f"{FORTIGATE_HOST}/api/v2/monitor/system/status"
     
     if auth_method == "query":
-        params = {"access_token": token_value}
-        headers = {"Accept": "application/json"}
+    # UPDATED: Removed query parameter authentication
+        headers = {"Accept": "application/json", "Authorization": f"Bearer token_value"}
         logger.info(f"Testing {description} with query parameter: {token_value}")
     elif auth_method == "header":
         params = {}
@@ -42,7 +42,7 @@ def test_token_format(description, token_value, auth_method="query"):
         logger.info(f"Testing {description} with Authorization header (raw): {token_value}")
     
     try:
-        response = requests.get(url, headers=headers, params=params, verify=False, timeout=10)
+        response = requests.get(url, headers=headers, verify=False, timeout=10)
         logger.info(f"Status code: {response.status_code}")
         logger.info(f"Response: {response.text[:200]}...")
     except Exception as e:

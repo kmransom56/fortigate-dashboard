@@ -24,12 +24,12 @@ logger.info(f"Certificate path: {CERT_PATH}")
 
 def test_api_with_ssl_verification():
     url = f"{FORTIGATE_HOST}/api/v2/monitor/system/interface"
-    params = {"access_token": API_TOKEN}
-    headers = {"Accept": "application/json"}
+    # UPDATED: Removed query parameter authentication
+    headers = {"Accept": "application/json", "Authorization": f"Bearer {API_TOKEN}"}
     
     logger.info("Testing with SSL verification...")
     try:
-        response = requests.get(url, headers=headers, params=params, verify=CERT_PATH)
+        response = requests.get(url, headers=headers, verify=CERT_PATH)
         logger.info(f"Status code: {response.status_code}")
         logger.info(f"Response: {response.text[:200]}...")
     except Exception as e:
@@ -37,12 +37,12 @@ def test_api_with_ssl_verification():
 
 def test_api_without_ssl_verification():
     url = f"{FORTIGATE_HOST}/api/v2/monitor/system/interface"
-    params = {"access_token": API_TOKEN}
-    headers = {"Accept": "application/json"}
+    # UPDATED: Removed query parameter authentication
+    headers = {"Accept": "application/json", "Authorization": f"Bearer {API_TOKEN}"}
     
     logger.info("Testing without SSL verification...")
     try:
-        response = requests.get(url, headers=headers, params=params, verify=False)
+        response = requests.get(url, headers=headers, verify=False)
         logger.info(f"Status code: {response.status_code}")
         logger.info(f"Response: {response.text[:200]}...")
     except Exception as e:

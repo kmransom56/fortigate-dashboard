@@ -1,0 +1,2159 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "FortiSwitch Monitor",
+        "description": "REST API for Monitor FortiSwitch objects and settings",
+        "version": "v2",
+        "termsOfService": "http:\/\/fortinet.com\/terms\/",
+        "contact": {
+            "name": "FortiSwitch Team",
+            "email": "faw_auto@fortinet.com",
+            "url": "http:\/\/fsw-qaportal.fortinet-us.com\/"
+        }
+    },
+    "host": "172.16.177.65",
+    "basePath": "\/api\/v2\/monitor",
+    "schemes": [
+        "https"
+    ],
+    "consumes": [
+        "application\/x-www-form-urlencoded"
+    ],
+    "securityDefinitions": {
+        "APIKeyQueryParam": {
+            "type": "apiKey",
+            "in": "query",
+            "name": "access_token"
+        }
+    },
+    "security": [
+        {
+            "APIKeyQueryParam": []
+        }
+    ],
+    "paths": {
+        "\/system\/dhcp-lease-list\/": {
+            "get": {
+                "tags": [
+                    "system\/dhcp-lease-list"
+                ],
+                "summary": "Retrieve DHCP Server Lease List of System. for system\/dhcp-lease-list",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "lease": {
+                                    "type": "array",
+                                    "description": "System DHCP Lease.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "interface": {
+                                                "type": "string",
+                                                "description": "DHCP Lease - Interface."
+                                            },
+                                            "ip-addr": {
+                                                "type": "string",
+                                                "description": "DHCP Lease - IP Address."
+                                            },
+                                            "mac-addr": {
+                                                "type": "string",
+                                                "description": "DHCP Lease - MAC Address."
+                                            },
+                                            "hostname": {
+                                                "type": "string",
+                                                "description": "DHCP Lease - Hostname."
+                                            },
+                                            "vci": {
+                                                "type": "string",
+                                                "description": "DHCP Lease - VCI string."
+                                            },
+                                            "expiry": {
+                                                "type": "string",
+                                                "description": "DHCP Lease - Expiry."
+                                            },
+                                            "conflicted": {
+                                                "type": "string",
+                                                "description": "DHCP Lease - Conflicted flag(yes)."
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/fan-status\/": {
+            "get": {
+                "tags": [
+                    "system\/fan-status"
+                ],
+                "summary": "Retrieve Fan Status of System. for system\/fan-status",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "module": {
+                                    "type": "string",
+                                    "description": "System's Fan Module."
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "description": "System's Fan Status."
+                                },
+                                "speed": {
+                                    "type": "array",
+                                    "description": "System's Fan Speed.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "number",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/flash-list\/": {
+            "get": {
+                "tags": [
+                    "system\/flash-list"
+                ],
+                "summary": "Retrieve Flash List of System. for system\/flash-list",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "partition": {
+                                    "type": "integer",
+                                    "description": "System's Flash Partition."
+                                },
+                                "total-size": {
+                                    "type": "array",
+                                    "description": "System's Flash Total-Size.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "used-size": {
+                                    "type": "array",
+                                    "description": "System's Flash Used-Size.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "usage": {
+                                    "type": "array",
+                                    "description": "System's Flash Usage.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "active": {
+                                    "enum": [
+                                        "yes",
+                                        "no"
+                                    ],
+                                    "type": "string",
+                                    "description": "System's Flash Active State."
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/flow-export-flows\/": {
+            "get": {
+                "tags": [
+                    "system\/flow-export-flows"
+                ],
+                "summary": "Retrieve Flow Export Flows of System. for system\/flow-export-flows",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "sequence": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - Sequence Number."
+                                },
+                                "interface-1": {
+                                    "type": "string",
+                                    "description": "System's Flow-Export Flows - Interface #1."
+                                },
+                                "interface-2": {
+                                    "type": "string",
+                                    "description": "System's Flow-Export Flows - Interface #2."
+                                },
+                                "mac-addr-1": {
+                                    "type": "string",
+                                    "description": "System's Flow-Export Flows - MAC Address #1."
+                                },
+                                "mac-addr-2": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - MAC Address #2."
+                                },
+                                "ip-addr-1": {
+                                    "type": "string",
+                                    "description": "System's Flow-Export Flows - IP Address #1."
+                                },
+                                "port-1": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - Port #1."
+                                },
+                                "ip-addr-2": {
+                                    "type": "string",
+                                    "description": "System's Flow-Export Flows - IP Address #2."
+                                },
+                                "port-2": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - Port #2."
+                                },
+                                "ip-mask-1": {
+                                    "type": "string",
+                                    "description": "System's Flow-Export Flows - IP Mask #1."
+                                },
+                                "ip-mask-2": {
+                                    "type": "string",
+                                    "description": "System's Flow-Export Flows - IP Mask #2."
+                                },
+                                "start-time": {
+                                    "type": "string",
+                                    "description": "System's Flow-Export Flows - Start Time."
+                                },
+                                "finish-time": {
+                                    "type": "string",
+                                    "description": "System's Flow-Export Flows - Finish Time."
+                                },
+                                "octets-1": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - Octets #1."
+                                },
+                                "packetes-1": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - Packets #1."
+                                },
+                                "octets-2": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - Octets #2."
+                                },
+                                "packetes-2": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - Packets #2."
+                                },
+                                "tcp-flags-1": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - TCP Flags #1."
+                                },
+                                "tcp-flags-2": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - TCP Flags #2."
+                                },
+                                "ipv6-label-1": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - IPv6 Label #1."
+                                },
+                                "ipv6-label-2": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - IPv6 Label #2."
+                                },
+                                "vlan": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Flows - VLAN ID."
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/flow-export-statistics\/": {
+            "get": {
+                "tags": [
+                    "system\/flow-export-statistics"
+                ],
+                "summary": "Retrieve Flow Export Statistics of System. for system\/flow-export-statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "active-flow-number": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Active Flow Number."
+                                },
+                                "processed-packets": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Processed packetes."
+                                },
+                                "fragmented-packets": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Fragmened Packets."
+                                },
+                                "ignored-packets": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Ignored Packets."
+                                },
+                                "non-sampled-packets": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Non-Sampled Packets."
+                                },
+                                "non-sampled-non-ip": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Non-Sampled Non-IP Packets."
+                                },
+                                "non-sampled-too-short": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Non-Sampled Too Short Packets."
+                                },
+                                "expired-flows": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Expired Flows."
+                                },
+                                "forced-expired-flows": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Forced Expired Flows."
+                                },
+                                "export-flows": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Export Flows."
+                                },
+                                "export-sent-records": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Export Sent Records."
+                                },
+                                "export-sent-packets": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Export Sent Packets."
+                                },
+                                "export-send-error-flows": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Export Send Error Flows."
+                                },
+                                "export-incompatible-flows": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Export Incompatible Flows."
+                                },
+                                "libpcap-received-packets": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - LIBCAP Received Packets."
+                                },
+                                "libpcap-dropped-packets": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - LIBCAP Dropped Packets."
+                                },
+                                "interface-dropped-packets": {
+                                    "type": "integer",
+                                    "description": "System's Flow-Export Statistics - Interface Dropped Packets."
+                                },
+                                "flow-stats": {
+                                    "type": "array",
+                                    "description": "System Flow-Export Flows Statistics (Optional).",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "flow-packetes": {
+                                                "type": "array",
+                                                "description": "System Flow-Export Flows Statistics Packetes.",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "minimum": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Flows - Minimum Packetes."
+                                                        },
+                                                        "average": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Flows - Average Packetes."
+                                                        },
+                                                        "maximum": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Flows - Maximum Packetes."
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "flow-bytes": {
+                                                "type": "array",
+                                                "description": "System Flow-Export Flows Statistics Bytes.",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "minimum": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Flows - Minimum Bytes."
+                                                        },
+                                                        "average": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Flows - Average Bytes."
+                                                        },
+                                                        "maximum": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Flows - Maximum Bytes."
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "flow-duration": {
+                                                "type": "array",
+                                                "description": "System Flow-Export Flows Statistics Bytes.",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "minimum": {
+                                                            "type": "number",
+                                                            "description": "System's Flow-Export Flows - Minimum Duration."
+                                                        },
+                                                        "average": {
+                                                            "type": "number",
+                                                            "description": "System's Flow-Export Flows - Average Duration."
+                                                        },
+                                                        "maximum": {
+                                                            "type": "number",
+                                                            "description": "System's Flow-Export Flows - Maximum Duration."
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "expiration-reasons": {
+                                                "type": "array",
+                                                "description": "System Flow-Export Flows Expiration Reasons.",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "tcp": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Expiration Reason - TCP."
+                                                        },
+                                                        "tcp-rst": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Expiration Reason - TCP Reset."
+                                                        },
+                                                        "tcp-fin": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Expiration Reason - TCP Fin."
+                                                        },
+                                                        "udp": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Expiration Reason - DP."
+                                                        },
+                                                        "icmp": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Expiration Reason - ICMP."
+                                                        },
+                                                        "general": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Expiration Reason - General."
+                                                        },
+                                                        "max-life": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Expiration Reason - Max Life."
+                                                        },
+                                                        "over-two-gib": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Expiration Reason - Over Two GBytes."
+                                                        },
+                                                        "max-flows": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Expiration Reason - Max Flows."
+                                                        },
+                                                        "flushed": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Expiration Reason - Flushed."
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "per-proto-stats": {
+                                                "type": "array",
+                                                "description": "System Flow-Export Flows Per Protocols.",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "proto-name": {
+                                                            "type": "string",
+                                                            "description": "System's Flow-Export Per Protocols - Name."
+                                                        },
+                                                        "proto-no": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Per Protocols - Number."
+                                                        },
+                                                        "octets": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Per Protocols - Octets."
+                                                        },
+                                                        "packets": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Per Protocols - Packets."
+                                                        },
+                                                        "average-life": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Per Protocols - Average Life."
+                                                        },
+                                                        "max-life": {
+                                                            "type": "integer",
+                                                            "description": "System's Flow-Export Per Protocols - Max Life."
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/hardware-status\/": {
+            "get": {
+                "tags": [
+                    "system\/hardware-status"
+                ],
+                "summary": "Retrieve Hardware Status of System. for system\/hardware-status",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "model": {
+                                    "type": "string",
+                                    "description": "System's Hardware Model."
+                                },
+                                "asic-version": {
+                                    "type": "string",
+                                    "description": "System's Hardware ASIC-Version."
+                                },
+                                "asic-sram-size": {
+                                    "type": "array",
+                                    "description": "System's Hardware ASIC-SRAM-Size.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "acceleration-module": {
+                                    "type": "string",
+                                    "description": "System's Hardware Acceleration-Module."
+                                },
+                                "fpga-code-version": {
+                                    "type": "string",
+                                    "description": "System's Hardware FPGA-Code-Version."
+                                },
+                                "cpu": {
+                                    "type": "string",
+                                    "description": "System's Hardware CPU."
+                                },
+                                "ram": {
+                                    "type": "array",
+                                    "description": "System's Hardware RAM.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "flash": {
+                                    "type": "array",
+                                    "description": "System's Hardware Flash.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {
+                                                "enum": [
+                                                    "MTD",
+                                                    "COMPACT"
+                                                ],
+                                                "type": "string",
+                                                "description": "System's Hardware Flash Type."
+                                            },
+                                            "size": {
+                                                "type": "array",
+                                                "description": "System's Hardware Flash Size.",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "description": "Value."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "Unit."
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "device": {
+                                                "type": "string",
+                                                "description": "System's Hardware Flash Device."
+                                            }
+                                        }
+                                    }
+                                },
+                                "hard-disk": {
+                                    "type": "array",
+                                    "description": "System's Hardware Hard-Disk.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "device": {
+                                                "type": "string",
+                                                "description": "System's Hardware Hard-Disk Device."
+                                            },
+                                            "size": {
+                                                "type": "array",
+                                                "description": "System's Hardware Hard-Disk Size.",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "description": "Value."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "Unit."
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "usb-flash-size": {
+                                    "type": "array",
+                                    "description": "System's Hardware USB-Flash-Size.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "modem": {
+                                    "type": "string",
+                                    "description": "System's Hardware Modem."
+                                },
+                                "switch-cpld-version": {
+                                    "type": "string",
+                                    "description": "System's Hardware Switch-CPLD-Version."
+                                },
+                                "cpu-cpld-version": {
+                                    "type": "string",
+                                    "description": "System's Hardware  CPU-CPLD-Version."
+                                },
+                                "poe-firmware-version": {
+                                    "type": "string",
+                                    "description": "System's Hardware PoE-Firmware-Version."
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/interface-physical\/": {
+            "get": {
+                "tags": [
+                    "system\/interface-physical"
+                ],
+                "summary": "Retrieve Physical Interfaces of System. for system\/interface-physical",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "title": {
+                                    "type": "string",
+                                    "description": "System's Interface Physical Title."
+                                },
+                                "mode": {
+                                    "enum": [
+                                        "dhcp",
+                                        "pppoe",
+                                        "manual"
+                                    ],
+                                    "type": "string",
+                                    "description": "System's Interface Physical Mode."
+                                },
+                                "ipv4": {
+                                    "type": "array",
+                                    "description": "System's Interface Physical IPv4.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "address": {
+                                                "type": "string",
+                                                "description": "Address."
+                                            },
+                                            "mask": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "ipv6": {
+                                    "type": "array",
+                                    "description": "System's Interface Physical IPv6.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "address": {
+                                                "type": "string",
+                                                "description": "Address."
+                                            },
+                                            "length": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "status": {
+                                    "enum": [
+                                        "up",
+                                        "down"
+                                    ],
+                                    "type": "string",
+                                    "description": "System's Interface Physical Status."
+                                },
+                                "speed": {
+                                    "type": "array",
+                                    "description": "System's Interface Physical Speed.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "duplex": {
+                                    "enum": [
+                                        "half",
+                                        "full",
+                                        "n\/a"
+                                    ],
+                                    "type": "string",
+                                    "description": "System's Interface Physical Duplex."
+                                },
+                                "stats": {
+                                    "type": "array",
+                                    "description": "System's Interface Physical Statistics.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "rx-bytes": {
+                                                "type": "integer",
+                                                "description": "System's Interface Physical Statistics Received Bytes."
+                                            },
+                                            "rx-packets": {
+                                                "type": "integer",
+                                                "description": "System's Interface Physical Statistics Received Packets."
+                                            },
+                                            "tx-bytes": {
+                                                "type": "integer",
+                                                "description": "System's Interface Physical Statistics Transmit Bytes."
+                                            },
+                                            "tx-packets": {
+                                                "type": "integer",
+                                                "description": "System's Interface Physical Statistics Transmit Packets."
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/link-monitor-status\/": {
+            "get": {
+                "tags": [
+                    "system\/link-monitor-status"
+                ],
+                "summary": "Retrieve Link Monitor Status of System. for system\/link-monitor-status",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "System's Link Monitor Status Name."
+                                },
+                                "status": {
+                                    "enum": [
+                                        "up",
+                                        "down"
+                                    ],
+                                    "type": "string",
+                                    "description": "System's Link Monitor Status Status."
+                                },
+                                "source-interface": {
+                                    "type": "string",
+                                    "description": "System's Link Monitor Source-Interface."
+                                },
+                                "gateway": {
+                                    "type": "string",
+                                    "description": "System's Link Monitor Gateway."
+                                },
+                                "interval": {
+                                    "type": "integer",
+                                    "description": "System's Link Monitor Interval."
+                                },
+                                "timeout": {
+                                    "type": "integer",
+                                    "description": "System's Link Monitor Timeout."
+                                },
+                                "fail-times": {
+                                    "type": "array",
+                                    "description": "System's Link Monitor Status Times.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "try": {
+                                                "type": "integer",
+                                                "description": "System's Link Monitor Status Try Times."
+                                            },
+                                            "config": {
+                                                "type": "integer",
+                                                "description": "System's Link Monitor Status Config Times."
+                                            }
+                                        }
+                                    }
+                                },
+                                "send-times": {
+                                    "type": "integer",
+                                    "description": "System's Link Monitor Send-Times."
+                                },
+                                "peer": {
+                                    "type": "array",
+                                    "description": "System's Link Monitor Status Peer.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "description": "System's Link Monitor Status Peer Name."
+                                            },
+                                            "ip-address": {
+                                                "type": "string",
+                                                "description": "System's Link Monitor Status Peer IP-Address."
+                                            },
+                                            "protocol": {
+                                                "type": "string",
+                                                "description": "System's Link Monitor Status Peer Protocol."
+                                            },
+                                            "state": {
+                                                "enum": [
+                                                    "up",
+                                                    "down"
+                                                ],
+                                                "type": "string",
+                                                "description": "System's Link Monitor Status Peer State."
+                                            },
+                                            "latency": {
+                                                "type": "array",
+                                                "description": "System's Link Monitor Status Peer Latency.",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "recent": {
+                                                            "type": "number",
+                                                            "description": "System's Link Monitor Status Peer Latency Recent."
+                                                        },
+                                                        "average": {
+                                                            "type": "number",
+                                                            "description": "System's Link Monitor Status Peer Latency Average."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "System's Link Monitor Status Peer Latency Unit."
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "jitter": {
+                                                "type": "number",
+                                                "description": "System's Link Monitor Status Peer Jitter."
+                                            },
+                                            "received-times": {
+                                                "type": "integer",
+                                                "description": "System's Link Monitor Status Peer Received-Times."
+                                            },
+                                            "recovery-times.": {
+                                                "type": "array",
+                                                "description": "System's Link Monitor Status Times.",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "try": {
+                                                            "type": "integer",
+                                                            "description": "System's Link Monitor Status Try Times."
+                                                        },
+                                                        "config": {
+                                                            "type": "integer",
+                                                            "description": "System's Link Monitor Status Config Times."
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "continuous-sending-times": {
+                                                "type": "integer",
+                                                "description": "System's Link Monitor Status Peer Continuous-Sending-Times."
+                                            },
+                                            "packet-sent": {
+                                                "type": "integer",
+                                                "description": "System's Link Monitor Status Peer Packet-Sent."
+                                            },
+                                            "packet-received": {
+                                                "type": "integer",
+                                                "description": "System's Link Monitor Status Peer Packet-Received."
+                                            },
+                                            "packet-lost": {
+                                                "type": "array",
+                                                "description": "System's Link Monitor Status Peer Packet-Lost.",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "number",
+                                                            "description": "Value."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "Unit."
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/log\/": {
+            "get": {
+                "tags": [
+                    "system\/log"
+                ],
+                "summary": "Retrieve Log of switch. for system\/log",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "start-line": {
+                                    "type": "integer",
+                                    "description": "System's Log - Start Line Number."
+                                },
+                                "view-lines": {
+                                    "type": "integer",
+                                    "description": "System's Log - View Line Count."
+                                },
+                                "total-lines": {
+                                    "type": "integer",
+                                    "description": "System's Log - Total Line Count."
+                                },
+                                "logs": {
+                                    "type": "array",
+                                    "description": "System's Log Entries.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "index": {
+                                                "type": "integer",
+                                                "description": "System's Log Entries - Index."
+                                            },
+                                            "message": {
+                                                "type": "string",
+                                                "description": "System's Log Entries - Message."
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/ntp-status\/": {
+            "get": {
+                "tags": [
+                    "system\/ntp-status"
+                ],
+                "summary": "Retrieve NTP Status of System. for system\/ntp-status",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "ip-version": {
+                                    "type": "string",
+                                    "description": "System's NTP Status Server-IP version."
+                                },
+                                "server-name": {
+                                    "type": "string",
+                                    "description": "System's NTP Status Server-Name."
+                                },
+                                "server-ip": {
+                                    "type": "string",
+                                    "description": "System's NTP Status Server-IP-Address."
+                                },
+                                "sync-state": {
+                                    "type": "string",
+                                    "description": "System's NTP Status Sync-State."
+                                },
+                                "server-version": {
+                                    "type": "integer",
+                                    "description": "System's NTP Status Server-Version."
+                                },
+                                "stratum": {
+                                    "type": "integer",
+                                    "description": "System's NTP Status Stratum."
+                                },
+                                "reference-time": {
+                                    "type": "string",
+                                    "description": "System's NTP Status Reference-Time."
+                                },
+                                "clock-offset": {
+                                    "type": "array",
+                                    "description": "System's NTP Status Clock-Offset.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "number",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "root-delay": {
+                                    "type": "array",
+                                    "description": "System's NTP Status Root-Delay.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "number",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "root-dispersion": {
+                                    "type": "array",
+                                    "description": "System's NTP Status Root-Dispersion.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "number",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "peer-dispersion": {
+                                    "type": "array",
+                                    "description": "System's NTP Status Peer-Dispersion.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/pcb-temp\/": {
+            "get": {
+                "tags": [
+                    "system\/pcb-temp"
+                ],
+                "summary": "Retrieve PCB Temperature of System. for system\/pcb-temp",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "module": {
+                                    "type": "string",
+                                    "description": "System's PCB Temperature Module."
+                                },
+                                "status": {
+                                    "type": "array",
+                                    "description": "System's PCB Temperature Status.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "number",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/performance-status\/": {
+            "get": {
+                "tags": [
+                    "system\/performance-status"
+                ],
+                "summary": "Retrieve Performance Status of System. for system\/performance-status",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "cpu": {
+                                    "type": "array",
+                                    "description": "System Performance CPU Status.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "user": {
+                                                "type": "array",
+                                                "description": "Performance CPU Status - User(%).",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "description": "Value."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "Unit."
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "system": {
+                                                "type": "array",
+                                                "description": "Performance CPU Status - System(%).",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "description": "Value."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "Unit."
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "nice": {
+                                                "type": "array",
+                                                "description": "Performance CPU Status - Nice(%).",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "description": "Value."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "Unit."
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "idle": {
+                                                "type": "array",
+                                                "description": "Performance CPU Status - Idle(%).",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "description": "Value."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "Unit."
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "memory": {
+                                    "type": "array",
+                                    "description": "System Performance Memory Status.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "used": {
+                                                "type": "array",
+                                                "description": "Performance Memory Status - Used(%).",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "description": "Value."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "Unit."
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "network": {
+                                    "type": "array",
+                                    "description": "System Performance Network Status.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "in-1min": {
+                                                "type": "array",
+                                                "description": "Performance Network Status - in-1min(kbps).",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "description": "Value."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "Unit."
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "in-10min": {
+                                                "type": "array",
+                                                "description": "Performance Network Status - in-10min(kbps).",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "description": "Value."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "Unit."
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "in-30min": {
+                                                "type": "array",
+                                                "description": "Performance Network Status - in-30min(kbps).",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "description": "Value."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "Unit."
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "uptime": {
+                                    "type": "array",
+                                    "description": "uptime",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "minutes": {
+                                                "type": "integer",
+                                                "description": "Uptime Minutes"
+                                            },
+                                            "hours": {
+                                                "type": "integer",
+                                                "description": "Uptime Hours"
+                                            },
+                                            "days": {
+                                                "type": "integer",
+                                                "description": "Uptime Days"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/psu-status\/": {
+            "get": {
+                "tags": [
+                    "system\/psu-status"
+                ],
+                "summary": "Retrieve PSU Status of System. for system\/psu-status",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "System's PSU Name."
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "description": "System's PSU Status."
+                                },
+                                "connection": {
+                                    "type": "string",
+                                    "description": "System's PSU Connection."
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/resource\/": {
+            "get": {
+                "tags": [
+                    "system\/resource"
+                ],
+                "summary": "Retrieve Resource of System. for system\/resource",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "cpu": {
+                                    "type": "array",
+                                    "description": "System Resource CPU.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "cpu": {
+                                                "type": "integer",
+                                                "description": "System Resource CPU Value."
+                                            }
+                                        }
+                                    }
+                                },
+                                "memory": {
+                                    "type": "integer",
+                                    "description": "System Resource Memory."
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/sniffer-profile-summary\/": {
+            "get": {
+                "tags": [
+                    "system\/sniffer-profile-summary"
+                ],
+                "summary": "Retrieve Sniffer Profile Summary of System. for system\/sniffer-profile-summary",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "max-capture-memory": {
+                                    "type": "array",
+                                    "description": "Sniffer's Max Memory Size for capture.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "entries": {
+                                    "type": "array",
+                                    "description": "System Sniffer profile summary list.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "description": "Sniffer Profile Summary - Profile name."
+                                            },
+                                            "status": {
+                                                "type": "string",
+                                                "description": "Sniffer Profile Summary - Status."
+                                            },
+                                            "pkt-count": {
+                                                "type": "integer",
+                                                "description": "Sniffer Profile Summary - Packet Count."
+                                            },
+                                            "snap-len": {
+                                                "type": "integer",
+                                                "description": "Sniffer Profile Summary - Snap Length."
+                                            },
+                                            "filter": {
+                                                "type": "string",
+                                                "description": "Sniffer Profile Summary - Filter."
+                                            },
+                                            "size": {
+                                                "type": "array",
+                                                "description": "Sniffer's Captured file size.",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "description": "Value."
+                                                        },
+                                                        "unit": {
+                                                            "type": "string",
+                                                            "description": "Unit."
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/status\/": {
+            "get": {
+                "tags": [
+                    "system\/status"
+                ],
+                "summary": "Retrieve System Status. for system\/status",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "version": {
+                                    "type": "string",
+                                    "description": "System's Version."
+                                },
+                                "serial_numbe": {
+                                    "type": "string",
+                                    "description": "System's Serial Number."
+                                },
+                                "BIOS_netconsole": {
+                                    "type": "string",
+                                    "description": "System's BIOS Netconsole."
+                                },
+                                "BIOS_version": {
+                                    "type": "string",
+                                    "description": "System's BIOS Version."
+                                },
+                                "system_part_number": {
+                                    "type": "string",
+                                    "description": "System's Part Number."
+                                },
+                                "burn_in_mac": {
+                                    "type": "string",
+                                    "description": "System's Burn in MAC."
+                                },
+                                "hostname": {
+                                    "type": "string",
+                                    "description": "System's Hostname."
+                                },
+                                "fips_cc_mode": {
+                                    "type": "string",
+                                    "description": "System's FIPS-CC Mode."
+                                },
+                                "distribution": {
+                                    "type": "string",
+                                    "description": "System's Distribution."
+                                },
+                                "branch_point": {
+                                    "type": "string",
+                                    "description": "System's Branch Point."
+                                },
+                                "system_time": {
+                                    "type": "string",
+                                    "description": "System's Time."
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        },
+        "\/system\/upgrade-status\/": {
+            "get": {
+                "tags": [
+                    "system\/upgrade-status"
+                ],
+                "summary": "Retrieve Upgrade Status of System. for system\/upgrade-status",
+                "responses": {
+                    "200": {
+                        "description": "OK: Request returns successful",
+                        "schema": {
+                            "properties": {
+                                "state": {
+                                    "enum": [
+                                        "idle",
+                                        "running",
+                                        "failure"
+                                    ],
+                                    "type": "string",
+                                    "description": "System's Upgrade State."
+                                },
+                                "erase": {
+                                    "type": "array",
+                                    "description": "Upgrade Erase Progress.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "write": {
+                                    "type": "array",
+                                    "description": "Upgrade Write Progress.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                },
+                                "verify": {
+                                    "type": "array",
+                                    "description": "Upgrade Verify Progress.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "description": "Value."
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Unit."
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Request cannot be processed by the API"
+                    },
+                    "401": {
+                        "description": "Not Authorized: Request without successful login session"
+                    },
+                    "403": {
+                        "description": "Forbidden: Request is missing CSRF token or administrator is missing access profile permissions."
+                    },
+                    "404": {
+                        "description": "Resource Not Found: Unable to find the specified resource."
+                    },
+                    "405": {
+                        "description": "Method Not Allowed: Specified HTTP method is not allowed for this resource. "
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large: Request cannot be processed due to large entity "
+                    },
+                    "424": {
+                        "description": "Failed Dependency: Fail dependency can be duplicate resource, missing required parameter, missing required attribute, invalid attribute value"
+                    },
+                    "429": {
+                        "description": "Access temporarily blocked: Maximum failed authentications reached. The offended source is temporarily blocked for certain amount of time."
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Internal error when processing the request "
+                    }
+                }
+            }
+        }
+    }
+}

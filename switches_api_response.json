@@ -1,0 +1,218 @@
+[
+  {
+    "name": "S124EPTQ22000276",
+    "serial": "S124EPTQ22000276",
+    "model": "Unknown",
+    "status": "Connected",
+    "version": "S124EP-v7.6.1-build1047,241217 (GA)",
+    "ip": "Unknown",
+    "mac": "Unknown",
+    "ports": [
+      {
+        "name": "port1",
+        "status": "up",
+        "speed": 1000,
+        "duplex": "full",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port2",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port3",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port4",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port5",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port6",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port7",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port8",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port9",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port10",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port11",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port12",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port13",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port14",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port15",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port16",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port17",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port18",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port19",
+        "status": "up",
+        "speed": 1000,
+        "duplex": "full",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port20",
+        "status": "up",
+        "speed": 10,
+        "duplex": "full",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port21",
+        "status": "up",
+        "speed": 1000,
+        "duplex": "full",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port22",
+        "status": "up",
+        "speed": 1000,
+        "duplex": "full",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port23",
+        "status": "up",
+        "speed": 1000,
+        "duplex": "full",
+        "vlan": "_default"
+      },
+      {
+        "name": "port24",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port25",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port26",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port27",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      },
+      {
+        "name": "port28",
+        "status": "down",
+        "speed": 0,
+        "duplex": "Unknown",
+        "vlan": "VLAN1000"
+      }
+    ],
+    "connected_devices": [
+      {
+        "port": "port23",
+        "device_name": "E023FF6F4A80",
+        "device_mac": "E0:23:FF:6F:4A:80",
+        "device_ip": "Unknown",
+        "device_type": "Unknown"
+      }
+    ]
+  }
+]

@@ -19,9 +19,10 @@ def test_auth_methods():
     
     # Method 1: Query parameter (current method)
     logger.info("Testing Method 1: Query parameter")
-    params = {"access_token": API_TOKEN}
+    # UPDATED: Removed query parameter authentication
+    headers = {"Accept": "application/json", "Authorization": f"Bearer {API_TOKEN}"}
     try:
-        response = requests.get(url, params=params, verify=False)
+        response = requests.get(url, verify=False)
         logger.info(f"Status code: {response.status_code}")
         logger.info(f"Response: {response.text[:200]}...")
     except Exception as e:
@@ -40,7 +41,7 @@ def test_auth_methods():
     # Method 3: Both query parameter and Authorization header
     logger.info("\nTesting Method 3: Both query parameter and Authorization header")
     try:
-        response = requests.get(url, params=params, headers=headers, verify=False)
+        response = requests.get(url, headers=headers, verify=False)
         logger.info(f"Status code: {response.status_code}")
         logger.info(f"Response: {response.text[:200]}...")
     except Exception as e:

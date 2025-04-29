@@ -95,6 +95,107 @@
         const switches = await response.json();
 
         updateNetwork(switches);
+        updateSwitchesTable(switches);
+    }
+
+    function updateSwitchesTable(switches) {
+        // Get the container for switches
+        const switchesContainer = document.querySelector('.container.mt-5:last-child');
+        
+        // Clear existing content except the heading
+        const heading = switchesContainer.querySelector('h2');
+        switchesContainer.innerHTML = '';
+        switchesContainer.appendChild(heading);
+        
+        // Add each switch
+        for (const switch_data of switches) {
+            const switchCard = document.createElement('div');
+            switchCard.className = 'card mb-4';
+            
+            // Create card header
+            const cardHeader = document.createElement('div');
+            cardHeader.className = 'card-header';
+            cardHeader.innerHTML = `<h3>${switch_data.name} (${switch_data.model})</h3>`;
+            switchCard.appendChild(cardHeader);
+            
+            // Create card body
+            const cardBody = document.createElement('div');
+            cardBody.className = 'card-body';
+            
+            // Add switch info
+            const infoRow = document.createElement('div');
+            infoRow.className = 'row';
+            
+            const leftCol = document.createElement('div');
+            leftCol.className = 'col-md-6';
+            leftCol.innerHTML = `
+                <p><strong>Serial:</strong> ${switch_data.serial}</p>
+                <p><strong>Status:</strong>
+                    ${switch_data.status === 'online'
+                        ? '<span class="badge bg-success">Online</span>'
+                        : '<span class="badge bg-danger">Offline</span>'}
+                </p>
+                <p><strong>Version:</strong> ${switch_data.version}</p>
+            `;
+            
+            const rightCol = document.createElement('div');
+            rightCol.className = 'col-md-6';
+            rightCol.innerHTML = `
+                <p><strong>IP Address:</strong> ${switch_data.ip}</p>
+                <p><strong>MAC Address:</strong> ${switch_data.mac}</p>
+            `;
+            
+            infoRow.appendChild(leftCol);
+            infoRow.appendChild(rightCol);
+            cardBody.appendChild(infoRow);
+            
+            // Add connected devices section
+            const devicesHeading = document.createElement('h4');
+            devicesHeading.className = 'mt-4';
+            devicesHeading.textContent = 'Connected Devices';
+            cardBody.appendChild(devicesHeading);
+            
+            if (switch_data.connected_devices && switch_data.connected_devices.length > 0) {
+                const table = document.createElement('table');
+                table.className = 'table table-striped table-bordered';
+                
+                // Add table header
+                const thead = document.createElement('thead');
+                thead.innerHTML = `
+                    <tr>
+                        <th>Port</th>
+                        <th>Device Name</th>
+                        <th>MAC Address</th>
+                        <th>IP Address</th>
+                        <th>Type</th>
+                    </tr>
+                `;
+                table.appendChild(thead);
+                
+                // Add table body
+                const tbody = document.createElement('tbody');
+                for (const device of switch_data.connected_devices) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${device.port}</td>
+                        <td>${device.device_name}</td>
+                        <td>${device.device_mac}</td>
+                        <td>${device.device_ip}</td>
+                        <td>${device.device_type}</td>
+                    `;
+                    tbody.appendChild(row);
+                }
+                table.appendChild(tbody);
+                cardBody.appendChild(table);
+            } else {
+                const noDevices = document.createElement('p');
+                noDevices.textContent = 'No connected devices found.';
+                cardBody.appendChild(noDevices);
+            }
+            
+            switchCard.appendChild(cardBody);
+            switchesContainer.appendChild(switchCard);
+        }
     }
 
     function countdown() {

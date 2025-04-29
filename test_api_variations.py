@@ -36,13 +36,13 @@ if __name__ == "__main__":
     test_variation(
         "API v1 with token in query param",
         f"{FORTIGATE_HOST}/api/v1/monitor/system/status",
-        params={"access_token": API_TOKEN}
+        
     )
     
     test_variation(
         "API v2 with token in query param",
         f"{FORTIGATE_HOST}/api/v2/monitor/system/status",
-        params={"access_token": API_TOKEN}
+        
     )
     
     # Test with token in Authorization header (different formats)
@@ -68,12 +68,12 @@ if __name__ == "__main__":
     test_variation(
         "API on port 80 (HTTP)",
         f"http://192.168.0.254:80/api/v2/monitor/system/status",
-        params={"access_token": API_TOKEN}
+        
     )
     
     # Test with different hostname format
     test_variation(
         "API with IP in different format",
         f"https://192.168.0.254/api/v2/monitor/system/status",
-        params={"access_token": API_TOKEN}
+        
     )

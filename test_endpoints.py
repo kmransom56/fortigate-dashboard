@@ -15,20 +15,21 @@ CERT_PATH = './app/certs/fortigate.pem'
 
 def test_endpoint(endpoint):
     url = f"{FORTIGATE_HOST}{endpoint}"
-    params = {"access_token": API_TOKEN}
+    # UPDATED: Removed query parameter authentication
+    headers = {"Accept": "application/json", "Authorization": f"Bearer {API_TOKEN}"}
     
     logger.info(f"Testing endpoint: {endpoint}")
     try:
         # Try with certificate verification
-        response = requests.get(url, params=params, verify=CERT_PATH)
+        response = requests.get(url, verify=CERT_PATH)
         logger.info(f"Status code (with cert): {response.status_code}")
         logger.info(f"Response (with cert): {response.text[:200]}...")
     except Exception as e:
         logger.error(f"Error with cert: {e}")
         
         # Try without certificate verification
-        try:
-            response = requests.get(url, params=params, verify=False)
+    try:
+            response = requests.get(url, verify=False)
             logger.info(f"Status code (without cert): {response.status_code}")
             logger.info(f"Response (without cert): {response.text[:200]}...")
         except Exception as e:
