@@ -50,6 +50,9 @@
                     <div class="col-md-6">
                         <p><strong>IP Address:</strong> {{ switch.ip }}</p>
                         <p><strong>MAC Address:</strong> {{ switch.mac }}</p>
+                        <p><a href="/switches/change-ip/{{ switch.serial }}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil"></i> Change IP Address
+                        </a></p>
                     </div>
                 </div>
                 
@@ -143,6 +146,9 @@
             rightCol.innerHTML = `
                 <p><strong>IP Address:</strong> ${switch_data.ip}</p>
                 <p><strong>MAC Address:</strong> ${switch_data.mac}</p>
+                <p><a href="/switches/change-ip/${switch_data.serial}" class="btn btn-warning btn-sm">
+                    <i class="bi bi-pencil"></i> Change IP Address
+                </a></p>
             `;
             
             infoRow.appendChild(leftCol);

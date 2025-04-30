@@ -10,10 +10,7 @@ COPY ./requirements.txt .
 # Copy our fixed curl command for reference
 COPY ./fixed_curl_command.sh .
 COPY ./fortigate_api_authentication_guide.md .
-
-# Replace the service files with our no_ssl versions
-COPY ./app/services/fortigate_service.no_ssl.py ./app/services/fortigate_service.py
-COPY ./app/services/fortiswitch_service.no_ssl.py ./app/services/fortiswitch_service.py
+COPY ./ssl_certificate_verification_guide.md .
 
 # Install dependencies
 RUN pip install --upgrade pip

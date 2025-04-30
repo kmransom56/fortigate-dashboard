@@ -1,186 +1,83 @@
-# Fortigate Dashboard Application
+# FortiGate Dashboard - Fixed Version
 
-A dashboard application for monitoring FortiGate interfaces and network status.
+This is a fixed version of the FortiGate Dashboard application that addresses the 401 Unauthorized error when accessing the FortiGate API.
 
-## Building the Application
+## Issue Fixed
 
-### Prerequisites
-- Docker and Docker Compose installed
-- Git (to clone the repository)
-- A FortiGate device with API access configured
-- API token for the FortiGate device
+The original application was using the API token as a query parameter (`access_token=token`), but the FortiGate API requires the token to be sent in the Authorization header as a Bearer token.
 
-### Step 1: Clone the Repository
-```bash
-git clone https://github.com/kmransom56/fortigate-dashboard.git
-cd fortigate-dashboard
-```
+## Changes Made
 
-### Step 2: Configure Environment Variables
-Create or modify the `.env` file in the root directory with your FortiGate configuration:
+1. Fixed the authentication method in all API calls to use the Authorization header with Bearer token.
+2. Updated the Docker configuration to include the fixed files.
+3. Added documentation on the correct authentication method for FortiGate APIs.
 
-```
-# FortiGate API Configuration
-FORTIGATE_HOST=https://your-fortigate-ip
-FORTIGATE_API_TOKEN=your-api-token
+## Files Added/Modified
 
-# Path to FortiGate SSL Certificate
-FORTIGATE_CERT_PATH=/app/certs/fortigate.pem
+- `curl_command.sh`: curl command that uses the Authorization header.
+- `fortigate_api_authentication_guide.md`: A comprehensive guide on FortiGate API authentication.
+- `Dockerfile`: Updated Dockerfile for the dashboard service.
+- `Dockerfile.wan_monitor`: Updated Dockerfile for the WAN monitor service.
+- `docker-compose.yml`: Updated docker-compose file that uses the fixed Dockerfiles.
+- `wan_monitor.py`: Updated WAN monitor script with the correct authentication method.
+- `build_and_run.sh`: Script to build and run the fixed Docker containers.
 
-# Logging Configuration
-LOG_LEVEL=DEBUG
-```
+## How to Use
 
-### Step 3: Configure API Token Secret
-Create or update the API token in the secrets file:
+### Option 1: Using the build script
 
-```bash
-mkdir -p secrets
-echo "your-api-token" > secrets/fortigate_api_token.txt
-```
+1. Make the build script executable:
+   ```bash
+   chmod +x build_and_run.sh
+   ```
 
-### Step 4: SSL Certificate (Optional)
-If you have a FortiGate SSL certificate, place it in the `app/certs` directory:
+2. Run the build script:
+   ```bash
+   ./build_and_run.sh
+   ```
 
-```bash
-mkdir -p app/certs
-# Copy your certificate to the certs directory
-cp your-fortigate-cert.pem app/certs/fortigate.pem
-```
+### Option 2: Manual build and run
 
-### Step 5: Build and Start the Application
-Use Docker Compose to build and start the application:
+1. Build the Docker images:
+   ```bash
+   docker-compose -f docker-compose.fixed.yml build
+   ```
 
-```bash
-docker-compose build
-docker-compose up -d
-```
+2. Start the containers:
+   ```bash
+   docker-compose -f docker-compose.fixed.yml up -d
+   ```
 
-This will:
-1. Build the Docker images for the dashboard and WAN monitor
-2. Start the containers in detached mode
-3. The dashboard will be available at http://localhost:8001
+3. Check the container status:
+   ```bash
+   docker-compose -f docker-compose.fixed.yml ps
+   ```
 
-### Step 6: Verify the Application is Running
-Check the logs to ensure the application started correctly:
+## Accessing the Dashboard
+
+Once the containers are running, you can access the dashboard at:
+- http://localhost:8001
+
+## Viewing Logs
+
+To view the logs of the running containers:
 
 ```bash
-docker-compose logs dashboard
+# Dashboard logs
+docker-compose -f docker-compose.fixed.yml logs -f dashboard
+
+# WAN monitor logs
+docker-compose -f docker-compose.fixed.yml logs -f wan_monitor
 ```
 
-You should see output indicating the application has started and is connecting to the FortiGate API.
+## Stopping the Containers
 
-## Using the Application
+To stop the containers:
 
-### Accessing the Dashboard
-Open your web browser and navigate to:
-```
-http://localhost:8001/dashboard
+```bash
+docker-compose -f docker-compose.fixed.yml down
 ```
 
-### Dashboard Features
+## FortiGate API Authentication Guide
 
-#### FortiGate Dashboard
-
-1. **Interface Overview**: The dashboard displays all FortiGate interfaces with their status, IP addresses, and link speeds.
-
-2. **WAN Status Monitoring**: The dashboard highlights WAN interfaces and shows alerts if any WAN links are down.
-
-3. **Traffic Statistics**: View traffic statistics for each interface, including transmitted and received bytes.
-
-4. **Network Map**: A visual representation of your network interfaces and their connections.
-
-5. **Auto-Refresh**: The dashboard automatically refreshes every 10 seconds to show the latest data.
-
-#### FortiSwitch Dashboard
-
-1. **Switch Overview**: View all FortiSwitches managed by your FortiGate, including model, serial number, and status.
-
-2. **Connected Devices**: See all devices connected to each FortiSwitch, including device name, MAC address, IP address, and port.
-
-3. **Network Map**: A visual representation of your FortiSwitches and connected devices.
-
-4. **Auto-Refresh**: The dashboard automatically refreshes every 10 seconds to show the latest data.
-
-### API Endpoints
-
-The application provides the following API endpoints:
-
-1. **Interface Information**:
-   ```
-   GET /fortigate/api/interfaces
-   ```
-   Returns JSON data with information about all FortiGate interfaces.
-
-2. **FortiSwitch Information**:
-   ```
-   GET /fortigate/api/switches
-   ```
-   Returns JSON data with information about all FortiSwitches and connected devices.
-
-3. **FortiGate Dashboard Page**:
-   ```
-   GET /dashboard
-   ```
-   Renders the HTML dashboard with FortiGate interface information.
-
-4. **FortiSwitch Dashboard Page**:
-   ```
-   GET /switches
-   ```
-   Renders the HTML dashboard with FortiSwitch information.
-
-5. **Home Page**:
-   ```
-   GET /
-   ```
-   Renders the application home page with links to both dashboards.
-
-### Troubleshooting
-
-1. **API Connection Issues**:
-   - Check your API token in the `.env` file and `secrets/fortigate_api_token.txt`
-   - Ensure your FortiGate device is reachable from the Docker container
-   - Verify the IP restrictions in your FortiGate API user configuration
-
-2. **SSL Certificate Issues**:
-   - The application is configured to disable SSL verification if certificate issues occur
-   - For production use, it's recommended to use a valid certificate
-
-3. **Container Issues**:
-   - If you make changes to the configuration, restart the containers:
-     ```bash
-     docker-compose down
-     docker-compose up -d
-     ```
-
-4. **Viewing Logs**:
-   - To view application logs:
-     ```bash
-     docker-compose logs -f dashboard
-     ```
-   - To view WAN monitor logs:
-     ```bash
-     docker-compose logs -f wan_monitor
-     ```
-
-## Security Considerations
-
-1. **API Token**: Keep your API token secure and don't commit it to public repositories.
-
-2. **SSL Verification**: For production environments, use proper SSL certificates instead of disabling verification.
-
-3. **Network Access**: Restrict access to the dashboard to trusted networks.
-
-4. **FortiGate API User**: Configure the FortiGate API user with the minimum required permissions.
-
-## Authentication Notes
-
-The FortiGate API requires the following authentication method:
-- Use the `Authorization: Bearer <token>` header (not query parameters)
-- Disable SSL verification or provide a valid certificate
-- Ensure your client IP is allowed in the FortiGate API user's trusthost configuration
-
-## License
-
-[MIT License](LICENSE)
+For more information on the correct authentication method for FortiGate APIs, see the `fortigate_api_authentication_guide.md` file.
