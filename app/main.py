@@ -55,3 +55,10 @@ async def show_switch_ip_change_form(request: Request, switch_serial: str):
 async def debug_switches(request: Request):
     switches = get_fortiswitches()
     return templates.TemplateResponse("simple.html", {"request": request, "switches": switches})
+
+def main():
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+if __name__ == "__main__":
+    main()
