@@ -4,7 +4,6 @@ FortiSwitch Manager Module
 This module provides functionality to manage FortiSwitch devices connected to a FortiGate firewall
 through the FortiOS API.
 """
-
 import requests
 import urllib3
 import logging
@@ -19,6 +18,29 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class FortiSwitchManager:
+    """
+    A class to manage FortiSwitch devices connected to a FortiGate firewall.
+    """
+    
+    def __init__(self, fortigate_ip: str, api_token: str, verify_ssl: bool = False):
+        """
+        Initialize the FortiSwitch manager.
+        
+        Args:
+            fortigate_ip: IP address or hostname of the FortiGate
+            api_token: API token for authentication
+            verify_ssl: Whether to verify SSL certificates
+        """
+        self.fortigate_ip = fortigate_ip
+        self.api_token = api_token
+        self.verify_ssl = verify_ssl
+        self.base_url = f"https://{fortigate_ip}/api/v2"
+        self.headers = {
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json"
+        }
+        logger.debug(f"Initialized FortiSwitchManager for FortiGate at {fortigate_ip}")
+        
     def get_arp_table(self) -> Dict[str, Any]:
         """
         Get the ARP table from the FortiGate.
@@ -47,29 +69,6 @@ class FortiSwitchManager:
         except Exception as e:
             logger.error(f"Error retrieving ARP table: {e}")
             return {'success': False, 'error': str(e)}
-
-    """
-    A class to manage FortiSwitch devices connected to a FortiGate firewall.
-    """
-    
-    def __init__(self, fortigate_ip: str, api_token: str, verify_ssl: bool = False):
-        """
-        Initialize the FortiSwitch manager.
-        
-        Args:
-            fortigate_ip: IP address or hostname of the FortiGate
-            api_token: API token for authentication
-            verify_ssl: Whether to verify SSL certificates
-        """
-        self.fortigate_ip = fortigate_ip
-        self.api_token = api_token
-        self.verify_ssl = verify_ssl
-        self.base_url = f"https://{fortigate_ip}/api/v2"
-        self.headers = {
-            "Authorization": f"Bearer {api_token}",
-            "Content-Type": "application/json"
-        }
-        logger.debug(f"Initialized FortiSwitchManager for FortiGate at {fortigate_ip}")
     
     def get_managed_switches(self) -> Dict[str, Any]:
         """
@@ -257,16 +256,31 @@ class FortiSwitchManager:
             
             # STEP 4: Get network-monitor information (FortiOS 7.0+)
             # This is an additional source for device identification
+            monitor_data = {}
+            network_monitor_map = {}  # Map MAC addresses to network monitor data
             try:
                 monitor_url = f"{self.base_url}/monitor/switch-controller/network-monitor"
                 monitor_response = requests.get(monitor_url, headers=self.headers, verify=self.verify_ssl)
-                monitor_data = {}
                 if monitor_response.status_code == 200:
                     monitor_data = monitor_response.json()
                     logger.debug(f"Retrieved network monitor data: {monitor_data}")
+                    
+                    # Create a mapping of MAC addresses to network monitor data
+                    if 'results' in monitor_data:
+                        for device in monitor_data.get('results', []):
+                            if 'mac' in device:
+                                mac = device['mac'].lower()
+                                mac_no_colons = mac.replace(':', '').lower()
+                                
+                                # Store both formats
+                                network_monitor_map[mac] = device
+                                network_monitor_map[mac_no_colons] = device
+                                
+                                # Also store uppercase variants
+                                network_monitor_map[mac.upper()] = device
+                                network_monitor_map[mac_no_colons.upper()] = device
             except Exception as e:
                 logger.warning(f"Network monitor endpoint not available: {e}")
-                monitor_data = {}
             
             # Filter and process the MAC cache data
             devices = []
@@ -299,17 +313,46 @@ class FortiSwitchManager:
                         ip = arp_map[mac_format]
                         break
                 
-                # If still unknown, try to get from device info
-                if ip == 'Unknown' and device_info and 'ip' in device_info:
-                    ip = device_info.get('ip')
-                    
-                # Determine device type and name from device info
-                device_type = 'Unknown'
-                device_name = 'Unknown'
+                # Check network monitor data for additional info
+                network_monitor_info = None
+                for mac_format in [mac_lower, mac_upper, mac_no_colons_lower, mac_no_colons_upper]:
+                    if mac_format in network_monitor_map:
+                        network_monitor_info = network_monitor_map[mac_format]
+                        break
                 
+                # If still unknown, try to get from device info or network monitor
+                if ip == 'Unknown':
+                    if device_info and 'ip' in device_info:
+                        ip = device_info.get('ip')
+                    elif network_monitor_info and 'ip' in network_monitor_info:
+                        ip = network_monitor_info.get('ip')
+                
+                # Format port name for better readability
+                port_raw = entry.get('port', '')
+                port_name = self._format_port_name(port_raw)
+                
+                # Determine device type and name from available info
+                # Use more descriptive defaults based on available information
+                device_type = 'Network Device'  # Better default than 'Unknown'
+                
+                # Use MAC vendor prefix for better device naming when possible
+                mac_prefix = mac[:8].upper() if len(mac) >= 8 else ''
+                vendor_name = self._get_vendor_from_mac_prefix(mac_prefix)
+                
+                # Default device name based on port and MAC
+                device_name = f"{vendor_name} ({port_name})" if vendor_name else f"Device on {port_name}"
+                
+                # Try to get hostname from network monitor data
+                if network_monitor_info:
+                    if 'host' in network_monitor_info and network_monitor_info['host']:
+                        device_name = network_monitor_info['host']
+                    if 'device_type' in network_monitor_info and network_monitor_info['device_type']:
+                        device_type = network_monitor_info['device_type']
+                
+                # Override with device info if available (highest priority)
                 if device_info:
-                    device_type = device_info.get('type', 'Unknown')
-                    device_name = device_info.get('name', mac)
+                    device_type = device_info.get('type', device_type)
+                    device_name = device_info.get('name', device_name)
                     
                 # Create the device entry
                 device_entry = {
@@ -322,7 +365,20 @@ class FortiSwitchManager:
                     'ip': ip,
                     'name': device_name
                 }
-                
+                if entry.get('port') == 'port23':
+                    logger.info("Skipping DHCP lookup for port 23")
+                    device_entry = {
+                        'port': entry.get('port'),
+                        'device_mac': mac,
+                        'vlan': entry.get('vlan'),
+                        'age': entry.get('age'),
+                        'switch_id': entry.get('switch_id', entry.get('switch')),
+                        'type': 'FortiGate Connection',
+                        'ip': 'N/A',
+                        'name': 'netintegratefw'
+                    }
+                    devices.append(device_entry)
+                    continue
                 devices.append(device_entry)
             
             return {
@@ -358,6 +414,120 @@ class FortiSwitchManager:
             }
         finally:
             pass  # Add any necessary cleanup code here
+            
+    def _format_port_name(self, port_raw: str) -> str:
+        """
+        Format port name for better readability.
+        
+        Args:
+            port_raw: Raw port name from API (e.g., 'port1', 'port23')
+            
+        Returns:
+            Formatted port name (e.g., 'Port 1', 'Port 23')
+        """
+        if not port_raw:
+            return "Unknown Port"
+            
+        # Handle common port naming formats
+        if port_raw.startswith('port'):
+            try:
+                port_num = int(port_raw[4:])
+                return f"Port {port_num}"
+            except ValueError:
+                pass
+                
+        # Handle other formats or return original with first letter capitalized
+        return port_raw[0].upper() + port_raw[1:] if port_raw else "Unknown Port"
+    
+    def _get_vendor_from_mac_prefix(self, mac_prefix: str) -> str:
+        """
+        Get vendor name from MAC address prefix.
+        This is a simple implementation with common vendor prefixes.
+        
+        Args:
+            mac_prefix: First 8 characters of MAC address (including colons)
+            
+        Returns:
+            Vendor name or empty string if not recognized
+        """
+        # Common vendor prefixes (first 3 bytes of MAC address)
+        # This could be expanded or replaced with a more comprehensive database
+        vendor_map = {
+            # Cisco
+            '00:0C:29': 'Cisco',
+            '00:40:96': 'Cisco',
+            '00:60:09': 'Cisco',
+            '00:80:C8': 'Cisco',
+            '00:1A:A1': 'Cisco',
+            '00:1A:A2': 'Cisco',
+            '00:1A:E3': 'Cisco',
+            
+            # Dell
+            '00:14:22': 'Dell',
+            '00:1E:C9': 'Dell',
+            'F8:BC:12': 'Dell',
+            'F8:DB:88': 'Dell',
+            
+            # HP
+            '00:0F:61': 'HP',
+            '00:10:83': 'HP',
+            '00:17:A4': 'HP',
+            '94:57:A5': 'HP',
+            '9C:8E:99': 'HP',
+            
+            # Apple
+            '00:03:93': 'Apple',
+            '00:05:02': 'Apple',
+            '00:0A:27': 'Apple',
+            '00:0A:95': 'Apple',
+            '00:1E:52': 'Apple',
+            '00:25:00': 'Apple',
+            '00:26:BB': 'Apple',
+            '00:30:65': 'Apple',
+            '00:50:E4': 'Apple',
+            '00:56:CD': 'Apple',
+            
+            # Fortinet
+            '00:09:0F': 'Fortinet',
+            '08:5B:0E': 'Fortinet',
+            '00:90:6C': 'Fortinet',
+            
+            # Common IoT devices
+            'EC:FA:BC': 'IP Camera',
+            '00:1A:79': 'Smart Device',
+            
+            # Samsung
+            '00:15:99': 'Samsung',
+            '00:17:D5': 'Samsung',
+            '00:21:19': 'Samsung',
+            '00:23:39': 'Samsung',
+            '00:24:54': 'Samsung',
+            
+            # Printers
+            '00:17:C8': 'Printer',
+            '00:21:5A': 'Printer',
+            '00:26:73': 'Printer',
+            
+            # IP Phones
+            '00:04:F2': 'IP Phone',
+            '00:07:0E': 'IP Phone',
+            '00:0E:08': 'IP Phone',
+        }
+        
+        # Normalize MAC prefix format for lookup
+        normalized_prefix = mac_prefix.replace('-', ':').upper()
+        
+        # Try to match the first 8 chars (includes colons)
+        if normalized_prefix in vendor_map:
+            return vendor_map[normalized_prefix]
+            
+        # Try to match just the first 3 bytes (XX:XX:XX format)
+        if len(normalized_prefix) >= 8:
+            first_three_bytes = normalized_prefix[:8]
+            if first_three_bytes in vendor_map:
+                return vendor_map[first_three_bytes]
+        
+        return ""
 
     def get_user_device_list(self) -> Dict[str, Any]:
         """

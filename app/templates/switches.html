@@ -13,7 +13,8 @@
     <div class="container mt-2">
         <div class="row">
             <div class="col-md-6">
-                <p id="refresh-timer">Refreshing in 10 seconds...</p>
+                <p id="refresh-timer">Auto-refresh disabled</p>
+                <button id="manual-refresh" class="btn btn-primary btn-sm">Refresh Data</button>
             </div>
             <div class="col-md-6 text-end">
                 <a href="/" class="btn btn-secondary">Home</a>
@@ -90,8 +91,8 @@
 </div>
 </body>
 <script>
-    var seconds = 10;
     var countdownElement = document.getElementById('refresh-timer');
+    var manualRefreshButton = document.getElementById('manual-refresh');
 
     async function fetchNewData() {
         const response = await fetch('/fortigate/api/switches');
@@ -204,16 +205,13 @@
         }
     }
 
-    function countdown() {
-        if (seconds > 0) {
-            countdownElement.innerHTML = 'Refreshing in ' + seconds + ' seconds...';
-            seconds--;
-        } else {
-            fetchNewData();
-            seconds = 10;  // reset timer
-        }
-    }
-    setInterval(countdown, 1000);
+    // Add event listener for manual refresh button
+    manualRefreshButton.addEventListener('click', function() {
+        countdownElement.innerHTML = 'Refreshing...';
+        fetchNewData().then(() => {
+            countdownElement.innerHTML = 'Auto-refresh disabled';
+        });
+    });
 
     // vis-network Map
     var container = document.getElementById('network');
@@ -288,7 +286,9 @@
         }
     }
 
-    // Initial fetch
-    fetchNewData();
+    // Initial fetch when page loads
+    fetchNewData().then(() => {
+        countdownElement.innerHTML = 'Auto-refresh disabled';
+    });
 </script>
 </html>
