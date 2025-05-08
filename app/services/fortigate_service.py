@@ -26,15 +26,18 @@ if API_TOKEN_FILE and os.path.exists(API_TOKEN_FILE):
     with open(API_TOKEN_FILE, 'r') as f:
         API_TOKEN = f.read().strip()
 else:
-    API_TOKEN = os.environ.get('FORTIGATE_API_TOKEN', 'fhk0ch856np81NhsNjGjgf3nxrj0gh')
+    API_TOKEN = os.environ.get('FORTIGATE_API_TOKEN', 'hmNqQ0st7xrjnyQHt8dzpnkqm5hw5N')
 
 # Get certificate path
 CERT_PATH = os.environ.get('FORTIGATE_CERT_PATH', None)
 
 # If the certificate path is the full host path, adjust it for Docker container
-if CERT_PATH and CERT_PATH.startswith('/home/keith/CascadeProjects/fortigate-dashboard/'):
+                        # Log the raw MAC address for debugging
+                        
+# When using Windows file paths, use raw strings (r"...") or double backslashes
+if CERT_PATH and CERT_PATH.startswith(r'C:\Users\Keith Ransom\Documents\fortigate-dashboard\app\certs'):
     # Extract the relative path and prepend with /app
-    relative_path = CERT_PATH.replace('/home/keith/CascadeProjects/fortigate-dashboard/', '')
+    relative_path = CERT_PATH.replace(r'C:\Users\Keith Ransom\Documents\fortigate-dashboard\app\certs', '')
     CERT_PATH = f"/app/{relative_path}"
     logger.info(f"Adjusted certificate path for Docker container: {CERT_PATH}")
 
@@ -186,3 +189,4 @@ def process_interface_data(data):
     
     logger.info(f"Successfully processed {len(interfaces)} interfaces")
     return interfaces
+

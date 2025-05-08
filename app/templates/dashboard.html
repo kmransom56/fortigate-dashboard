@@ -70,7 +70,7 @@
 </div>
 </body>
 <script>
-    var seconds = 10;
+    var seconds = 300;
     var countdownElement = document.getElementById('refresh-timer');
 
     async function fetchNewData() {
@@ -208,11 +208,16 @@ function updateNetwork(interfaces) {
         },
         physics: {
             forceAtlas2Based: {
-                gravitationalConstant: -50,
-                centralGravity: 0.01,
-                springLength: 100
+                gravitationalConstant: -80,
+                centralGravity: 0.05,
+                springLength: 200,
+                springConstant: 0.05,
+                damping: 0.4
             },
             solver: 'forceAtlas2Based'
+        },
+        layout: {
+            improvedLayout: true
         }
     };
 
