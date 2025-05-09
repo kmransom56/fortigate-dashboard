@@ -32,9 +32,6 @@ else:
 CERT_PATH = os.environ.get('FORTIGATE_CERT_PATH', None)
 
 # If the certificate path is the full host path, adjust it for Docker container
-                        # Log the raw MAC address for debugging
-                        
-# When using Windows file paths, use raw strings (r"...") or double backslashes
 if CERT_PATH and CERT_PATH.startswith(r'C:\Users\Keith Ransom\Documents\fortigate-dashboard\app\certs'):
     # Extract the relative path and prepend with /app
     relative_path = CERT_PATH.replace(r'C:\Users\Keith Ransom\Documents\fortigate-dashboard\app\certs', '')

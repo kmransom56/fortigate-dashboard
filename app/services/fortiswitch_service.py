@@ -457,46 +457,52 @@ def get_connected_devices_workflow():
     try:
         # Get all managed switches
         managed_switches_result = fortiswitch_manager.get_managed_switches()
+        logger.debug(f"Managed switches result: {managed_switches_result}")
         if not managed_switches_result.get('success', False):
             logger.error(f"Failed to retrieve managed switches: {managed_switches_result.get('message', 'Unknown error')}")
             return []
-            
+
         # Get ARP table for IP mapping
         arp_result = fortiswitch_manager.get_arp_table()
+        logger.debug(f"ARP table result: {arp_result}")
         if not arp_result.get('success', False):
             logger.warning(f"Failed to retrieve ARP table: {arp_result.get('message', 'Unknown error')}")
-            
+
         # Get user device database for device identification
         device_result = fortiswitch_manager.get_user_device_list()
+        logger.debug(f"User device list result: {device_result}")
         if not device_result.get('success', False):
             logger.warning(f"Failed to retrieve device list: {device_result.get('message', 'Unknown error')}")
-        
+
         # Process each switch
         all_switches = []
         for switch in managed_switches_result.get('switches', []):
             switch_id = switch.get('serial')
             logger.info(f"Processing switch: {switch_id}")
-            
+
             # Get enhanced connected devices info
             connected_devices_result = fortiswitch_manager.get_connected_devices(switch_id=switch_id)
-            
+            logger.debug(f"Connected devices result for switch {switch_id}: {connected_devices_result}")
+
             switch_info = {
                 **switch,  # Include all switch details
                 'connected_devices': connected_devices_result.get('devices', []) if connected_devices_result.get('success', False) else []
             }
-            
+
             # Get port information
             port_result = fortiswitch_manager.get_switch_ports(switch_id=switch_id)
+            logger.debug(f"Port result for switch {switch_id}: {port_result}")
             if port_result.get('success', False):
                 switch_info['ports'] = port_result.get('ports', [])
             else:
                 logger.error(f"Failed to retrieve port information for switch {switch_id}")
                 switch_info['ports'] = []
-                
+
+            logger.debug(f"Final switch info for {switch_id}: {switch_info}")
             all_switches.append(switch_info)
-            
+
         return all_switches
-            
+
     except Exception as e:
         logger.error(f"Error in connected devices workflow: {e}", exc_info=True)
         return []
