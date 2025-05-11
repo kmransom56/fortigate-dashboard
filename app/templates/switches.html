@@ -217,10 +217,27 @@
     var container = document.getElementById('network');
     var network = null;
 
+    // Base64 encoded SVG icons
+    const icons = {
+        fortigate: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjRkYwMDAwIiBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjxwYXRoIGZpbGw9IiNGRjAwMDAiIGQ9Ik0zNjMuNyAxMzQuOWwtMTA3LjcgMTA3LjdMMTQ4LjMgMTM1Yy00LjctNC43LTEyLjMtNC43LTE3IDBsLTIyLjYgMjIuNmMtNC43IDQuNy00LjcgMTIuMyAwIDE3bDEwNy43IDEwNy43LTEwNy43IDEwNy43Yy00LjcgNC43LTQuNyAxMi4zIDAgMTdsMjIuNiAyMi42YzQuNyA0LjcgMTIuMyA0LjcgMTcgMGwxMDcuNy0xMDcuNyAxMDcuNyAxMDcuN2M0LjcgNC43IDEyLjMgNC43IDE3IDBsMjIuNi0yMi42YzQuNy00LjcgNC43LTEyLjMgMC0xN0wyOTUuMyAyODIuM2wxMDcuNy0xMDcuN2M0LjctNC43IDQuNy0xMi4zIDAtMTdsLTIyLjYtMjIuNmMtNC43LTQuNy0xMi4zLTQuNy0xNi43LS4xeiIvPjwvc3ZnPg==',
+        fortiswitch: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMDA3NkNFIiBkPSJNNDQ4IDgwaC0zODRjLTM1LjMgMC02NCAyOC43LTY0IDY0djIyNGMwIDM1LjMgMjguNyA2NCA2NCA2NGgzODRjMzUuMyAwIDY0LTI4LjcgNjQtNjRWMTQ0YzAtMzUuMy0yOC43LTY0LTY0LTY0em0xNiAyODhjMCA4LjgtNy4yIDE2LTE2IDE2aC0zODRjLTguOCAwLTE2LTcuMi0xNi0xNlYxNDRjMC04LjggNy4yLTE2IDE2LTE2aDM4NGM4LjggMCAxNiA3LjIgMTYgMTZ2MjI0eiIvPjxwYXRoIGZpbGw9IiMwMDc2Q0UiIGQ9Ik0xMjggMTQ0Yy0xNy43IDAtMzIgMTQuMy0zMiAzMnYxNjBjMCAxNy43IDE0LjMgMzIgMzIgMzJoMjU2YzE3LjcgMCAzMi0xNC4zIDMyLTMyVjE3NmMwLTE3LjctMTQuMy0zMi0zMi0zMkgxMjh6bTI1NiAxNzZIMTI4VjE3NmgyNTZ2MTQ0eiIvPjwvc3ZnPg==',
+        computer: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMzMzIiBkPSJNNDgwIDQ4SDMyYy0xNy43IDAtMzIgMTQuMy0zMiAzMnYzNTJjMCAxNy43IDE0LjMgMzIgMzIgMzJoOTZ2MTZjMCAxNy43IDE0LjMgMzIgMzIgMzJoMTkyYzE3LjcgMCAzMi0xNC4zIDMyLTMydi0xNmg5NmMxNy43IDAgMzItMTQuMyAzMi0zMlY4MGMwLTE3LjctMTQuMy0zMi0zMi0zMnptLTE0NCA0MTZIMTc2di0xNmgxNjB2MTZ6bTE0NC02NEgzMlY4MGg0NDh2MzIweiIvPjwvc3ZnPg==',
+        server: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjNjY2IiBkPSJNNDgwIDEyOGMwLTE3LjctMTQuMy0zMi0zMi0zMkgzMmMtMTcuNyAwLTMyIDE0LjMtMzIgMzJ2NjRjMCAxNy43IDE0LjMgMzIgMzIgMzJoNDE2YzE3LjcgMCAzMi0xNC4zIDMyLTMydi02NHpNNDMyIDE3NkgzMzZjLTguOCAwLTE2LTcuMi0xNi0xNnM3LjItMTYgMTYtMTZoOTZjOC44IDAgMTYgNy4yIDE2IDE2cy03LjIgMTYtMTYgMTZ6bS0yODgtMzJjMC04LjggNy4yLTE2IDE2LTE2czE2IDcuMiAxNiAxNi03LjIgMTYtMTYgMTYtMTYtNy4yLTE2LTE2em00OCAwYzAgOC44LTcuMiAxNi0xNiAxNnMtMTYtNy4yLTE2LTE2IDcuMi0xNiAxNi0xNiAxNiA3LjIgMTYgMTZ6TTQ4MCAzMjBjMC0xNy43LTE0LjMtMzItMzItMzJIMzJjLTE3LjcgMC0zMiAxNC4zLTMyIDMydjY0YzAgMTcuNyAxNC4zIDMyIDMyIDMyaDQxNmMxNy43IDAgMzItMTQuMyAzMi0zMnYtNjR6TTQzMiAzNjhIMzM2Yy04LjggMC0xNi03LjItMTYtMTZzNy4yLTE2IDE2LTE2aDk2YzguOCAwIDE2IDcuMiAxNiAxNnMtNy4yIDE2LTE2IDE2em0tMjg4LTMyYzAtOC44IDcuMi0xNiAxNi0xNnMxNiA3LjIgMTYgMTYtNy4yIDE2LTE2IDE2LTE2LTcuMi0xNi0xNnptNDggMGMwIDguOC03LjIgMTYtMTYgMTZzLTE2LTcuMi0xNi0xNiA3LjItMTYgMTYtMTYgMTYgNy4yIDE2IDE2eiIvPjwvc3ZnPg==',
+        xbox: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMTA3QzEwIiBkPSJNMzY5LjkgMzE4LjJjMjkuNi0yOS42IDYyLjEtNzcuNSA2Mi4xLTExNC44IDAtNDguNi0xNy4zLTc2LjUtMzQuNC05My4xLTMuOS0zLjktMTAuMy0zLjktMTQuMiAwTDMyMCA1MDAuOWM3Ny4xLTI5LjYgOTIuMi0xMDYuMSA0OS45LTE4Mi43ek0yNDAgMzUuNmMtMzUuNCAwLTY0IDI4LjYtNjQgNjRzMjguNiA2NCA2NCA2NCA2NC0yOC42IDY0LTY0LTI4LjYtNjQtNjQtNjR6bS04OS45IDM5NC45TDk2LjggMTEwLjNjLTMuOS0zLjktMTAuMy0zLjktMTQuMiAwLTE3LjIgMTYuNi0zNC40IDQ0LjQtMzQuNCA5My4xIDAgMzcuMyAzMi41IDg1LjIgNjIuMSAxMTQuOC00Mi4zIDc2LjctMjcuMiAxNTMuMiA0OS45IDE4Mi43bC0xMC4xLTEwMC41eiIvPjwvc3ZnPg==',
+        generic: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjOTk5IiBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg=='
+    };
+
     function updateNetwork(switches) {
         // Build nodes
         var nodes = new vis.DataSet([
-            { id: 1, label: 'FortiGate', shape: 'box' }
+            { 
+                id: 1, 
+                label: 'FortiGate', 
+                shape: 'image', 
+                image: icons.fortigate,
+                size: 40,
+                font: { size: 14, color: '#ff0000', face: 'Tahoma', strokeWidth: 2, strokeColor: '#ffffff' }
+            }
         ]);
 
         var edges = [];
@@ -230,25 +247,58 @@
             nodes.add({
                 id: counter,
                 label: `${switch_data.name}\n${switch_data.ip}`,
-                color: switch_data.status === 'online' ? 'green' : 'red',
-                shape: 'triangle'
+                shape: 'image',
+                image: icons.fortiswitch,
+                size: 35,
+                color: { border: switch_data.status === 'online' ? '#00b300' : '#ff0000' },
+                font: { size: 14, color: '#0076CE', face: 'Tahoma', strokeWidth: 2, strokeColor: '#ffffff' }
             });
             edges.push({
                 from: 1,
-                to: counter
+                to: counter,
+                width: 3,
+                color: { color: '#0076CE' },
+                arrows: {
+                    to: { enabled: true, scaleFactor: 0.5 }
+                }
             });
             
             // Add connected devices
             let deviceCounter = counter * 100;
             for (const device of switch_data.connected_devices) {
+                // Select icon based on device type
+                let deviceIcon = icons.generic;
+                let iconColor = '#999';
+                
+                if (device.device_type.toLowerCase().includes('fortigate')) {
+                    deviceIcon = icons.fortigate;
+                    iconColor = '#ff0000';
+                } else if (device.device_type.toLowerCase().includes('server')) {
+                    deviceIcon = icons.server;
+                    iconColor = '#666';
+                } else if (device.device_type.toLowerCase().includes('xbox')) {
+                    deviceIcon = icons.xbox;
+                    iconColor = '#107C10';
+                } else if (device.device_type.toLowerCase().includes('client') || 
+                           device.device_type.toLowerCase().includes('computer') ||
+                           device.device_name.toLowerCase().includes('studio')) {
+                    deviceIcon = icons.computer;
+                    iconColor = '#333';
+                }
+                
                 nodes.add({
                     id: deviceCounter,
                     label: `${device.device_name}\n${device.device_ip}`,
-                    color: 'blue'
+                    shape: 'image',
+                    image: deviceIcon,
+                    size: 25,
+                    font: { size: 12, color: iconColor, face: 'Tahoma', strokeWidth: 2, strokeColor: '#ffffff' }
                 });
                 edges.push({
                     from: counter,
-                    to: deviceCounter
+                    to: deviceCounter,
+                    width: 2,
+                    color: { color: '#aaaaaa' }
                 });
                 deviceCounter++;
             }
@@ -265,16 +315,37 @@
         // Configure layout and physics
         var options = {
             nodes: {
-                shape: 'dot',
-                size: 20
+                borderWidth: 2,
+                shadow: true
+            },
+            edges: {
+                smooth: {
+                    type: 'continuous'
+                },
+                shadow: true
             },
             physics: {
-                forceAtlas2Based: {
-                    gravitationalConstant: -50,
-                    centralGravity: 0.01,
-                    springLength: 100
+                barnesHut: {
+                    gravitationalConstant: -2000,
+                    centralGravity: 0.3,
+                    springLength: 150,
+                    springConstant: 0.04,
+                    damping: 0.09
                 },
-                solver: 'forceAtlas2Based'
+                solver: 'barnesHut'
+            },
+            layout: {
+                improvedLayout: true,
+                hierarchical: {
+                    enabled: false,
+                    direction: 'UD',
+                    sortMethod: 'directed'
+                }
+            },
+            interaction: {
+                navigationButtons: true,
+                keyboard: true,
+                hover: true
             }
         };
 

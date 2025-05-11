@@ -1,0 +1,880 @@
+[
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port1",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "up",
+        "duplex": "full",
+        "speed": 1000,
+        "poe_capable": true,
+        "poe_status": "enabled",
+        "port_power": 0.0,
+        "power_status": 1,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port2",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": true,
+        "poe_status": "enabled",
+        "port_power": 0.0,
+        "power_status": 1,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port3",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": true,
+        "poe_status": "enabled",
+        "port_power": 0.0,
+        "power_status": 1,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port4",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": true,
+        "poe_status": "enabled",
+        "port_power": 0.0,
+        "power_status": 1,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port5",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": true,
+        "poe_status": "enabled",
+        "port_power": 0.0,
+        "power_status": 1,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port6",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": true,
+        "poe_status": "enabled",
+        "port_power": 0.0,
+        "power_status": 1,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port7",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": true,
+        "poe_status": "enabled",
+        "port_power": 0.0,
+        "power_status": 1,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port8",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": true,
+        "poe_status": "enabled",
+        "port_power": 0.0,
+        "power_status": 1,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port9",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": true,
+        "poe_status": "enabled",
+        "port_power": 0.0,
+        "power_status": 1,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port10",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": true,
+        "poe_status": "enabled",
+        "port_power": 0.0,
+        "power_status": 1,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port11",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": true,
+        "poe_status": "enabled",
+        "port_power": 0.0,
+        "power_status": 1,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port12",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": true,
+        "poe_status": "enabled",
+        "port_power": 0.0,
+        "power_status": 1,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port13",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port14",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port15",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port16",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port17",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port18",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port19",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "up",
+        "duplex": "full",
+        "speed": 1000,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port20",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "up",
+        "duplex": "full",
+        "speed": 10,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port21",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "up",
+        "duplex": "full",
+        "speed": 1000,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port22",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "up",
+        "duplex": "full",
+        "speed": 1000,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port23",
+        "fortilink_port": true,
+        "vlan": "_default",
+        "fgt_peer_port_name": "a",
+        "fgt_peer_device_name": "E023FF6F4A80",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "up",
+        "duplex": "full",
+        "speed": 1000,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "10half",
+            "10full",
+            "100half",
+            "100full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port24",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "100full",
+            "1000full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port25",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "100full",
+            "1000full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port26",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "100full",
+            "1000full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port27",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    },
+    {
+        "supported_port_speeds": [
+            "100full",
+            "1000full",
+            "auto",
+            "1000auto"
+        ],
+        "interface": "port28",
+        "fortilink_port": false,
+        "vlan": "VLAN1000",
+        "fgt_peer_port_name": "",
+        "fgt_peer_device_name": "",
+        "isl_peer_device_name": "",
+        "isl_peer_port_name": "",
+        "isl_peer_trunk_name": "",
+        "mclag_icl": false,
+        "mclag": false,
+        "status": "down",
+        "speed": 0,
+        "poe_capable": false,
+        "port_power": 0.0,
+        "power_status": 0,
+        "igmp_snooping_group": {
+            "group_count": 0
+        },
+        "dhcp_snooping": {
+            "untrusted": 0
+        }
+    }
+]

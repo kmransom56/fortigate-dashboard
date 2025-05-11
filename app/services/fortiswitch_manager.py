@@ -34,7 +34,13 @@ class FortiSwitchManager:
         self.fortigate_ip = fortigate_ip
         self.api_token = api_token
         self.verify_ssl = verify_ssl
-        self.base_url = f"https://{fortigate_ip}/api/v2"
+        
+        # Ensure fortigate_ip doesn't already include https://
+        if fortigate_ip.startswith('https://'):
+            self.base_url = f"{fortigate_ip}/api/v2"
+        else:
+            self.base_url = f"https://{fortigate_ip}/api/v2"
+            
         self.headers = {
             "Authorization": f"Bearer {api_token}",
             "Content-Type": "application/json"

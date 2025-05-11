@@ -1,0 +1,101 @@
+{
+    "http_method": "GET",
+    "results": [
+        {
+            "ip": "192.168.0.7",
+            "reserved": false,
+            "mac": "38:14:28:d5:ed:34",
+            "vci": "MSFT 5.0",
+            "hostname": "IB-3rdU6Gz3qRSm",
+            "expire_time": 1747414094,
+            "status": "leased",
+            "interface": "VLAN1000",
+            "type": "ipv4",
+            "server_mkey": 6,
+            "server_ipam_enabled": true
+        },
+        {
+            "ip": "192.168.0.3",
+            "reserved": false,
+            "mac": "dc:a6:32:eb:46:f7",
+            "hostname": "unbound",
+            "expire_time": 1747506484,
+            "status": "leased",
+            "interface": "VLAN1000",
+            "type": "ipv4",
+            "server_mkey": 6,
+            "server_ipam_enabled": true
+        },
+        {
+            "ip": "192.168.0.8",
+            "reserved": false,
+            "mac": "fc:8c:11:b9:ee:de",
+            "vci": "MSFT 5.0 XBOX",
+            "hostname": "XBOX",
+            "expire_time": 1747555851,
+            "status": "leased",
+            "interface": "VLAN1000",
+            "type": "ipv4",
+            "server_mkey": 6,
+            "server_ipam_enabled": true
+        },
+        {
+            "ip": "192.168.0.9",
+            "reserved": false,
+            "mac": "c4:8b:a3:4b:df:5f",
+            "vci": "MERAKI",
+            "hostname": "ne-atlanta-hq-c48ba34bdf5e",
+            "expire_time": 1747564701,
+            "status": "leased",
+            "interface": "VLAN1000",
+            "type": "ipv4",
+            "server_mkey": 6,
+            "server_ipam_enabled": true
+        },
+        {
+            "ip": "192.168.0.1",
+            "reserved": false,
+            "mac": "d8:43:ae:9f:41:26",
+            "vci": "MSFT 5.0",
+            "hostname": "AICODESTUDIOTHREE",
+            "expire_time": 1747584349,
+            "status": "leased",
+            "interface": "VLAN1000",
+            "type": "ipv4",
+            "server_mkey": 6,
+            "server_ipam_enabled": true
+        },
+        {
+            "ip": "192.168.0.2",
+            "reserved": false,
+            "mac": "0c:37:96:a4:3b:af",
+            "vci": "MSFT 5.0",
+            "hostname": "AICODESTUDIOTHREE",
+            "expire_time": 1747584352,
+            "status": "leased",
+            "interface": "VLAN1000",
+            "type": "ipv4",
+            "server_mkey": 6,
+            "server_ipam_enabled": true
+        },
+        {
+            "ip": "192.168.0.6",
+            "reserved": false,
+            "mac": "10:7c:61:3f:2b:5d",
+            "hostname": "ubuntuaicodeserver",
+            "expire_time": 1747584466,
+            "status": "leased",
+            "interface": "VLAN1000",
+            "type": "ipv4",
+            "server_mkey": 6,
+            "server_ipam_enabled": true
+        }
+    ],
+    "vdom": "root",
+    "path": "system",
+    "name": "dhcp",
+    "status": "success",
+    "serial": "FGT61FTK20020975",
+    "version": "v7.6.3",
+    "build": 3510
+}

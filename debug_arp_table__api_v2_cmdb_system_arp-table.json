@@ -1,0 +1,18 @@
+{
+    "http_method": "GET",
+    "size": 0,
+    "limit_reached": false,
+    "matched_count": 0,
+    "next_idx": 0,
+    "revision": "3c8705cdad486fa2811c186364a94a37",
+    "results": [],
+    "vdom": "root",
+    "path": "system",
+    "name": "arp-table",
+    "action": "",
+    "status": "success",
+    "http_status": 200,
+    "serial": "FGT61FTK20020975",
+    "version": "v7.6.3",
+    "build": 3510
+}
