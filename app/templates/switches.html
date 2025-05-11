@@ -12,13 +12,22 @@
     <h1>FortiSwitch Dashboard</h1>
     <div class="container mt-2">
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <p id="refresh-timer">Auto-refresh disabled</p>
-                <button id="manual-refresh" class="btn btn-primary btn-sm">Refresh Data</button>
             </div>
-            <div class="col-md-6 text-end">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="vendor-filter">Filter by Vendor:</label>
+                    <select id="vendor-filter" class="form-control">
+                        <option value="all">All Vendors</option>
+                        <!-- Vendor options will be populated by JavaScript -->
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
                 <a href="/" class="btn btn-secondary">Home</a>
                 <a href="/dashboard" class="btn btn-primary">View FortiGate Dashboard</a>
+                <button id="refresh-vendor-cache" class="btn btn-info">Refresh Vendor Data</button>
             </div>
         </div>
     </div>
@@ -67,16 +76,26 @@
                             <th>MAC Address</th>
                             <th>IP Address</th>
                             <th>Type</th>
+                            <th>Vendor</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for device in switch.connected_devices %}
-                        <tr>
+                        <tr class="device-row" data-vendor="{{ device.vendor|default('Unknown') }}">
                             <td>{{ device.port }}</td>
                             <td>{{ device.device_name }}</td>
                             <td>{{ device.device_mac }}</td>
                             <td>{{ device.device_ip }}</td>
                             <td>{{ device.device_type }}</td>
+                            <td>
+                                <span class="vendor-badge" style="background-color: {{ device.vendor_color|default('#505050') }}">
+                                    {{ device.vendor|default('Unknown') }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info lookup-vendor" data-mac="{{ device.device_mac }}">Lookup</button>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -183,12 +202,21 @@
                 const tbody = document.createElement('tbody');
                 for (const device of switch_data.connected_devices) {
                     const row = document.createElement('tr');
+                    // Get vendor from MAC address if available
+                    let vendorName = '';
+                    if (device.device_mac && device.device_mac !== 'Unknown') {
+                        // Extract first 8 characters of MAC (including colons)
+                        const macPrefix = device.device_mac.substring(0, 8).toUpperCase();
+                        vendorName = getVendorFromMacPrefix(macPrefix) || 'Unknown';
+                    }
+                    
                     row.innerHTML = `
                         <td>${device.port}</td>
                         <td>${device.device_name}</td>
                         <td>${device.device_mac}</td>
                         <td>${device.device_ip}</td>
                         <td>${device.device_type}</td>
+                        <td>${vendorName}</td>
                     `;
                     tbody.appendChild(row);
                 }
@@ -217,6 +245,137 @@
     var container = document.getElementById('network');
     var network = null;
 
+    // Add CSS for vendor badges
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        .vendor-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .device-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        .vendor-filter-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .vendor-filter-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        .vendor-filter-item:hover {
+            background-color: #f0f0f0;
+        }
+        .vendor-filter-item.active {
+            background-color: #e0e0e0;
+        }
+    `;
+    document.head.appendChild(styleElement);
+    
+    // Function to get vendor from MAC prefix
+    function getVendorFromMacPrefix(macPrefix) {
+        const vendorMap = {
+            // Cisco
+            '00:0C:29': 'Cisco',
+            '00:40:96': 'Cisco',
+            '00:60:09': 'Cisco',
+            '00:80:C8': 'Cisco',
+            '00:1A:A1': 'Cisco',
+            '00:1A:A2': 'Cisco',
+            '00:1A:E3': 'Cisco',
+            
+            // Dell
+            '00:14:22': 'Dell',
+            '00:1E:C9': 'Dell',
+            'F8:BC:12': 'Dell',
+            'F8:DB:88': 'Dell',
+            
+            // HP
+            '00:0F:61': 'HP',
+            '00:10:83': 'HP',
+            '00:17:A4': 'HP',
+            '94:57:A5': 'HP',
+            '9C:8E:99': 'HP',
+            
+            // Apple
+            '00:03:93': 'Apple',
+            '00:05:02': 'Apple',
+            '00:0A:27': 'Apple',
+            '00:0A:95': 'Apple',
+            '00:1E:52': 'Apple',
+            '00:25:00': 'Apple',
+            '00:26:BB': 'Apple',
+            '00:30:65': 'Apple',
+            '00:50:E4': 'Apple',
+            '00:56:CD': 'Apple',
+            
+            // Fortinet
+            '00:09:0F': 'Fortinet',
+            '08:5B:0E': 'Fortinet',
+            '00:90:6C': 'Fortinet',
+            'E0:23:FF': 'Fortinet',
+            
+            // Common IoT devices
+            'EC:FA:BC': 'IP Camera',
+            '00:1A:79': 'Smart Device',
+            
+            // Samsung
+            '00:15:99': 'Samsung',
+            '00:17:D5': 'Samsung',
+            '00:21:19': 'Samsung',
+            '00:23:39': 'Samsung',
+            '00:24:54': 'Samsung',
+            
+            // Printers
+            '00:17:C8': 'Printer',
+            '00:21:5A': 'Printer',
+            '00:26:73': 'Printer',
+            
+            // IP Phones
+            '00:04:F2': 'IP Phone',
+            '00:07:0E': 'IP Phone',
+            '00:0E:08': 'IP Phone',
+            
+            // Microsoft/Xbox
+            'FC:8C:11': 'Xbox',
+            '3C:18:A0': 'Microsoft',
+            '0C:37:96': 'Microsoft',
+            'D8:43:AE': 'Microsoft',
+            
+            // Other common vendors
+            '38:14:28': 'Huawei',
+            '10:7C:61': 'Lenovo',
+            'DC:A6:32': 'Raspberry Pi',
+            'C4:8B:A3': 'Meraki'
+        };
+        
+        // Try to match the first 8 chars (includes colons)
+        if (vendorMap[macPrefix]) {
+            return vendorMap[macPrefix];
+        }
+        
+        // Try to match just the first 3 bytes (XX:XX:XX format)
+        const firstThreeBytes = macPrefix.substring(0, 8);
+        if (vendorMap[firstThreeBytes]) {
+            return vendorMap[firstThreeBytes];
+        }
+        
+        return '';
+    }
+    
     // Base64 encoded SVG icons
     const icons = {
         fortigate: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjRkYwMDAwIiBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjxwYXRoIGZpbGw9IiNGRjAwMDAiIGQ9Ik0zNjMuNyAxMzQuOWwtMTA3LjcgMTA3LjdMMTQ4LjMgMTM1Yy00LjctNC43LTEyLjMtNC43LTE3IDBsLTIyLjYgMjIuNmMtNC43IDQuNy00LjcgMTIuMyAwIDE3bDEwNy43IDEwNy43LTEwNy43IDEwNy43Yy00LjcgNC43LTQuNyAxMi4zIDAgMTdsMjIuNiAyMi42YzQuNyA0LjcgMTIuMyA0LjcgMTcgMGwxMDcuNy0xMDcuNyAxMDcuNyAxMDcuN2M0LjcgNC43IDEyLjMgNC43IDE3IDBsMjIuNi0yMi42YzQuNy00LjcgNC43LTEyLjMgMC0xN0wyOTUuMyAyODIuM2wxMDcuNy0xMDcuN2M0LjctNC43IDQuNy0xMi4zIDAtMTdsLTIyLjYtMjIuNmMtNC43LTQuNy0xMi4zLTQuNy0xNi43LS4xeiIvPjwvc3ZnPg==',
@@ -286,9 +445,22 @@
                     iconColor = '#333';
                 }
                 
+                // Get vendor from MAC address if available
+                let vendorInfo = '';
+                if (device.device_mac && device.device_mac !== 'Unknown') {
+                    // Extract first 8 characters of MAC (including colons)
+                    const macPrefix = device.device_mac.substring(0, 8).toUpperCase();
+                    
+                    // Check against our vendor map
+                    const vendor = getVendorFromMacPrefix(macPrefix);
+                    if (vendor) {
+                        vendorInfo = `[${vendor}]`;
+                    }
+                }
+                
                 nodes.add({
                     id: deviceCounter,
-                    label: `${device.device_name}\n${device.device_ip}`,
+                    label: `${device.device_name}${vendorInfo ? '\n' + vendorInfo : ''}\n${device.device_ip}`,
                     shape: 'image',
                     image: deviceIcon,
                     size: 25,
@@ -357,9 +529,166 @@
         }
     }
 
+    // Function to populate vendor filter dropdown
+    function populateVendorFilter() {
+        const vendorFilter = document.getElementById('vendor-filter');
+        if (!vendorFilter) return;
+        
+        // Clear existing options except the first one
+        while (vendorFilter.options.length > 1) {
+            vendorFilter.remove(1);
+        }
+        
+        // Get all unique vendors
+        const vendors = new Set();
+        document.querySelectorAll('.device-row').forEach(row => {
+            const vendor = row.getAttribute('data-vendor');
+            if (vendor) vendors.add(vendor);
+        });
+        
+        // Add vendor options
+        vendors.forEach(vendor => {
+            const option = document.createElement('option');
+            option.value = vendor;
+            option.textContent = vendor;
+            vendorFilter.appendChild(option);
+        });
+        
+        // Add event listener
+        vendorFilter.addEventListener('change', filterDevicesByVendor);
+    }
+    
+    // Function to filter devices by vendor
+    function filterDevicesByVendor() {
+        const selectedVendor = document.getElementById('vendor-filter').value;
+        const deviceRows = document.querySelectorAll('.device-row');
+        
+        deviceRows.forEach(row => {
+            const vendor = row.getAttribute('data-vendor');
+            if (selectedVendor === 'all' || vendor === selectedVendor) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Update the network graph to show only the selected vendor
+        updateNetworkWithVendorFilter(selectedVendor);
+    }
+    
+    // Function to update the network graph with vendor filter
+    function updateNetworkWithVendorFilter(selectedVendor) {
+        if (!network) return;
+        
+        const nodes = network.body.data.nodes;
+        const nodeIds = nodes.getIds();
+        
+        nodeIds.forEach(id => {
+            const node = nodes.get(id);
+            if (id === 1) return; // Skip the FortiSwitch node
+            
+            const nodeLabel = node.label || '';
+            const vendorMatch = nodeLabel.match(/\[(.*?)\]/); // Extract vendor from [Vendor] in label
+            
+            if (selectedVendor === 'all') {
+                nodes.update({ id: id, hidden: false });
+            } else if (vendorMatch && vendorMatch[1] === selectedVendor) {
+                nodes.update({ id: id, hidden: false });
+            } else if (vendorMatch) {
+                nodes.update({ id: id, hidden: true });
+            }
+        });
+    }
+    
+    // Function to look up vendor online
+    function lookupVendorOnline(mac) {
+        // Show loading indicator
+        const loadingToast = showToast('Looking up vendor information...', 'info');
+        
+        fetch(`/api/lookup-vendor?mac=${encodeURIComponent(mac)}`)
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading indicator
+                hideToast(loadingToast);
+                
+                if (data.success) {
+                    showToast(`Vendor found: ${data.vendor}`, 'success');
+                    // Refresh the data to show the updated vendor
+                    fetchNewData();
+                } else {
+                    showToast(`Vendor lookup failed: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                hideToast(loadingToast);
+                showToast(`Error: ${error.message}`, 'error');
+            });
+    }
+    
+    // Toast notification functions
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-header">
+                <strong class="me-auto">${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
+                <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+            </div>
+            <div class="toast-body">${message}</div>
+        `;
+        
+        // Add toast container if it doesn't exist
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+        
+        toastContainer.appendChild(toast);
+        return toast;
+    }
+    
+    function hideToast(toast) {
+        if (toast && toast.parentElement) {
+            toast.remove();
+        }
+    }
+    
+    // Add event listeners for vendor lookup buttons
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('lookup-vendor')) {
+            const mac = event.target.getAttribute('data-mac');
+            if (mac) {
+                lookupVendorOnline(mac);
+            }
+        }
+    });
+    
+    // Add event listener for refresh vendor cache button
+    document.getElementById('refresh-vendor-cache').addEventListener('click', function() {
+        fetch('/api/refresh-vendor-cache')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Vendor cache refreshed successfully', 'success');
+                    fetchNewData();
+                } else {
+                    showToast(`Failed to refresh vendor cache: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                showToast(`Error: ${error.message}`, 'error');
+            });
+    });
+    
     // Initial fetch when page loads
     fetchNewData().then(() => {
         countdownElement.innerHTML = 'Auto-refresh disabled';
+        // Populate vendor filter after data is loaded
+        setTimeout(() => {
+            populateVendorFilter();
+        }, 500);
     });
 </script>
 </html>

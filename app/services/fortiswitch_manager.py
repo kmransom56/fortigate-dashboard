@@ -445,95 +445,57 @@ class FortiSwitchManager:
         # Handle other formats or return original with first letter capitalized
         return port_raw[0].upper() + port_raw[1:] if port_raw else "Unknown Port"
     
-    def _get_vendor_from_mac_prefix(self, mac_prefix: str) -> str:
+    def _get_vendor_from_mac_prefix(self, mac_prefix: str, use_online_lookup: bool = True) -> str:
         """
         Get vendor name from MAC address prefix.
-        This is a simple implementation with common vendor prefixes.
+        Uses an enhanced implementation with a comprehensive vendor database and online lookup.
         
         Args:
-            mac_prefix: First 8 characters of MAC address (including colons)
+            mac_prefix: MAC address (any format)
+            use_online_lookup: Whether to use online lookup if not found locally
             
         Returns:
             Vendor name or empty string if not recognized
         """
-        # Common vendor prefixes (first 3 bytes of MAC address)
-        # This could be expanded or replaced with a more comprehensive database
-        vendor_map = {
-            # Cisco
-            '00:0C:29': 'Cisco',
-            '00:40:96': 'Cisco',
-            '00:60:09': 'Cisco',
-            '00:80:C8': 'Cisco',
-            '00:1A:A1': 'Cisco',
-            '00:1A:A2': 'Cisco',
-            '00:1A:E3': 'Cisco',
-            
-            # Dell
-            '00:14:22': 'Dell',
-            '00:1E:C9': 'Dell',
-            'F8:BC:12': 'Dell',
-            'F8:DB:88': 'Dell',
-            
-            # HP
-            '00:0F:61': 'HP',
-            '00:10:83': 'HP',
-            '00:17:A4': 'HP',
-            '94:57:A5': 'HP',
-            '9C:8E:99': 'HP',
-            
-            # Apple
-            '00:03:93': 'Apple',
-            '00:05:02': 'Apple',
-            '00:0A:27': 'Apple',
-            '00:0A:95': 'Apple',
-            '00:1E:52': 'Apple',
-            '00:25:00': 'Apple',
-            '00:26:BB': 'Apple',
-            '00:30:65': 'Apple',
-            '00:50:E4': 'Apple',
-            '00:56:CD': 'Apple',
-            
-            # Fortinet
-            '00:09:0F': 'Fortinet',
-            '08:5B:0E': 'Fortinet',
-            '00:90:6C': 'Fortinet',
-            
-            # Common IoT devices
-            'EC:FA:BC': 'IP Camera',
-            '00:1A:79': 'Smart Device',
-            
-            # Samsung
-            '00:15:99': 'Samsung',
-            '00:17:D5': 'Samsung',
-            '00:21:19': 'Samsung',
-            '00:23:39': 'Samsung',
-            '00:24:54': 'Samsung',
-            
-            # Printers
-            '00:17:C8': 'Printer',
-            '00:21:5A': 'Printer',
-            '00:26:73': 'Printer',
-            
-            # IP Phones
-            '00:04:F2': 'IP Phone',
-            '00:07:0E': 'IP Phone',
-            '00:0E:08': 'IP Phone',
-        }
+        from app.services.mac_vendors import get_vendor_from_mac
         
-        # Normalize MAC prefix format for lookup
-        normalized_prefix = mac_prefix.replace('-', ':').upper()
+        return get_vendor_from_mac(mac_prefix, use_online_lookup)
         
-        # Try to match the first 8 chars (includes colons)
-        if normalized_prefix in vendor_map:
-            return vendor_map[normalized_prefix]
-            
-        # Try to match just the first 3 bytes (XX:XX:XX format)
-        if len(normalized_prefix) >= 8:
-            first_three_bytes = normalized_prefix[:8]
-            if first_three_bytes in vendor_map:
-                return vendor_map[first_three_bytes]
+    def get_vendor_icon(self, vendor: str) -> str:
+        """
+        Get the icon filename for a vendor.
         
-        return ""
+        Args:
+            vendor: Vendor name
+        
+        Returns:
+            Icon filename or default icon if not found
+        """
+        from app.services.mac_vendors import get_vendor_icon
+        
+        return get_vendor_icon(vendor)
+        
+    def get_vendor_color(self, vendor: str) -> str:
+        """
+        Get the color for a vendor.
+        
+        Args:
+            vendor: Vendor name
+        
+        Returns:
+            Color hex code
+        """
+        from app.services.mac_vendors import get_vendor_color
+        
+        return get_vendor_color(vendor)
+        
+    def refresh_vendor_cache(self) -> None:
+        """
+        Force a refresh of the vendor cache by clearing expired entries.
+        """
+        from app.services.mac_vendors import refresh_vendor_cache
+        
+        refresh_vendor_cache()
 
     def get_user_device_list(self) -> Dict[str, Any]:
         """

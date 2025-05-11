@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from app.services.fortigate_service import get_interfaces
 from app.services.fortiswitch_service import get_fortiswitches
+from app.services.mac_vendors import get_vendor_from_mac, refresh_vendor_cache as refresh_cache
 import logging
 from pydantic import BaseModel
 from app.services.fortiswitch_service import get_fortiswitches, change_fortiswitch_ip
@@ -34,6 +35,44 @@ async def get_fortigate_switches():
     except Exception as e:
         logger.error(f"Error in /fortigate/api/switches endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/switches")
+async def get_switches():
+    """
+    Get information about all FortiSwitches.
+    """
+    try:
+        switches = get_fortiswitches()
+        return {"success": True, "switches": switches}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/lookup-vendor")
+async def lookup_vendor(mac: str = Query(..., description="MAC address to look up")):
+    """
+    Look up vendor information for a MAC address.
+    """
+    try:
+        # Force online lookup
+        vendor = get_vendor_from_mac(mac, use_online_lookup=True)
+        if vendor:
+            return {"success": True, "vendor": vendor}
+        else:
+            return {"success": False, "error": "Vendor not found"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.get("/refresh-vendor-cache")
+async def refresh_vendor_cache():
+    """
+    Refresh the vendor cache by clearing expired entries.
+    """
+    try:
+        refresh_cache()
+        return {"success": True, "message": "Vendor cache refreshed successfully"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 @router.post("/fortigate/api/switches/change-ip")
 async def change_switch_ip(request: SwitchIPChangeRequest):
     try:

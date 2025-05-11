@@ -1,6 +1,9 @@
-import os
+import json
 import logging
+import os
 import requests
+from typing import Dict, List, Any, Optional
+from app.services.mac_vendors import get_vendor_from_mac, get_vendor_icon, get_vendor_color
 from urllib3.exceptions import InsecureRequestWarning
 from app.services.fortiswitch_manager import FortiSwitchManager
 
@@ -432,6 +435,17 @@ def process_fortiswitch_data(data, dhcp_info):
                             'device_ip': device_ip,
                             'device_type': device_type
                         }
+                        
+                        # Add vendor information
+                        if device['device_mac'] and device['device_mac'] != 'Unknown':
+                            vendor = get_vendor_from_mac(device['device_mac'])
+                            device['vendor'] = vendor
+                            device['vendor_icon'] = get_vendor_icon(vendor)
+                            device['vendor_color'] = get_vendor_color(vendor)
+                        else:
+                            device['vendor'] = 'Unknown'
+                            device['vendor_icon'] = get_vendor_icon('Unknown')
+                            device['vendor_color'] = get_vendor_color('Unknown')
                     
                     # Only add devices for ports that are up or special ports like port23
                     if port.get('status') == 'up' or port.get('interface') == 'port23':

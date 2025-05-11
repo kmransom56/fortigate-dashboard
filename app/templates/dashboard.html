@@ -10,6 +10,24 @@
 <div class="container mt-5">
     <h2>Network Map</h2>
     <div id="network" style="height: 400px; border: 1px solid lightgray;"></div>
+    
+    <h3>Connected Devices</h3>
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Device</th>
+                <th>MAC Address</th>
+                <th>IP Address</th>
+                <th>Type</th>
+                <th>Vendor</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="device-table-body">
+            <!-- Device data will be populated by JavaScript -->
+        </tbody>
+    </table>
 </div>
 
 <body>
@@ -17,14 +35,29 @@
     <h1>FortiGate Interface Dashboard</h1>
     <div class="container mt-2">
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <p id="refresh-timer">Refreshing in 10 seconds...</p>
             </div>
-            <div class="col-md-6 text-end">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="vendor-filter">Filter by Vendor:</label>
+                    <select id="vendor-filter" class="form-control">
+                        <option value="all">All Vendors</option>
+                        <!-- Vendor options will be populated by JavaScript -->
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
                 <a href="/" class="btn btn-secondary">Home</a>
                 <a href="/switches" class="btn btn-success">View FortiSwitch Dashboard</a>
+                <button id="refresh-vendor-cache" class="btn btn-info">Refresh Vendor Data</button>
             </div>
         </div>
+    </div>
+    
+    <!-- Vendor Legend -->
+    <div class="vendor-filter-legend mt-3" id="vendor-legend">
+        <!-- Will be populated by JavaScript -->
     </div>
     <div id="wan-alert" class="alert alert-danger" role="alert" style="display:none;">
         ⚠️ WARNING: WAN Link Down Detected!
@@ -73,14 +106,57 @@
     var seconds = 300;
     var countdownElement = document.getElementById('refresh-timer');
 
-    async function fetchNewData() {
-        const response = await fetch('/fortigate/api/interfaces');
-        const interfaces = await response.json();
+    async function fetchDashboardData() {
+        return fetch('/api/dashboard')
+            .then(response => response.json())
+            .then(data => {
+                updateNetwork(data.interfaces);
+                updateCharts(data.interfaces);
+                checkWanAlerts(data.interfaces);
+                
+                // Fetch connected devices from the switches API
+                fetch('/api/switches')
+                    .then(response => response.json())
+                    .then(switchData => {
+                        if (switchData && switchData.switches) {
+                            // Collect all connected devices from all switches
+                            const allDevices = [];
+                            switchData.switches.forEach(sw => {
+                                if (sw.connected_devices && Array.isArray(sw.connected_devices)) {
+                                    sw.connected_devices.forEach(device => {
+                                        allDevices.push({
+                                            name: device.device_name || 'Unknown',
+                                            mac: device.device_mac || 'Unknown',
+                                            ip: device.device_ip || 'Unknown',
+                                            type: device.device_type || 'Unknown',
+                                            status: device.status || 'Unknown',
+                                            port: device.port || 'Unknown'
+                                        });
+                                    });
+                                }
+                            });
+                            
+                            // Populate the device table
+                            populateDeviceTable(allDevices);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching switch data:', error);
+                    });
+                
+                return data; // Return data for further processing
+            })
+            .catch(error => {
+                console.error('Error fetching dashboard data:', error);
+                return null;
+            });
+    }
 
-        updateTable(interfaces);
-        updateChart(interfaces);
-        updateNetwork(interfaces);
-        checkWanAlerts(interfaces); // Check WAN status
+    async function fetchNewData() {
+        const response = await fetchDashboardData();
+        if (response && response.interfaces) {
+            updateTable(response.interfaces);
+        }
     }
 
     function countdown() {
@@ -166,18 +242,153 @@ function updateChart(interfaces) {
     rxTrafficChart.update();
 }
 
-
-
     // vis-network Map
     var container = document.getElementById('network');
 var network = null;
+
+// Add CSS for vendor badges
+const styleElement = document.createElement('style');
+styleElement.textContent = `
+    .vendor-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 12px;
+        color: white;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    .device-icon {
+        width: 24px;
+        height: 24px;
+        margin-right: 5px;
+        vertical-align: middle;
+    }
+    .vendor-filter-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .vendor-filter-item {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        padding: 5px 10px;
+        border-radius: 5px;
+        transition: background-color 0.2s;
+    }
+    .vendor-filter-item:hover {
+        background-color: #f0f0f0;
+    }
+    .vendor-filter-item.active {
+        background-color: #e0e0e0;
+    }
+    .toast-container {
+        z-index: 9999;
+    }
+    .toast {
+        min-width: 250px;
+    }
+`;
+document.head.appendChild(styleElement);
+
+// Function to get vendor from MAC prefix
+function getVendorFromMacPrefix(macPrefix) {
+    const vendorMap = {
+        // Cisco
+        '00:0C:29': 'Cisco',
+        '00:40:96': 'Cisco',
+        '00:60:09': 'Cisco',
+        '00:80:C8': 'Cisco',
+        '00:1A:A1': 'Cisco',
+        '00:1A:A2': 'Cisco',
+        '00:1A:E3': 'Cisco',
+        
+        // Dell
+        '00:14:22': 'Dell',
+        '00:1E:C9': 'Dell',
+        'F8:BC:12': 'Dell',
+        'F8:DB:88': 'Dell',
+        
+        // HP
+        '00:0F:61': 'HP',
+        '00:10:83': 'HP',
+        '00:17:A4': 'HP',
+        '94:57:A5': 'HP',
+        '9C:8E:99': 'HP',
+        
+        // Apple
+        '00:03:93': 'Apple',
+        '00:05:02': 'Apple',
+        '00:0A:27': 'Apple',
+        '00:0A:95': 'Apple',
+        '00:1E:52': 'Apple',
+        '00:25:00': 'Apple',
+        '00:26:BB': 'Apple',
+        '00:30:65': 'Apple',
+        '00:50:E4': 'Apple',
+        '00:56:CD': 'Apple',
+        
+        // Fortinet
+        '00:09:0F': 'Fortinet',
+        '08:5B:0E': 'Fortinet',
+        '00:90:6C': 'Fortinet',
+        'E0:23:FF': 'Fortinet',
+        
+        // Common IoT devices
+        'EC:FA:BC': 'IP Camera',
+        '00:1A:79': 'Smart Device',
+        
+        // Samsung
+        '00:15:99': 'Samsung',
+        '00:17:D5': 'Samsung',
+        '00:21:19': 'Samsung',
+        '00:23:39': 'Samsung',
+        '00:24:54': 'Samsung',
+        
+        // Printers
+        '00:17:C8': 'Printer',
+        '00:21:5A': 'Printer',
+        '00:26:73': 'Printer',
+        
+        // IP Phones
+        '00:04:F2': 'IP Phone',
+        '00:07:0E': 'IP Phone',
+        '00:0E:08': 'IP Phone',
+        
+        // Microsoft/Xbox
+        'FC:8C:11': 'Xbox',
+        '3C:18:A0': 'Microsoft',
+        '0C:37:96': 'Microsoft',
+        'D8:43:AE': 'Microsoft',
+        
+        // Other common vendors
+        '38:14:28': 'Huawei',
+        '10:7C:61': 'Lenovo',
+        'DC:A6:32': 'Raspberry Pi',
+        'C4:8B:A3': 'Meraki'
+    };
+    
+    // Try to match the first 8 chars (includes colons)
+    if (vendorMap[macPrefix]) {
+        return vendorMap[macPrefix];
+    }
+    
+    // Try to match just the first 3 bytes (XX:XX:XX format)
+    const firstThreeBytes = macPrefix.substring(0, 8);
+    if (vendorMap[firstThreeBytes]) {
+        return vendorMap[firstThreeBytes];
+    }
+    
+    return '';
+}
 
 // Base64 encoded SVG icons
 const icons = {
     fortigate: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjRkYwMDAwIiBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjxwYXRoIGZpbGw9IiNGRjAwMDAiIGQ9Ik0zNjMuNyAxMzQuOWwtMTA3LjcgMTA3LjdMMTQ4LjMgMTM1Yy00LjctNC43LTEyLjMtNC43LTE3IDBsLTIyLjYgMjIuNmMtNC43IDQuNy00LjcgMTIuMyAwIDE3bDEwNy43IDEwNy43LTEwNy43IDEwNy43Yy00LjcgNC43LTQuNyAxMi4zIDAgMTdsMjIuNiAyMi42YzQuNyA0LjcgMTIuMyA0LjcgMTcgMGwxMDcuNy0xMDcuNyAxMDcuNyAxMDcuN2M0LjcgNC43IDEyLjMgNC43IDE3IDBsMjIuNi0yMi42YzQuNy00LjcgNC43LTEyLjMgMC0xN0wyOTUuMyAyODIuM2wxMDcuNy0xMDcuN2M0LjctNC43IDQuNy0xMi4zIDAtMTdsLTIyLjYtMjIuNmMtNC43LTQuNy0xMi4zLTQuNy0xNi43LS4xeiIvPjwvc3ZnPg==',
     interface: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMDA3NkNFIiBkPSJNNDY0IDY0SDQ4QzIxLjUgNjQgMCA4NS41IDAgMTEydjI4OGMwIDI2LjUgMjEuNSA0OCA0OCA0OGg0MTZjMjYuNSAwIDQ4LTIxLjUgNDgtNDhWMTEyYzAtMjYuNS0yMS41LTQ4LTQ4LTQ4em0wIDMzNmMwIDguOC03LjIgMTYtMTYgMTZINjRjLTguOCAwLTE2LTcuMi0xNi0xNlYyNDBoMTYwdjY0aDY0di02NGgxOTJ2MTYwem0wLTIyNEg2NHYtNjRjMC04LjggNy4yLTE2IDE2LTE2aDM2OGM4LjggMCAxNiA3LjIgMTYgMTZ2NjR6Ii8+PC9zdmc+',
     wan: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMDA3NkNFIiBkPSJNMzg3LjkgMzQ3LjJjLTMxLjQtMzEuNC04Mi41LTMxLjQtMTEzLjkgMGwtMjIuNiAyMi42Yy02LjIgNi4yLTE2LjQgNi4yLTIyLjYgMGwtOTEuNS05MS41Yy02LjItNi4yLTYuMi0xNi40IDAtMjIuNmwyMi42LTIyLjZjMzEuNC0zMS40IDMxLjQtODIuNSAwLTExMy45cy04Mi41LTMxLjQtMTEzLjkgMGwtMjIuNiAyMi42Yy02LjIgNi4yLTYuMiAxNi40IDAgMjIuNmwyNzQuNCgyNzQuNGM2LjIgNi4yIDE2LjQgNi4yIDIyLjYgMGwyMi42LTIyLjZjMzEuNC0zMS40IDMxLjQtODIuNSAwLTExMy45ek0xODQuMiA2Ni44YzIwLjUtMjAuNSA1My45LTIwLjUgNzQuNCAwczIwLjUgNTMuOSAwIDc0LjRsLTIyLjYgMjIuNmMtNi4yIDYuMi02LjIgMTYuNCAwIDIyLjZsOTEuNSA5MS41YzYuMiA2LjIgMTYuNCA2LjIgMjIuNiAwbDIyLjYtMjIuNmMyMC41LTIwLjUgNTMuOS0yMC41IDc0LjQgMHMyMC41IDUzLjkgMCA3NC40bC0yMi42IDIyLjZjLTYuMiA2LjItNi4yIDE2LjQgMCAyMi42bDIyLjYgMjIuNmM2LjIgNi4yIDE2LjQgNi4yIDIyLjYgMGw0NS4zLTQ1LjNjNTAuMy01MC4zIDUwLjMtMTMxLjcgMC0xODItMzEuNC0zMS40LTcyLjEtNDIuOS0xMTEuNC0zNC41IDkuNy00NS4xLTEuNy05My43LTM0LjUtMTI2LjUtNTAuMy01MC4zLTEzMS43LTUwLjMtMTgyIDBsLTQ1LjMgNDUuM2MtNi4yIDYuMi02LjIgMTYuNCAwIDIyLjZsMjIuNiAyMi42YzYuMiA2LjIgMTYuNCA2LjIgMjIuNiAwbDQ1LjMtNDUuMnoiLz48L3N2Zz4=',
-    lan: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMDA3NkNFIiBkPSJNNDg4IDY0aC04Yy0xMy4yNSAwLTI0IDEwLjc0LTI0IDI0djEzMmgtNDhWOTZjMC0yNi41MS0yMS40OS00OC00OC00OEgxNTJjLTI2LjUxIDAtNDggMjEuNDktNDggNDh2MTI4SDU2VjgwYzAtNC40Mi0zLjU4LTgtOC04aC04Yy0xMy4yNSAwLTI0IDEwLjc0LTI0IDI0djIwOGMwIDEzLjI1IDEwLjc1IDI0IDI0IDI0aDhjNC40MiAwIDgtMy41OCA4LThoNDh2MTI4YzAgMjYuNTEgMjEuNDkgNDggNDggNDhoMjA4YzI2LjUxIDAgNDgtMjEuNDkgNDgtNDhWMzI4aDQ4YzQuNDIgMCA4LTMuNTggOC04di04YzAtMTMuMjYtMTAuNzUtMjQtMjQtMjRoLThjLTQuNDIgMC04IDMuNTgtOCA4djEzMmgtNDhWOTZjMC04LjgyIDcuMTgtMTYgMTYtMTZoMjA4YzguODIgMCAxNiA3LjE4IDE2IDE2djEyOGgtNDhWODhjMC0xMy4yNi0xMC43NS0yNC0yNC0yNHptLTMzNiA4MGMwLTguODIgNy4xOC0xNiAxNi0xNmg2NGM4LjgyIDAgMTYgNy4xOCAxNiAxNnY0OGMwIDguODIgLTcuMTggMTYtMTYgMTZoLTY0Yy04LjgyIDAtMTYtNy4xOC0xNi0xNnYtNDh6bTEyOCAxNzZjMCA4LjgyLTcuMTggMTYtMTYgMTZoLTY0Yy04LjgyIDAtMTYtNy4xOC0xNi0xNnYtNDhjMC04LjgyIDcuMTggLTE2IDE2LTE2aDY0YzguODIgMCAxNiA3LjE4IDE2IDE2djQ4em0xNDQtMTc2YzAgOC44Mi03LjE4IDE2LTE2IDE2aC02NGMtOC44MiAwLTE2LTcuMTgtMTYtMTZ2LTQ4YzAtOC44MiA3LjE4LTE2IDE2LTE2aDY0YzguODIgMCAxNiA3LjE4IDE2IDE2djQ4em0tMTQ0IDBjMCA4LjgyLTcuMTggMTYtMTYgMTZoLTY0Yy04LjgyIDAtMTYtNy4xOC0xNi0xNnYtNDhjMC04LjgyIDcuMTgtMTYgMTYtMTZoNjRjOC44MiAwIDE2IDcuMTggMTYgMTZ2NDh6Ii8+PC9zdmc+'
+    lan: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMDA3NkNFIiBkPSJNNDg4IDY0aC04Yy0xMy4yNSAwLTI0IDEwLjc0LTI0IDI0djEzMmgtNDhWOTZjMC0yNi41MS0yMS40OS00OC00OC00OEgxNTJjLTI2LjUxIDAtNDggMjEuNDktNDggNDh2MTI4SDU2VjgwYzAtNC40Mi0zLjU4LTgtOC04aC04Yy0xMy4yNSAwLTI0IDEwLjc0LTI0IDI0djIwOGMwIDEzLjI1IDEwLjc5IDI0IDI0IDI0aDhjNC40MiAwIDgtMy41OCA4LThoNDh2MTI4YzAgMjYuNTEgMjEuNDkgNDggNDggNDhoMjA4YzI2LjUxIDAgNDgtMjEuNDkgNDgtNDhWMzI4aDQ4YzQuNDIgMCA4LTMuNTggOC04di04YzAtMTMuMjYtMTAuNzUtMjQtMjQtMjRoLThjLTQuNDIgMC04IDMuNTgtOCA4djEzMmgtNDhWOTZjMC04LjgyIDcuMTgtMTYgMTYtMTZoMjA4YzguODIgMCAxNiA3LjE4IDE2IDE2djEyOGgtNDhWODhjMC0xMy4yNi0xMC43NS0yNC0yNC0yNHptLTMzNiA4MGMwLTguODIgNy4xOC0xNiAxNi0xNmg2NGM4LjgyIDAgMTYgNy4xOCAxNiAxNnY0OGMwIDguODIgLTcuMTggMTYtMTYgMTZoLTY0Yy04LjgyIDAtMTYtNy4xOC0xNi0xNnYtNDh6bTEyOCAxNzZjMCA4LjgyLTcuMTggMTYtMTYgMTZoLTY0Yy04LjgyIDAtMTYtNy4xOC0xNi0xNnYtNDhjMC04LjgyIDcuMTggLTE2IDE2LTE2aDY0YzguODIgMCAxNiA3LjE4IDE2IDE2djQ4em0xNDQtMTc2YzAgOC44Mi03LjE4IDE2LTE2IDE2aC02NGMtOC44MiAwLTE2LTcuMTgtMTYtMTZ2LTQ4YzAtOC44MiA3LjE4LTE2IDE2LTE2aDY0YzguODIgMCAxNiA3LjE4IDE2IDE2djQ4em0tMTQ0IDBjMCA4LjgyLTcuMTggMTYtMTYgMTZoLTY0Yy04LjgyIDAtMTYtNy4xOC0xNi0xNnYtNDhjMC04LjgyIDcuMTgtMTYgMTYtMTZoNjRjOC44MiAwIDE2IDcuMTggMTYgMTZ2NDh6Ii8+PC9zdmc+'
 };
 
 function updateNetwork(interfaces) {
@@ -185,7 +396,7 @@ function updateNetwork(interfaces) {
     var nodes = new vis.DataSet([
         { 
             id: 1, 
-            label: 'FortiGate', 
+            label: 'FortiGate\n[Fortinet]', 
             shape: 'image', 
             image: icons.fortigate,
             size: 40,
@@ -295,6 +506,285 @@ function checkWanAlerts(interfaces) {
         alertBox.style.display = 'none';   // Hide alert
     }
 }
+
+// Function to populate the device table
+function populateDeviceTable(devices) {
+    const tableBody = document.getElementById('device-table-body');
+    if (!tableBody) return;
+    
+    // Clear existing rows
+    tableBody.innerHTML = '';
+    
+    // Collect all unique vendors for the filter
+    const vendors = new Set();
+    const vendorColors = {};
+    
+    // Add device rows
+    devices.forEach(device => {
+        const row = document.createElement('tr');
+        
+        // Get vendor from MAC address if available
+        let vendorName = 'Unknown';
+        let vendorColor = '#505050';
+        if (device.mac && device.mac !== 'Unknown') {
+            // Extract first 8 characters of MAC (including colons)
+            const macPrefix = device.mac.substring(0, 8).toUpperCase();
+            vendorName = getVendorFromMacPrefix(macPrefix) || 'Unknown';
+            
+            // Assign color based on vendor
+            if (vendorName === 'Cisco') vendorColor = '#049fd9';
+            else if (vendorName === 'Dell') vendorColor = '#007db8';
+            else if (vendorName === 'HP') vendorColor = '#0096d6';
+            else if (vendorName === 'Apple') vendorColor = '#999999';
+            else if (vendorName === 'Fortinet') vendorColor = '#ee3124';
+            else if (vendorName === 'Samsung') vendorColor = '#1428a0';
+            else if (vendorName === 'Microsoft' || vendorName === 'Xbox') vendorColor = '#7fba00';
+            else if (vendorName.includes('Phone')) vendorColor = '#83b81a';
+            else if (vendorName.includes('Printer')) vendorColor = '#000000';
+            else if (vendorName.includes('Camera')) vendorColor = '#e3008c';
+            else vendorColor = '#505050';
+            
+            // Add to vendors set for filter
+            vendors.add(vendorName);
+            vendorColors[vendorName] = vendorColor;
+        }
+        
+        row.className = 'device-row';
+        row.setAttribute('data-vendor', vendorName);
+        
+        row.innerHTML = `
+            <td>${device.name || 'Unknown'}</td>
+            <td>${device.mac || 'Unknown'}</td>
+            <td>${device.ip || 'Unknown'}</td>
+            <td>${device.type || 'Unknown'}</td>
+            <td>
+                <span class="vendor-badge" style="background-color: ${vendorColor}">
+                    ${vendorName}
+                </span>
+            </td>
+            <td>${device.status || 'Unknown'}</td>
+            <td>
+                <button class="btn btn-sm btn-info lookup-vendor" data-mac="${device.mac || ''}">Lookup</button>
+            </td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+    
+    // Update vendor filter dropdown
+    populateVendorFilter(vendors, vendorColors);
+    
+    // Update vendor legend
+    updateVendorLegend(vendors, vendorColors);
+}
+
+// Function to populate vendor filter dropdown
+function populateVendorFilter(vendors, vendorColors) {
+    const vendorFilter = document.getElementById('vendor-filter');
+    if (!vendorFilter) return;
+    
+    // Clear existing options except the first one
+    while (vendorFilter.options.length > 1) {
+        vendorFilter.remove(1);
+    }
+    
+    // Add vendor options
+    vendors.forEach(vendor => {
+        const option = document.createElement('option');
+        option.value = vendor;
+        option.textContent = vendor;
+        vendorFilter.appendChild(option);
+    });
+    
+    // Add event listener
+    vendorFilter.addEventListener('change', filterDevicesByVendor);
+}
+
+// Function to update vendor legend
+function updateVendorLegend(vendors, vendorColors) {
+    const legend = document.getElementById('vendor-legend');
+    if (!legend) return;
+    
+    // Clear existing legend
+    legend.innerHTML = '';
+    
+    // Add legend items
+    vendors.forEach(vendor => {
+        const item = document.createElement('div');
+        item.className = 'vendor-filter-item';
+        item.setAttribute('data-vendor', vendor);
+        item.innerHTML = `
+            <span class="vendor-badge" style="background-color: ${vendorColors[vendor] || '#505050'}">
+                ${vendor}
+            </span>
+        `;
+        
+        // Add click event to filter
+        item.addEventListener('click', () => {
+            document.getElementById('vendor-filter').value = vendor;
+            filterDevicesByVendor();
+            
+            // Update active state
+            document.querySelectorAll('.vendor-filter-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            item.classList.add('active');
+        });
+        
+        legend.appendChild(item);
+    });
+    
+    // Add 'All' option to legend
+    const allItem = document.createElement('div');
+    allItem.className = 'vendor-filter-item active';
+    allItem.setAttribute('data-vendor', 'all');
+    allItem.innerHTML = `
+        <span class="vendor-badge" style="background-color: #0078d7">
+            All Vendors
+        </span>
+    `;
+    
+    // Add click event to show all
+    allItem.addEventListener('click', () => {
+        document.getElementById('vendor-filter').value = 'all';
+        filterDevicesByVendor();
+        
+        // Update active state
+        document.querySelectorAll('.vendor-filter-item').forEach(el => {
+            el.classList.remove('active');
+        });
+        allItem.classList.add('active');
+    });
+    
+    legend.insertBefore(allItem, legend.firstChild);
+}
+
+// Function to filter devices by vendor
+function filterDevicesByVendor() {
+    const selectedVendor = document.getElementById('vendor-filter').value;
+    const deviceRows = document.querySelectorAll('.device-row');
+    
+    deviceRows.forEach(row => {
+        const vendor = row.getAttribute('data-vendor');
+        if (selectedVendor === 'all' || vendor === selectedVendor) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update the network graph to show only the selected vendor
+    updateNetworkWithVendorFilter(selectedVendor);
+}
+
+// Function to update the network graph with vendor filter
+function updateNetworkWithVendorFilter(selectedVendor) {
+    if (!network) return;
+    
+    const nodes = network.body.data.nodes;
+    const nodeIds = nodes.getIds();
+    
+    nodeIds.forEach(id => {
+        const node = nodes.get(id);
+        if (id === 1) return; // Skip the FortiGate node
+        
+        const nodeLabel = node.label || '';
+        const vendorMatch = nodeLabel.match(/\[(.*?)\]/); // Extract vendor from [Vendor] in label
+        
+        if (selectedVendor === 'all') {
+            nodes.update({ id: id, hidden: false });
+        } else if (vendorMatch && vendorMatch[1] === selectedVendor) {
+            nodes.update({ id: id, hidden: false });
+        } else if (vendorMatch) {
+            nodes.update({ id: id, hidden: true });
+        }
+    });
+}
+
+// Function to look up vendor online
+function lookupVendorOnline(mac) {
+    // Show loading indicator
+    const loadingToast = showToast('Looking up vendor information...', 'info');
+    
+    fetch(`/api/lookup-vendor?mac=${encodeURIComponent(mac)}`)
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading indicator
+            hideToast(loadingToast);
+            
+            if (data.success) {
+                showToast(`Vendor found: ${data.vendor}`, 'success');
+                // Refresh the data to show the updated vendor
+                fetchDashboardData();
+            } else {
+                showToast(`Vendor lookup failed: ${data.error}`, 'error');
+            }
+        })
+        .catch(error => {
+            hideToast(loadingToast);
+            showToast(`Error: ${error.message}`, 'error');
+        });
+}
+
+// Toast notification functions
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-header">
+            <strong class="me-auto">${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
+            <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+        <div class="toast-body">${message}</div>
+    `;
+    
+    // Add toast container if it doesn't exist
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+    
+    toastContainer.appendChild(toast);
+    return toast;
+}
+
+function hideToast(toast) {
+    if (toast && toast.parentElement) {
+        toast.remove();
+    }
+}
+
+// Add event listeners for vendor lookup buttons
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('lookup-vendor')) {
+        const mac = event.target.getAttribute('data-mac');
+        if (mac) {
+            lookupVendorOnline(mac);
+        }
+    }
+});
+
+// Add event listener for refresh vendor cache button
+document.getElementById('refresh-vendor-cache').addEventListener('click', function() {
+    fetch('/api/refresh-vendor-cache')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Vendor cache refreshed successfully', 'success');
+                fetchDashboardData();
+            } else {
+                showToast(`Failed to refresh vendor cache: ${data.error}`, 'error');
+            }
+        })
+        .catch(error => {
+            showToast(`Error: ${error.message}`, 'error');
+        });
+});
+
+// Initial data fetch
+fetchDashboardData();
 </script>
 
 </html>
