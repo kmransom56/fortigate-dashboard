@@ -36,7 +36,7 @@ async def get_fortigate_switches():
         logger.error(f"Error in /fortigate/api/switches endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/switches")
+@router.get("/api/switches")
 async def get_switches():
     """
     Get information about all FortiSwitches.
