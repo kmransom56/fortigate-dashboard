@@ -1,0 +1,12 @@
+This is a test file created using the MCP filesystem server!
+
+The filesystem MCP server is now successfully installed and working.
+
+Capabilities demonstrated:
+- list_allowed_directories
+- list_directory
+- read_file
+- search_files
+- write_file
+
+Timestamp: 2025-05-23 22:12:25

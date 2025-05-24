@@ -1,16 +1,16 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 import os
-from fastapi import FastAPI, Request, HTTPException
+from app.api import fortigate
+from app.services.fortigate_service import get_interfaces
+from app.services.fortiswitch_service import get_fortiswitches
+from app.services.mac_vendors import get_vendor_from_mac, refresh_vendor_cache as refresh_cache
+
 # Load environment variables from .env file
 load_dotenv()
-
-from app.api import fortigate  # your existing fortigate routes
-from app.services.fortigate_service import get_interfaces  # to get interfaces for dashboard
-from app.services.fortiswitch_service import get_fortiswitches  # to get FortiSwitch information
 
 app = FastAPI()
 
@@ -104,7 +104,8 @@ async def get_switches_api():
         processed_switches.append(switch_data)
     
     return {"success": True, "switches": processed_switches}
- #🔄 Route for FortiSwitch IP Change Form "/switches/change-ip/{switch_serial}"
+
+#🔄 Route for FortiSwitch IP Change Form "/switches/change-ip/{switch_serial}"
 @app.get("/switches/change-ip/{switch_serial}", response_class=HTMLResponse)
 async def show_switch_ip_change_form(request: Request, switch_serial: str):
     switches = get_fortiswitches()
@@ -116,10 +117,37 @@ async def show_switch_ip_change_form(request: Request, switch_serial: str):
         raise HTTPException(status_code=404, detail=f"FortiSwitch with serial {switch_serial} not found")
     
     return templates.TemplateResponse("change_ip.html", {"request": request, "switch": switch})
+
 @app.get("/debug/switches", response_class=HTMLResponse)
 async def debug_switches(request: Request):
     switches = get_fortiswitches()
     return templates.TemplateResponse("simple.html", {"request": request, "switches": switches})
+
+@app.get("/api/refresh-vendor-cache")
+async def refresh_vendor_cache():
+    """
+    Force a refresh of the vendor cache by clearing expired entries.
+    """
+    try:
+        refresh_cache()
+        return {"success": True, "message": "Vendor cache refreshed successfully"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/lookup-vendor")
+async def lookup_vendor(mac: str = Query(..., description="MAC address to look up")):
+    """
+    Look up vendor information for a MAC address.
+    """
+    try:
+        # Force online lookup
+        vendor = get_vendor_from_mac(mac, use_online_lookup=True)
+        if vendor:
+            return {"success": True, "vendor": vendor}
+        else:
+            return {"success": False, "error": "Vendor not found"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 def main():
     import uvicorn
