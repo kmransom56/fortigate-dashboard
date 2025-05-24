@@ -112,9 +112,14 @@
             .then(data => {
                 // Check if the response has the expected format
                 if (data.success) {
-                    // Update the network visualization with interface data
+                    // Update the network visualization with interface and device data
                     if (data.interfaces) {
-                        updateNetwork(data.interfaces);
+                        // If we have devices, pass them to updateNetwork
+                        if (data.devices && Array.isArray(data.devices)) {
+                            updateNetwork(data.interfaces, data.devices);
+                        } else {
+                            updateNetwork(data.interfaces, []);
+                        }
                         updateCharts(data.interfaces);
                         checkWanAlerts(data.interfaces);
                     } else {
@@ -401,7 +406,7 @@ const icons = {
     lan: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMDA3NkNFIiBkPSJNNDg4IDY0aC04Yy0xMy4yNSAwLTI0IDEwLjc0LTI0IDI0djEzMmgtNDhWOTZjMC0yNi41MS0yMS40OS00OC00OC00OEgxNTJjLTI2LjUxIDAtNDggMjEuNDktNDggNDh2MTI4SDU2VjgwYzAtNC40Mi0zLjU4LTgtOC04aC04Yy0xMy4yNSAwLTI0IDEwLjc0LTI0IDI0djIwOGMwIDEzLjI1IDEwLjc5IDI0IDI0IDI0aDhjNC40MiAwIDgtMy41OCA4LThoNDh2MTI4YzAgMjYuNTEgMjEuNDkgNDggNDggNDhoMjA4YzI2LjUxIDAgNDgtMjEuNDkgNDgtNDhWMzI4aDQ4YzQuNDIgMCA4LTMuNTggOC04di04YzAtMTMuMjYtMTAuNzUtMjQtMjQtMjRoLThjLTQuNDIgMC04IDMuNTgtOCA4djEzMmgtNDhWOTZjMC04LjgyIDcuMTgtMTYgMTYtMTZoMjA4YzguODIgMCAxNiA3LjE4IDE2IDE2djEyOGgtNDhWODhjMC0xMy4yNi0xMC43NS0yNC0yNC0yNHptLTMzNiA4MGMwLTguODIgNy4xOC0xNiAxNi0xNmg2NGM4LjgyIDAgMTYgNy4xOCAxNiAxNnY0OGMwIDguODIgLTcuMTggMTYtMTYgMTZoLTY0Yy04LjgyIDAtMTYtNy4xOC0xNi0xNnYtNDh6bTEyOCAxNzZjMCA4LjgyLTcuMTggMTYtMTYgMTZoLTY0Yy04LjgyIDAtMTYtNy4xOC0xNi0xNnYtNDhjMC04LjgyIDcuMTggLTE2IDE2LTE2aDY0YzguODIgMCAxNiA3LjE4IDE2IDE2djQ4em0xNDQtMTc2YzAgOC44Mi03LjE4IDE2LTE2IDE2aC02NGMtOC44MiAwLTE2LTcuMTgtMTYtMTZ2LTQ4YzAtOC44MiA3LjE4LTE2IDE2LTE2aDY0YzguODIgMCAxNiA3LjE4IDE2IDE2djQ4em0tMTQ0IDBjMCA4LjgyLTcuMTggMTYtMTYgMTZoLTY0Yy04LjgyIDAtMTYtNy4xOC0xNi0xNnYtNDhjMC04LjgyIDcuMTgtMTYgMTYtMTZoNjRjOC44MiAwIDE2IDcuMTggMTYgMTZ2NDh6Ii8+PC9zdmc+'
 };
 
-function updateNetwork(interfaces) {
+function updateNetwork(interfaces, devices = []) {
     // Build nodes
     var nodes = new vis.DataSet([
         { 
@@ -417,7 +422,14 @@ function updateNetwork(interfaces) {
     var edges = [];
 
     let counter = 2;
+    
+    // Add interfaces first
     for (const [name, iface] of Object.entries(interfaces)) {
+        // Skip interfaces with no IP or 0.0.0.0 IP
+        if (!iface.ip || iface.ip === '0.0.0.0') {
+            continue;
+        }
+        
         // Select appropriate icon based on interface name
         let interfaceIcon = icons.interface;
         let iconColor = '#0076CE';
@@ -449,6 +461,63 @@ function updateNetwork(interfaces) {
             }
         });
         counter++;
+    }
+    
+    // Add connected devices
+    if (devices && devices.length > 0) {
+        devices.forEach(device => {
+            // Skip devices with no IP or unknown IP
+            if (!device.ip || device.ip === 'Unknown') {
+                return;
+            }
+            
+            // Determine device icon and color based on type
+            let deviceIcon = icons.interface;
+            let deviceColor = '#0076CE';
+            
+            if (device.type === 'FortiSwitch') {
+                deviceIcon = icons.lan;
+                deviceColor = '#0076CE';
+            }
+            
+            // Add the device to the network
+            nodes.add({
+                id: counter,
+                label: `${device.name}\n${device.ip}\n[${device.vendor}]`,
+                shape: 'image',
+                image: deviceIcon,
+                size: 30,
+                color: { border: device.status === 'online' ? '#00b300' : '#ff0000' },
+                font: { size: 14, color: deviceColor, face: 'Tahoma', strokeWidth: 2, strokeColor: '#ffffff' }
+            });
+            
+            // Connect the device to the appropriate interface if possible
+            let connectedTo = 1; // Default to FortiGate
+            
+            // Try to find the interface this device is connected to
+            if (device.port) {
+                // Look through interfaces to find a matching name
+                for (let i = 2; i < counter; i++) {
+                    const node = nodes.get(i);
+                    if (node && node.label && node.label.toLowerCase().includes(device.port.toLowerCase())) {
+                        connectedTo = i;
+                        break;
+                    }
+                }
+            }
+            
+            edges.push({
+                from: connectedTo,
+                to: counter,
+                width: 2,
+                color: { color: device.status === 'online' ? '#00b300' : '#ff0000' },
+                arrows: {
+                    to: { enabled: true, scaleFactor: 0.5 }
+                }
+            });
+            
+            counter++;
+        });
     }
 
     // Prepare data
