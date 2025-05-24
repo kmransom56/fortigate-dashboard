@@ -1,83 +1,145 @@
-# FortiGate Dashboard - Fixed Version
+# FortiGate Dashboard and Troubleshooter
 
-This is a fixed version of the FortiGate Dashboard application that addresses the 401 Unauthorized error when accessing the FortiGate API.
+This project contains two applications for managing and troubleshooting FortiGate devices:
 
-## Issue Fixed
+1. **FortiGate Dashboard** - A FastAPI web application for monitoring FortiGate interfaces and FortiSwitches
+2. **FortiGate Troubleshooter** - A Flask application for diagnosing and troubleshooting FortiGate devices
 
-The original application was using the API token as a query parameter (`access_token=token`), but the FortiGate API requires the token to be sent in the Authorization header as a Bearer token.
+## Project Structure
 
-## Changes Made
+- `app/` - FastAPI dashboard application
+- `src/` - Flask troubleshooter application
+- `app/certs/` - SSL certificates for secure connections
+- `logs/` - Application logs
 
-1. Fixed the authentication method in all API calls to use the Authorization header with Bearer token.
-2. Updated the Docker configuration to include the fixed files.
-3. Added documentation on the correct authentication method for FortiGate APIs.
+## Features
 
-## Files Added/Modified
+### FortiGate Dashboard
 
-- `curl_command.sh`: curl command that uses the Authorization header.
-- `fortigate_api_authentication_guide.md`: A comprehensive guide on FortiGate API authentication.
-- `Dockerfile`: Updated Dockerfile for the dashboard service.
-- `Dockerfile.wan_monitor`: Updated Dockerfile for the WAN monitor service.
-- `docker-compose.yml`: Updated docker-compose file that uses the fixed Dockerfiles.
-- `wan_monitor.py`: Updated WAN monitor script with the correct authentication method.
-- `build_and_run.sh`: Script to build and run the fixed Docker containers.
+- Monitor FortiGate interfaces and traffic statistics
+- View connected FortiSwitches and their status
+- Manage FortiSwitch IP addresses
+- RESTful API endpoints for integration
 
-## How to Use
+### FortiGate Troubleshooter
 
-### Option 1: Using the build script
+- Run diagnostics on FortiGate devices
+- Troubleshoot network connectivity issues
+- Session table and flow debugging
+- UTM and web filtering diagnostics
+- VPN and authentication troubleshooting
+- Hardware and high availability checks
 
-1. Make the build script executable:
+## Prerequisites
+
+- Python 3.8 or higher
+- FortiGate device with API access
+- API token for FortiGate authentication
+
+## Installation and Setup
+
+### Option 1: Easy Docker Installation (Recommended)
+
+1. Make the installation script executable:
+
    ```bash
-   chmod +x build_and_run.sh
+   chmod +x install.sh
    ```
 
-2. Run the build script:
+2. Run the installation script:
+
    ```bash
-   ./build_and_run.sh
+   ./install.sh
    ```
 
-### Option 2: Manual build and run
+   The script will:
+   - Check for Docker and Docker Compose
+   - Create a configuration file (.env) if it doesn't exist
+   - Generate self-signed SSL certificates if needed
+   - Build and start the Docker containers
+   - Display access URLs for the applications
 
-1. Build the Docker images:
-   ```bash
-   docker-compose -f docker-compose.fixed.yml build
+### Option 2: Manual Docker Setup
+
+1. Create a `.env` file with your FortiGate configuration:
+
+   ```env
+   FORTIGATE_HOST=https://192.168.0.254
+   FORTIGATE_API_TOKEN=your_api_token_here
    ```
 
-2. Start the containers:
+2. Build and start the Docker containers:
+
    ```bash
-   docker-compose -f docker-compose.fixed.yml up -d
+   docker-compose up -d --build
    ```
 
-3. Check the container status:
+3. Access your applications at:
+   - Dashboard: `http://localhost:8001`
+   - Troubleshooter: `https://localhost:5002`
+
+### Option 3: Using the startserver.sh script (Local Development)
+
+1. Make the script executable:
+
    ```bash
-   docker-compose -f docker-compose.fixed.yml ps
+   chmod +x startserver.sh
    ```
 
-## Accessing the Dashboard
+2. Run the script to start both applications:
 
-Once the containers are running, you can access the dashboard at:
-- http://localhost:8001
+   ```bash
+   ./startserver.sh --all
+   ```
 
-## Viewing Logs
+   The script uses `uv` for faster package installation and virtual environment management.
 
-To view the logs of the running containers:
+## Accessing the Applications
+
+- **FortiGate Dashboard**: `http://localhost:8001`
+- **FortiGate Troubleshooter**: `https://localhost:5002` (uses SSL)
+
+## Using the startserver.sh Script
+
+The `startserver.sh` script provides several options for running the applications:
 
 ```bash
-# Dashboard logs
-docker-compose -f docker-compose.fixed.yml logs -f dashboard
+# Show help and available options
+./startserver.sh --help
 
-# WAN monitor logs
-docker-compose -f docker-compose.fixed.yml logs -f wan_monitor
+# Start just the dashboard (default)
+./startserver.sh
+
+# Start just the troubleshooter
+./startserver.sh --troubleshooter
+
+# Start both applications
+./startserver.sh --all
+
+# Start both with custom ports
+./startserver.sh --all --dashboard-port 8080 --troubleshooter-port 5003
+
+# Start without killing existing processes
+./startserver.sh --all --no-kill
 ```
 
-## Stopping the Containers
+## Authentication
 
-To stop the containers:
+This project uses Bearer token authentication for the FortiGate API. For more information, see the `fortigate_api_authentication_guide.md` file.
 
-```bash
-docker-compose -f docker-compose.fixed.yml down
-```
+## SSL Certificate Verification
 
-## FortiGate API Authentication Guide
+For information on SSL certificate verification and troubleshooting, see the `ssl_certificate_verification_guide.md` file.
 
-For more information on the correct authentication method for FortiGate APIs, see the `fortigate_api_authentication_guide.md` file.
+## Troubleshooting
+
+If you encounter issues:
+
+1. Check the log files in the `logs/` directory
+2. Verify your FortiGate API token is valid
+3. Ensure the FortiGate device is accessible from your network
+4. Check SSL certificate configuration if you're having connection issues
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.

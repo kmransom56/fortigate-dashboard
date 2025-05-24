@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   dashboard:
     build:
@@ -8,20 +10,55 @@ services:
     restart: always  # 🔥 Auto-restart if crash or reboot
     networks:
       - fortinet_net
-    secrets:
-      - fortigate_api_token
     volumes:
       - ./app/certs:/app/certs
+      - ./logs:/app/logs
     environment:
-      - FORTIGATE_API_TOKEN_FILE=/run/secrets/fortigate_api_token
-      - FORTIGATE_CERT_PATH=/app/certs/fortigate.pem
+      - FORTIGATE_API_TOKEN=hmNqQ0st7xrjnyQHt8dzpnkqm5hw5N
+      - FORTIGATE_CERT_PATH=/app/certs/cert.pem
       - FORTIGATE_HOST=https://192.168.0.254
-      - LOG_LEVEL=DEBUG
+      - LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  troubleshooter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python src/fortigateconnectivity.py
+    ports:
+      - "5002:5002"
+    restart: always
+    networks:
+      - fortinet_net
+    volumes:
+      - ./app/certs:/app/certs
+      - ./logs:/app/logs
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    networks:
+      - fortinet_net
+    volumes:
+      - redis_data:/data
+    restart: always
 
   wan_monitor:
     build:
       context: .
-      dockerfile: Dockerfile.wan_monitor
+      dockerfile: Dockerfile
+    command: python wan_monitor.py
     restart: always
     networks:
       - fortinet_net
@@ -31,8 +68,7 @@ services:
 
 secrets:
   fortigate_api_token:
-    file: ./secrets/fortigate_api_token.txt
+    file: ./.env
 
-networks:
-  fortinet_net:
-    driver: bridge
+volumes:
+  redis_data:

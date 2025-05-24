@@ -1763,16 +1763,25 @@ def create_self_signed_cert():
 
 if __name__ == '__main__':
     try:
-        # Check if certificate exists, if not create it
-        if not (os.path.exists('cert.pem') and os.path.exists('key.pem')):
-            create_self_signed_cert()
+        # Use certificates from app/certs directory
+        cert_path = os.path.join(PROJECT_ROOT, 'app', 'certs', 'cert.pem')
+        key_path = os.path.join(PROJECT_ROOT, 'app', 'certs', 'key.pem')
+        
+        # Check if certificates exist in app/certs, if not, use or create in current directory
+        if os.path.exists(cert_path) and os.path.exists(key_path):
+            ssl_context = (cert_path, key_path)
+        else:
+            # Fall back to current directory
+            if not (os.path.exists('cert.pem') and os.path.exists('key.pem')):
+                create_self_signed_cert()
+            ssl_context = ('cert.pem', 'key.pem')
         
         # Run Flask with SSL
         app.run(
             debug=False,
             host='0.0.0.0',
-            port=5001,
-            ssl_context=('cert.pem', 'key.pem')
+            port=5000,
+            ssl_context=ssl_context
         )
     except OSError as e:
         if "An operation was attempted on something that is not a socket" in str(e):
