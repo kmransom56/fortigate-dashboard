@@ -38,6 +38,15 @@ This project contains two applications for managing and troubleshooting FortiGat
 
 ## Installation and Setup
 
+### Getting Started
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/kmransom56/fortigate-dashboard.git
+   cd fortigate-dashboard
+   ```
+
 ### Option 1: Easy Docker Installation (Recommended)
 
 1. Make the installation script executable:
