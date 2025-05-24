@@ -110,39 +110,49 @@
         return fetch('/api/dashboard')
             .then(response => response.json())
             .then(data => {
-                updateNetwork(data.interfaces);
-                updateCharts(data.interfaces);
-                checkWanAlerts(data.interfaces);
-                
-                // Fetch connected devices from the switches API
-                fetch('/api/switches')
-                    .then(response => response.json())
-                    .then(switchData => {
-                        if (switchData && switchData.switches) {
-                            // Collect all connected devices from all switches
-                            const allDevices = [];
-                            switchData.switches.forEach(sw => {
-                                if (sw.connected_devices && Array.isArray(sw.connected_devices)) {
-                                    sw.connected_devices.forEach(device => {
-                                        allDevices.push({
-                                            name: device.device_name || 'Unknown',
-                                            mac: device.device_mac || 'Unknown',
-                                            ip: device.device_ip || 'Unknown',
-                                            type: device.device_type || 'Unknown',
-                                            status: device.status || 'Unknown',
-                                            port: device.port || 'Unknown'
-                                        });
+                // Check if the response has the expected format
+                if (data.success) {
+                    // Update the network visualization with interface data
+                    if (data.interfaces) {
+                        updateNetwork(data.interfaces);
+                        updateCharts(data.interfaces);
+                        checkWanAlerts(data.interfaces);
+                    } else {
+                        console.error('No interfaces data in the response');
+                    }
+                    
+                    // If we have devices from the API response, use them
+                    if (data.devices && Array.isArray(data.devices)) {
+                        populateDeviceTable(data.devices);
+                    } else {
+                        // Fallback: Fetch connected devices from the switches API
+                        fetch('/api/switches')
+                            .then(response => response.json())
+                            .then(switchData => {
+                                if (switchData.success && switchData.switches) {
+                                    let allDevices = [];
+                                    
+                                    // Process devices from each switch
+                                    switchData.switches.forEach(switchInfo => {
+                                        if (switchInfo.connected_devices && Array.isArray(switchInfo.connected_devices)) {
+                                            allDevices = allDevices.concat(switchInfo.connected_devices);
+                                        }
                                     });
+                                    
+                                    // If we have devices from the API response, use them
+                                    if (allDevices.length > 0) {
+                                        // Populate the device table
+                                        populateDeviceTable(allDevices);
+                                    }
                                 }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching switch data:', error);
                             });
-                            
-                            // Populate the device table
-                            populateDeviceTable(allDevices);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching switch data:', error);
-                    });
+                    }
+                } else {
+                    console.error('API response indicates failure:', data.error || 'Unknown error');
+                }
                 
                 return data; // Return data for further processing
             })

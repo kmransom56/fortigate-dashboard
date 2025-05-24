@@ -8,6 +8,7 @@ from app.api import fortigate
 from app.services.fortigate_service import get_interfaces
 from app.services.fortiswitch_service import get_fortiswitches
 from app.services.mac_vendors import get_vendor_from_mac, refresh_vendor_cache as refresh_cache
+from app.services.utils import get_connected_devices
 
 # Load environment variables from .env file
 load_dotenv()
@@ -134,6 +135,22 @@ async def refresh_vendor_cache():
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+@app.get("/api/dashboard")
+async def get_dashboard_data():
+    """
+    Get dashboard data including interfaces and connected devices.
+    """
+    try:
+        interfaces = get_interfaces()
+        devices = get_connected_devices()
+        return {
+            "success": True,
+            "interfaces": interfaces,
+            "devices": devices
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 @app.get("/api/lookup-vendor")
 async def lookup_vendor(mac: str = Query(..., description="MAC address to look up")):
     """
@@ -151,7 +168,7 @@ async def lookup_vendor(mac: str = Query(..., description="MAC address to look u
 
 def main():
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8002)
 
 if __name__ == "__main__":
     main()
