@@ -27,7 +27,7 @@ services:
       - fortinet_net
     environment:
       - FORTIGATE_HOST=https://192.168.0.254
-      - FORTIGATE_API_TOKEN_FILE=/run/secrets/fortigate_api_token
+      - API_TOKEN=hmNqQ0st7xrjnyQHt8dzpnkqm5hw5N
 
 secrets:
   fortigate_api_token:
