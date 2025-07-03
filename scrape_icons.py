@@ -25,30 +25,22 @@ def list_simpleicons(keyword: str):
         print(f"Response headers: {dict(response.headers)}")
         print(f"Response content (first 200 chars): {response.text[:200]}")
 
-        data = response.json()
-        # The new API returns a list of icons directly
-        if isinstance(data, list):
-            icons = data
-        elif "icons" in data:
-            icons = data["icons"]
-        else:
-            print(f"Warning: Unexpected data structure. Type: {type(data)}")
-            return []
-
-        return [
-            icon for icon in icons if keyword.lower() in icon.get("title", "").lower()
-        ]
+        obj = response.json()
     except requests.exceptions.RequestException as e:
         print(f"Network error fetching Simple Icons: {e}")
         return []
     except json.JSONDecodeError as e:
-        print(f"JSON decode error: {e}")
+        print(f"Error parsing JSON from Simple Icons: {e}")
         if response:
             print(f"Raw response: {response.text[:500]}")
         return []
     except Exception as e:
         print(f"Unexpected error: {e}")
         return []
+
+    # JSON may be under 'icons' key or be the list directly
+    icons = obj.get("icons") if isinstance(obj, dict) and "icons" in obj else obj
+    return [icon for icon in icons if keyword.lower() in icon.get("title", "").lower()]
 
 
 def download_simpleicon(slug: str):

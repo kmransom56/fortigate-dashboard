@@ -11,8 +11,10 @@ RUN apt-get update && apt-get install -y curl ca-certificates \
 # Set working directory
 WORKDIR /app
 COPY . /app
-COPY cert.pem /certs/cert.pem
-COPY key.pem /certs/key.pem
+# Create certs directory and copy SSL certificates
+RUN mkdir -p /certs
+# Copy actual certificates directory
+COPY app/certs/ /certs/
 # Copy requirements file
 COPY requirements.txt ./requirements.txt
 
@@ -29,5 +31,4 @@ COPY /secrets ./secrets
 EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "10000", "--ssl-keyfile", "/app/certs/key.pem", "--ssl-certfile", "/app/certs/cert.pem"]
-
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "${PORT:-8001}"]

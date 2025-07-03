@@ -1,0 +1,50 @@
+[
+  {
+    "switch": "S124EPTQ22000276",
+    "port": "port15",
+    "mac": "38:14:28:D5:ED:34",
+    "ip": "Unknown",
+    "hostname": "Device-port15-ED34",
+    "manufacturer": null
+  },
+  {
+    "switch": "S124EPTQ22000276",
+    "port": "port17",
+    "mac": "FC:8C:11:B9:EE:DE",
+    "ip": "Unknown",
+    "hostname": "Device-port17-EEDE",
+    "manufacturer": null
+  },
+  {
+    "switch": "S124EPTQ22000276",
+    "port": "port18",
+    "mac": "54:BF:64:51:72:9D",
+    "ip": "192.168.0.1",
+    "hostname": "AICODESTUDIOTWO",
+    "manufacturer": null
+  },
+  {
+    "switch": "S124EPTQ22000276",
+    "port": "port19",
+    "mac": "10:7C:61:3F:2B:5D",
+    "ip": "192.168.0.6",
+    "hostname": "ubuntuaicodeserver",
+    "manufacturer": "ASUSTek COMPUTER INC."
+  },
+  {
+    "switch": "S124EPTQ22000276",
+    "port": "port21",
+    "mac": "3C:18:A0:D4:CF:68",
+    "ip": "Unknown",
+    "hostname": "Device-port21-CF68",
+    "manufacturer": null
+  },
+  {
+    "switch": "S124EPTQ22000276",
+    "port": "port22",
+    "mac": "DC:A6:32:EB:46:F7",
+    "ip": "192.168.0.3",
+    "hostname": "unbound",
+    "manufacturer": null
+  }
+]
