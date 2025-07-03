@@ -1,7 +1,6 @@
 requests
 python-dotenv
 aiohttp
-requests
 urllib3
 uvicorn
 fastapi

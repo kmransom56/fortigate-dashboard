@@ -224,6 +224,9 @@ async def _fgt_api_with_token_async(
         logger.debug(f"Making async API request to: {endpoint}")
 
         # Use aiohttp session with connection pooling
+        if session is None:
+            session = await get_connection_pool()
+        
         async with session.get(
             url, 
             headers=headers, 
