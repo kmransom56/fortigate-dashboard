@@ -1,0 +1,93 @@
+{
+  "Name": "FortiGate Dashboard Automation",
+  "Description": "Automated deployment and management workflow for FortiGate Dashboard",
+  "Version": "1.0",
+  "Triggers": [
+    {
+      "Type": "Manual",
+      "Name": "Manual Deployment Trigger",
+      "Description": "Manually trigger deployment process"
+    },
+    {
+      "Type": "Schedule",
+      "Name": "Daily Backup",
+      "Schedule": "Daily at 2:00 AM",
+      "Action": "backup"
+    },
+    {
+      "Type": "File Watcher",
+      "Name": "Code Change Detection",
+      "WatchPath": "C:\\users\\south\\fortigate-dashboard",
+      "FileTypes": ["*.py", "*.html", "*.css", "*.js"],
+      "Action": "test"
+    }
+  ],
+  "Actions": [
+    {
+      "Step": 1,
+      "Name": "Initialize Variables",
+      "Type": "Variable Assignment",
+      "Variables": {
+        "ProjectPath": "C:\\users\\south\\fortigate-dashboard",
+        "ScriptPath": "C:\\users\\south\\fortigate-dashboard\\automation\\power_automate_integration.ps1",
+        "Environment": "development",
+        "TeamsWebhook": "https://outlook.office.com/webhook/YOUR_WEBHOOK_URL"
+      }
+    },
+    {
+      "Step": 2,
+      "Name": "Execute PowerShell Script",
+      "Type": "Run PowerShell Script",
+      "Script": "%ScriptPath%",
+      "Parameters": "-Action deploy -Environment %Environment% -TeamsWebhookUrl %TeamsWebhook% -Verbose",
+      "OutputVariable": "ScriptResult"
+    },
+    {
+      "Step": 3,
+      "Name": "Parse Results",
+      "Type": "Parse JSON",
+      "Input": "%ScriptResult%",
+      "OutputVariable": "ParsedResult"
+    },
+    {
+      "Step": 4,
+      "Name": "Send Email Notification",
+      "Type": "Send Email",
+      "Condition": "If deployment fails",
+      "To": "your-email@domain.com",
+      "Subject": "FortiGate Dashboard Deployment Failed",
+      "Body": "Deployment failed with message: %ParsedResult.Message%"
+    },
+    {
+      "Step": 5,
+      "Name": "Log Results",
+      "Type": "Write to File",
+      "FilePath": "C:\\users\\south\\fortigate-dashboard\\automation\\logs\\deployment_log.txt",
+      "Content": "Timestamp: %ParsedResult.Timestamp%\nAction: %ParsedResult.Action%\nSuccess: %ParsedResult.Success%\nMessage: %ParsedResult.Message%\n---\n",
+      "AppendMode": true
+    }
+  ],
+  "ErrorHandling": {
+    "OnError": "Continue",
+    "LogErrors": true,
+    "ErrorLogPath": "C:\\users\\south\\fortigate-dashboard\\automation\\logs\\error_log.txt"
+  },
+  "PowerAutomate_Desktop_Steps": [
+    "1. Open Power Automate Desktop",
+    "2. Create New Flow -> Desktop Flow",
+    "3. Add Action: System -> Run PowerShell Script",
+    "4. Set Script Path: C:\\users\\south\\fortigate-dashboard\\automation\\power_automate_integration.ps1",
+    "5. Set Parameters: -Action deploy -Environment development -Verbose",
+    "6. Add Action: Variables -> Parse JSON (for ScriptResult)",
+    "7. Add Action: Email -> Send Email (conditional on failure)",
+    "8. Add Action: File -> Write to Text File (for logging)",
+    "9. Save Flow as 'FortiGate Dashboard Deployment'",
+    "10. Test the flow manually first"
+  ],
+  "Required_Permissions": [
+    "Read/Write access to project directory",
+    "PowerShell execution policy set to allow scripts",
+    "Email configuration for notifications",
+    "Microsoft Teams webhook configured (optional)"
+  ]
+}

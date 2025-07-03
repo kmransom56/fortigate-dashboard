@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
 @router.get("/fortigate/api/interfaces")
 async def get_fortigate_interfaces():
     try:
@@ -17,6 +18,7 @@ async def get_fortigate_interfaces():
     except Exception as e:
         logger.error(f"Error in /fortigate/api/interfaces endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/fortigate/api/switches")
 async def get_fortigate_switches():

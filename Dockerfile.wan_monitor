@@ -1,12 +1,19 @@
 FROM python:3.12-slim
+# Set environment variables
+ENV UV_VERSION=0.1.19
 
+# Install dependencies and uv
+RUN apt-get update && apt-get install -y curl ca-certificates \
+    && curl -Ls https://astral.sh/uv/install.sh | sh \
+    && mv ~/.local/bin/uv /usr/local/bin/uv \
+    && chmod +x /usr/local/bin/uv \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 WORKDIR /monitor
-
-# Copy the fixed WAN monitor script
-COPY wan_monitor.fixed.py ./wan_monitor.py
-
+# Copy the WAN monitor script
+COPY wan_monitor.py ./wan_monitor.py
+COPY requirements.txt ./requirements.txt
 # Install required packages
-RUN pip install --no-cache-dir requests urllib3
+RUN uv pip install --no-cache-dir --system -r requirements.txt
 
 # Run the WAN monitor script
 CMD ["python", "wan_monitor.py"]

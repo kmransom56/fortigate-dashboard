@@ -1,29 +1,33 @@
 FROM python:3.12-slim
+# Set environment variables
+ENV UV_VERSION=0.1.19
 
+# Install dependencies and uv
+RUN apt-get update && apt-get install -y curl ca-certificates \
+    && curl -Ls https://astral.sh/uv/install.sh | sh \
+    && mv ~/.local/bin/uv /usr/local/bin/uv \
+    && chmod +x /usr/local/bin/uv \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Set working directory
 WORKDIR /app
-
-# Copy project files
-COPY ./app ./app
-COPY ./app/certs ./certs
-COPY ./requirements.txt .
-
-# Copy our fixed curl command for reference
-COPY ./fixed_curl_command.sh .
-COPY ./fortigate_api_authentication_guide.md .
-
-# Replace the service files with our no_ssl versions
-COPY ./app/services/fortigate_service.no_ssl.py ./app/services/fortigate_service.py
-COPY ./app/services/fortiswitch_service.no_ssl.py ./app/services/fortiswitch_service.py
+COPY . /app
+COPY cert.pem /certs/cert.pem
+COPY key.pem /certs/key.pem
+# Copy requirements file
+COPY requirements.txt ./requirements.txt
 
 # Install dependencies
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN uv pip install --no-cache-dir --system -r requirements.txt
 
-# Make the fixed curl command executable
-RUN chmod +x fixed_curl_command.sh
+# Copy the application code
+COPY /app ./app
+COPY /tools ./tools
+COPY /scripts ./scripts
+COPY /secrets ./secrets
 
-# Expose FastAPI port
-EXPOSE 8001
+# Expose the port the app runs on
+EXPOSE 8000
 
-# Run uvicorn directly (no --reload)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+# Command to run the application
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "10000", "--ssl-keyfile", "/app/certs/key.pem", "--ssl-certfile", "/app/certs/cert.pem"]
+

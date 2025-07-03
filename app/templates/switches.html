@@ -1,288 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>FortiSwitch Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <meta charset="UTF-8">
+  <title>FortiSwitch Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 </head>
 <body>
 <div class="container mt-5">
-    <h1>FortiSwitch Dashboard</h1>
-    <div class="container mt-2">
-        <div class="row">
-            <div class="col-md-6">
-                <p id="refresh-timer">Refreshing in 10 seconds...</p>
-            </div>
-            <div class="col-md-6 text-end">
-                <a href="/" class="btn btn-secondary">Home</a>
-                <a href="/dashboard" class="btn btn-primary">View FortiGate Dashboard</a>
-            </div>
-        </div>
-    </div>
-    
-    <div class="container mt-5">
-        <h2>Network Map</h2>
-        <div id="network" style="height: 400px; border: 1px solid lightgray;"></div>
-    </div>
+  <h1><i class="fa-solid fa-network-wired"></i> FortiSwitch Dashboard</h1>
 
-    <div class="container mt-5">
-        <h2>FortiSwitches</h2>
-        {% for switch in switches %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h3>{{ switch.name }} ({{ switch.model }})</h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Serial:</strong> {{ switch.serial }}</p>
-                        <p><strong>Status:</strong> 
-                            {% if switch.status == 'online' %}
-                                <span class="badge bg-success">Online</span>
-                            {% else %}
-                                <span class="badge bg-danger">Offline</span>
-                            {% endif %}
-                        </p>
-                        <p><strong>Version:</strong> {{ switch.version }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>IP Address:</strong> {{ switch.ip }}</p>
-                        <p><strong>MAC Address:</strong> {{ switch.mac }}</p>
-                    </div>
-                </div>
-                
-                <h4 class="mt-4">Connected Devices</h4>
-                {% if switch.connected_devices %}
-                <table class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Port</th>
-                            <th>Device Name</th>
-                            <th>MAC Address</th>
-                            <th>IP Address</th>
-                            <th>Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for device in switch.connected_devices %}
-                        <tr>
-                            <td>{{ device.port }}</td>
-                            <td>{{ device.device_name }}</td>
-                            <td>{{ device.device_mac }}</td>
-                            <td>{{ device.device_ip }}</td>
-                            <td>{{ device.device_type }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p>No connected devices found.</p>
-                {% endif %}
-            </div>
-        </div>
-        {% endfor %}
+  <div class="mt-4 text-end">
+    <a href="/" class="btn btn-outline-secondary">Home</a>
+    <a href="/dashboard" class="btn btn-primary">View FortiGate Dashboard</a>
+  </div>
+
+  <div class="mt-5">
+    <h2><i class="fa-solid fa-diagram-project"></i> Network Map</h2>
+    <div id="network" style="height: 400px; border: 1px solid lightgray;"></div>
+  </div>
+
+  <div class="mt-5">
+    <h2><i class="fa-solid fa-server"></i> FortiSwitches</h2>
+    <div id="switches-container">
+      <!-- Dynamically rendered by JS -->
     </div>
+  </div>
 </div>
-</body>
-<script>
-    var seconds = 10;
-    var countdownElement = document.getElementById('refresh-timer');
 
-    async function fetchNewData() {
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    fetchAndUpdateSwitches();
+    setInterval(fetchAndUpdateSwitches, 30000); // Auto-refresh every 30s
+});
+
+async function fetchAndUpdateSwitches() {
+    try {
         const response = await fetch('/fortigate/api/switches');
         const switches = await response.json();
-
+        updateSwitchesView(switches);
         updateNetwork(switches);
-        updateSwitchesTable(switches);
+    } catch (err) {
+        console.error('Error fetching switch data:', err);
     }
+}
 
-    function updateSwitchesTable(switches) {
-        // Get the container for switches
-        const switchesContainer = document.querySelector('.container.mt-5:last-child');
-        
-        // Clear existing content except the heading
-        const heading = switchesContainer.querySelector('h2');
-        switchesContainer.innerHTML = '';
-        switchesContainer.appendChild(heading);
-        
-        // Add each switch
-        for (const switch_data of switches) {
-            const switchCard = document.createElement('div');
-            switchCard.className = 'card mb-4';
-            
-            // Create card header
-            const cardHeader = document.createElement('div');
-            cardHeader.className = 'card-header';
-            cardHeader.innerHTML = `<h3>${switch_data.name} (${switch_data.model})</h3>`;
-            switchCard.appendChild(cardHeader);
-            
-            // Create card body
-            const cardBody = document.createElement('div');
-            cardBody.className = 'card-body';
-            
-            // Add switch info
-            const infoRow = document.createElement('div');
-            infoRow.className = 'row';
-            
-            const leftCol = document.createElement('div');
-            leftCol.className = 'col-md-6';
-            leftCol.innerHTML = `
-                <p><strong>Serial:</strong> ${switch_data.serial}</p>
-                <p><strong>Status:</strong>
-                    ${switch_data.status === 'online'
-                        ? '<span class="badge bg-success">Online</span>'
-                        : '<span class="badge bg-danger">Offline</span>'}
-                </p>
-                <p><strong>Version:</strong> ${switch_data.version}</p>
-            `;
-            
-            const rightCol = document.createElement('div');
-            rightCol.className = 'col-md-6';
-            rightCol.innerHTML = `
-                <p><strong>IP Address:</strong> ${switch_data.ip}</p>
-                <p><strong>MAC Address:</strong> ${switch_data.mac}</p>
-            `;
-            
-            infoRow.appendChild(leftCol);
-            infoRow.appendChild(rightCol);
-            cardBody.appendChild(infoRow);
-            
-            // Add connected devices section
-            const devicesHeading = document.createElement('h4');
-            devicesHeading.className = 'mt-4';
-            devicesHeading.textContent = 'Connected Devices';
-            cardBody.appendChild(devicesHeading);
-            
-            if (switch_data.connected_devices && switch_data.connected_devices.length > 0) {
-                const table = document.createElement('table');
-                table.className = 'table table-striped table-bordered';
-                
-                // Add table header
-                const thead = document.createElement('thead');
-                thead.innerHTML = `
-                    <tr>
-                        <th>Port</th>
-                        <th>Device Name</th>
-                        <th>MAC Address</th>
-                        <th>IP Address</th>
-                        <th>Type</th>
-                    </tr>
-                `;
-                table.appendChild(thead);
-                
-                // Add table body
-                const tbody = document.createElement('tbody');
-                for (const device of switch_data.connected_devices) {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${device.port}</td>
-                        <td>${device.device_name}</td>
-                        <td>${device.device_mac}</td>
-                        <td>${device.device_ip}</td>
-                        <td>${device.device_type}</td>
-                    `;
-                    tbody.appendChild(row);
-                }
-                table.appendChild(tbody);
-                cardBody.appendChild(table);
-            } else {
-                const noDevices = document.createElement('p');
-                noDevices.textContent = 'No connected devices found.';
-                cardBody.appendChild(noDevices);
+function updateSwitchesView(switches) {
+    const container = document.getElementById('switches-container');
+    container.innerHTML = '';
+
+    switches.forEach(sw => {
+        let allDevices = [];
+
+        sw.ports?.forEach(port => {
+            port.connected_devices?.forEach(dev => {
+                allDevices.push({
+                    port: port.name,
+                    ...dev
+                });
+            });
+        });
+
+        const devicesTable = allDevices.length ? `
+            <table class="table table-bordered table-hover mt-3">
+              <thead class="table-light">
+                <tr>
+                  <th>Port</th>
+                  <th>Device Name</th>
+                  <th>MAC Address</th>
+                  <th>IP Address</th>
+                  <th>Type</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${allDevices.map(dev => `
+                  <tr>
+                    <td>${dev.port}</td>
+                    <td>${dev.device_name || 'Unknown'}</td>
+                    <td>${dev.device_mac || 'Unknown'}</td>
+                    <td>${dev.device_ip || 'Unknown'}</td>
+                    <td>${dev.device_type || 'Unknown'}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>` : `<p class="text-muted">No connected devices found.</p>`;
+
+        container.innerHTML += `
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light">
+              <h3><i class="fa-solid fa-microchip"></i> ${sw.name} <small class="text-muted">(${sw.model})</small></h3>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Serial:</strong> ${sw.serial}</p>
+                  <p><strong>Status:</strong> ${sw.status === 'online' 
+                      ? '<i class="fa-solid fa-circle text-success"></i> Online' 
+                      : '<i class="fa-solid fa-circle text-danger"></i> Offline'}
+                  </p>
+                  <p><strong>Version:</strong> ${sw.version}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>IP Address:</strong> ${sw.ip}</p>
+                  <p><strong>MAC Address:</strong> ${sw.mac}</p>
+                </div>
+              </div>
+              ${devicesTable}
+            </div>
+          </div>`;
+    });
+}
+
+function updateNetwork(switches) {
+    const container = document.getElementById('network');
+    if (!container) return;
+
+    const nodes = new vis.DataSet();
+    const edges = [];
+    const nodeMeta = {};
+
+    nodes.add({
+        id: 1,
+        label: "FortiGate",
+        shape: "icon",
+        icon: {
+            face: "FontAwesome",
+            code: "\uf233",  // fa-server
+            size: 50,
+            color: "#e74c3c"
+        }
+    });
+
+    let switchId = 2;
+    switches.forEach(sw => {
+        const switchNodeId = switchId++;
+        nodes.add({
+            id: switchNodeId,
+            label: `${sw.name}\\n${sw.ip}`,
+            shape: "icon",
+            icon: {
+                face: "FontAwesome",
+                code: "\uf6ff",  // fa-network-wired
+                size: 40,
+                color: "#3498db"
             }
-            
-            switchCard.appendChild(cardBody);
-            switchesContainer.appendChild(switchCard);
-        }
-    }
+        });
+        edges.push({ from: 1, to: switchNodeId });
 
-    function countdown() {
-        if (seconds > 0) {
-            countdownElement.innerHTML = 'Refreshing in ' + seconds + ' seconds...';
-            seconds--;
-        } else {
-            fetchNewData();
-            seconds = 10;  // reset timer
-        }
-    }
-    setInterval(countdown, 1000);
-
-    // vis-network Map
-    var container = document.getElementById('network');
-    var network = null;
-
-    function updateNetwork(switches) {
-        // Build nodes
-        var nodes = new vis.DataSet([
-            { id: 1, label: 'FortiGate', shape: 'box' }
-        ]);
-
-        var edges = [];
-
-        let counter = 2;
-        for (const switch_data of switches) {
-            nodes.add({
-                id: counter,
-                label: `${switch_data.name}\n${switch_data.ip}`,
-                color: switch_data.status === 'online' ? 'green' : 'red',
-                shape: 'triangle'
-            });
-            edges.push({
-                from: 1,
-                to: counter
-            });
-            
-            // Add connected devices
-            let deviceCounter = counter * 100;
-            for (const device of switch_data.connected_devices) {
+        let deviceNodeId = switchNodeId * 100;
+        sw.ports?.forEach(port => {
+            port.connected_devices?.forEach(dev => {
+                const ip = dev.device_ip || "";
+                const type = (dev.device_type || "").toLowerCase();
+                const label = `${dev.device_name || "Unknown"}\\n${ip}`;
                 nodes.add({
-                    id: deviceCounter,
-                    label: `${device.device_name}\n${device.device_ip}`,
-                    color: 'blue'
+                    id: deviceNodeId,
+                    label: label,
+                    shape: "icon",
+                    icon: {
+                        face: "FontAwesome",
+                        code: "\uf108",  // fa-desktop
+                        size: 30,
+                        color: "#2ecc71"
+                    }
                 });
-                edges.push({
-                    from: counter,
-                    to: deviceCounter
-                });
-                deviceCounter++;
-            }
-            
-            counter++;
-        }
+                edges.push({ from: switchNodeId, to: deviceNodeId });
+                nodeMeta[deviceNodeId] = { ip, type };
+                deviceNodeId++;
+            });
+        });
+    });
 
-        // Prepare data
-        var data = {
-            nodes: nodes,
-            edges: edges
-        };
+    const network = new vis.Network(container, { nodes, edges }, {
+        nodes: {
+            shapeProperties: { useImageSize: true },
+            font: { size: 14 }
+        },
+        edges: { width: 2 },
+        physics: true
+    });
 
-        // Configure layout and physics
-        var options = {
-            nodes: {
-                shape: 'dot',
-                size: 20
-            },
-            physics: {
-                forceAtlas2Based: {
-                    gravitationalConstant: -50,
-                    centralGravity: 0.01,
-                    springLength: 100
-                },
-                solver: 'forceAtlas2Based'
-            }
-        };
-
-        // Initialize network
-        if (network) {
-            network.setData(data);
-        } else {
-            network = new vis.Network(container, data, options);
-        }
-    }
-
-    // Initial fetch
-    fetchNewData();
+    network.on("click", function (params) {
+        const nodeId = params.nodes[0];
+        if (!nodeId || !nodeMeta[nodeId]) return;
+        const { ip, type } = nodeMeta[nodeId];
+        if (!ip) return alert("No IP address available.");
+        const isWindows = type.includes("windows") || type.includes("rdp");
+        const uri = isWindows ? `rdp://${ip}` : `ssh://${ip}`;
+        window.open(uri, '_blank');
+    });
+}
 </script>
+</body>
 </html>
