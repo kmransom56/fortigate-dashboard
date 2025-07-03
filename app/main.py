@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, HTTPException, Query
-from fastapi.responses import HTMLResponse
+import logging
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
@@ -44,69 +45,66 @@ async def show_switches(request: Request):
 # API endpoint for FortiSwitch data
 @app.get("/api/switches")
 async def get_switches_api():
-    # Get FortiSwitch data
-    switches_data = get_fortiswitches()
-    
-    # Process the data similar to the HTML route
-    if isinstance(switches_data, dict) and 'success' in switches_data:
-        if not switches_data.get('success', False):
-            return {"success": False, "error": switches_data.get('message', 'Failed to retrieve FortiSwitch data')}
-        switches = switches_data.get('switches', [])
-    elif isinstance(switches_data, dict) and 'results' in switches_data:
-        switches = switches_data['results']
-    elif isinstance(switches_data, list):
-        switches = switches_data
-    else:
-        switches = []
-    
-    # Process each switch to ensure it has the expected structure
-    processed_switches = []
-    for switch in switches:
-        if not isinstance(switch, dict):
-            continue
-            
-        switch_data = {
-            'serial': switch.get('serial', 'Unknown'),
-            'name': switch.get('name', switch.get('switch-id', 'Unknown')),
-            'model': switch.get('model', switch.get('os_version', '').split('-')[0] if switch.get('os_version') else 'Unknown'),
-            'status': 'online' if switch.get('status', '').lower() in ['connected', 'authorized/up', 'authorized'] else 'offline',
-            'version': switch.get('version', switch.get('os_version', 'Unknown')),
-            'ip': switch.get('ip', switch.get('connecting_from', 'Unknown')),
-            'mac': switch.get('mac', 'Unknown'),
-            'ports': [],
-            'connected_devices': []
-        }
-        
-        # Process ports and connected devices
-        if 'ports' in switch and isinstance(switch['ports'], list):
-            for port in switch['ports']:
-                port_info = {
-                    'name': port.get('interface', 'Unknown'),
-                    'status': port.get('status', 'Unknown'),
-                    'speed': port.get('speed', 0),
-                    'duplex': port.get('duplex', 'Unknown'),
-                    'vlan': port.get('vlan', 'Unknown')
-                }
-                switch_data['ports'].append(port_info)
-                
-                if port.get('status') == 'up':
-                    device = {
-                        'port': port.get('interface', 'Unknown'),
-                        'device_name': f"Device on {port.get('interface', 'Unknown')}",
-                        'device_mac': 'Unknown',
-                        'device_ip': 'Unknown',
-                        'device_type': 'Network Device',
-                        'vendor': 'Unknown',
-                        'vendor_icon': '',
-                        'vendor_color': '#505050'
-                    }
-                    switch_data['connected_devices'].append(device)
-        
-        processed_switches.append(switch_data)
-    
-    return {"success": True, "switches": processed_switches}
+    try:
+        # Get FortiSwitch data
+        switches_data = get_fortiswitches()
 
-#🔄 Route for FortiSwitch IP Change Form "/switches/change-ip/{switch_serial}"
+        # Process the data similar to the HTML route
+        if isinstance(switches_data, dict) and "success" in switches_data:
+            if not switches_data.get("success", False):
+                return {
+                    "success": False,
+                    "error": switches_data.get(
+                        "message", "Failed to retrieve FortiSwitch data"
+                    ),
+                }
+            switches = switches_data.get("switches", [])
+        elif isinstance(switches_data, dict) and "results" in switches_data:
+            switches = switches_data["results"]
+        elif isinstance(switches_data, list):
+            switches = switches_data
+        else:
+            switches = []
+
+        # Process each switch to ensure it has the expected structure
+        processed_switches = []
+        for switch in switches:
+            processed_switches.append(
+                {
+                    "serial": switch.get("serial", "Unknown"),
+                    "name": switch.get("name", switch.get("switch-id", "Unknown")),
+                    "model": switch.get(
+                        "model",
+                        (
+                            switch.get("os_version", "").split("-")[0]
+                            if switch.get("os_version")
+                            else "Unknown"
+                        ),
+                    ),
+                    "status": (
+                        "online"
+                        if switch.get("status", "").lower()
+                        in ["connected", "authorized/up", "authorized"]
+                        else "offline"
+                    ),
+                    "version": switch.get(
+                        "version", switch.get("os_version", "Unknown")
+                    ),
+                    "ip": switch.get("ip", switch.get("connecting_from", "Unknown")),
+                    "mac": switch.get("mac", "Unknown"),
+                    "ports": switch.get("ports", []),
+                    "connected_devices": switch.get("connected_devices", []),
+                }
+            )
+
+        return {"success": True, "switches": processed_switches}
+    except Exception as e:
+        logging.error(f"Error in /api/switches endpoint: {e}")
+        return JSONResponse(
+            status_code=200, content={"success": False, "error": str(e)}
+        )
+
+# 🔄 Route for FortiSwitch IP Change Form "/switches/change-ip/{switch_serial}"
 @app.get("/switches/change-ip/{switch_serial}", response_class=HTMLResponse)
 async def show_switch_ip_change_form(request: Request, switch_serial: str):
     switches = get_fortiswitches()

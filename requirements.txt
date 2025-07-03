@@ -4,3 +4,8 @@ requests
 jinja2
 certifi
 python-dotenv
+flask
+paramiko
+pyopenssl
+redis
+fastapi

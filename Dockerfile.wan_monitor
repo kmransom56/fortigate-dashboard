@@ -1,9 +1,9 @@
 FROM python:3.12-slim
 
-WORKDIR /monitor
+WORKDIR /src
 
 # Copy the fixed WAN monitor script
-COPY wan_monitor.fixed.py ./wan_monitor.py
+COPY wan_monitor.py ./wan_monitor.py
 
 # Install required packages
 RUN pip install --no-cache-dir requests urllib3

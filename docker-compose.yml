@@ -1,25 +1,32 @@
-version: '3.8'
-
 services:
   dashboard:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8001:8001"
-    restart: always  # 🔥 Auto-restart if crash or reboot
+      - "10000:10000"
+    restart: always
     networks:
       - fortinet_net
     volumes:
       - ./app/certs:/app/certs
       - ./logs:/app/logs
     environment:
-      - FORTIGATE_API_TOKEN=hmNqQ0st7xrjnyQHt8dzpnkqm5hw5N
+      - FORTIGATE_API_TOKEN=Ggtw6bdjz8wrsshpwHd50HHkzg0dzp
       - FORTIGATE_CERT_PATH=/app/certs/cert.pem
-      - FORTIGATE_HOST=https://192.168.0.254
+      - FORTIGATE_HOST=[https://192.168.0.254](https://192.168.0.254)
       - LOG_LEVEL=INFO
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=fortigate
+      - DB_PASSWORD=fortigate
+      - DB_NAME=fortigate
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/"]
+      test: ["CMD", "curl", "-f", "http://localhost:10000/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -29,46 +36,35 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python src/fortigateconnectivity.py
+    command: uv run python src/fortigateconnectivity.py  # use uv venv for Flask
     ports:
-      - "5002:5002"
+      - "10000:10000"
     restart: always
-    networks:
-      - fortinet_net
-    volumes:
-      - ./app/certs:/app/certs
-      - ./logs:/app/logs
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=
-      - REDIS_DB=0
-    depends_on:
-      - redis
+
 
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
+    restart: always
     networks:
       - fortinet_net
-    volumes:
-      - redis_data:/data
-    restart: always
+    ports:
+      - "6379:6379"
 
-  wan_monitor:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: python wan_monitor.py
+  db:
+    image: postgres:15-alpine
     restart: always
-    networks:
-      - fortinet_net
     environment:
-      - FORTIGATE_HOST=https://192.168.0.254
-      - API_TOKEN=hmNqQ0st7xrjnyQHt8dzpnkqm5hw5N
+      POSTGRES_USER: fortigate
+      POSTGRES_PASSWORD: fortigate
+      POSTGRES_DB: fortigate
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - fortinet_net
 
-secrets:
-  fortigate_api_token:
-    file: ./.env
+networks:
+  fortinet_net:
+    driver: bridge
 
 volumes:
-  redis_data:
+  pgdata:

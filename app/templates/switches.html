@@ -113,7 +113,10 @@
             .then(data => {
                 if (!data.success) {
                     console.error('Error fetching switch data:', data.error);
-                    return;
+                    showToast(`Error: ${data.error}`, 'error');
+                    // Ensure FortiGate node still renders
+                    createNetworkMap();
+                    return false;
                 }
                 
                 const switches = data.switches;
@@ -240,11 +243,19 @@
                 if (!data.success) {
                     console.error('Error fetching switch data:', data.error);
                     showToast(`Error: ${data.error}`, 'error');
+                    // Render network map with only FortiGate if switches fail
+                    createNetworkMap();
                     return false;
                 }
-                
+
                 const switches = data.switches;
-                
+                // If no switches returned, show a warning and render network map
+                if (!Array.isArray(switches) || switches.length === 0) {
+                    switchesContainer.innerHTML = '<div class="alert alert-warning">No FortiSwitch data available. Please try again later.</div>';
+                    createNetworkMap();
+                    return false;
+                }
+
                 // Clear the switches container
                 switchesContainer.innerHTML = '<h2>FortiSwitches</h2>';
                 
