@@ -2,506 +2,134 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FortiSwitch Dashboard</title>
+    <title>Unified FortiGate Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <style>
-        .vendor-badge {
-            display: inline-block;
-            padding: 0.25em 0.6em;
-            font-size: 75%;
-            font-weight: 700;
-            line-height: 1;
+        .summary-widget {
+            display: flex;
+            justify-content: space-between;
+            padding: 1em;
+            background-color: #f8f9fa;
+            border-radius: 0.5em;
+            margin-bottom: 1em;
+        }
+        .summary-widget div {
             text-align: center;
-            white-space: nowrap;
-            vertical-align: baseline;
-            border-radius: 0.25rem;
-            color: white;
         }
-        .toast-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
+        .summary-widget div h3 {
+            margin: 0;
+            font-size: 1.5em;
         }
-        .toast {
-            margin-bottom: 10px;
-            min-width: 250px;
+        .summary-widget div p {
+            margin: 0;
+            font-size: 1em;
+            color: #6c757d;
         }
-        .toast-info {
-            background-color: #17a2b8;
-            color: white;
+        .hierarchical-table {
+            width: 100%;
+            border-collapse: collapse;
         }
-        .toast-success {
-            background-color: #28a745;
-            color: white;
+        .hierarchical-table th, .hierarchical-table td {
+            border: 1px solid #dee2e6;
+            padding: 0.75em;
+            text-align: left;
         }
-        .toast-error {
-            background-color: #dc3545;
-            color: white;
+        .hierarchical-table th {
+            background-color: #e9ecef;
+        }
+        .hierarchical-table .expandable-row {
+            cursor: pointer;
+        }
+        .hierarchical-table .hidden-row {
+            display: none;
         }
     </style>
 </head>
 <body>
 <div class="container mt-5">
-    <h1>FortiSwitch Dashboard</h1>
-    <div class="container mt-2">
-        <div class="row">
-            <div class="col-md-4">
-                <p id="refresh-timer">Auto-refresh disabled</p>
-            </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="vendor-filter">Filter by Vendor:</label>
-                    <select id="vendor-filter" class="form-control">
-                        <option value="all">All Vendors</option>
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-4 text-end">
-                <a href="/" class="btn btn-secondary">Home</a>
-                <a href="/dashboard" class="btn btn-primary">View FortiGate Dashboard</a>
-                <button id="refresh-vendor-cache" class="btn btn-info">Refresh Vendor Data</button>
-            </div>
+    <h1>Unified FortiGate Dashboard</h1>
+
+    <!-- Summary Widgets -->
+    <div class="summary-widget">
+        <div>
+            <h3 id="device-count">0</h3>
+            <p>Connected Devices</p>
+        </div>
+        <div>
+            <h3 id="switch-count">0</h3>
+            <p>FortiSwitches</p>
+        </div>
+        <div>
+            <h3 id="status-count">0</h3>
+            <p>System Status</p>
         </div>
     </div>
-    
-    <div class="container mt-5">
-        <h2>Network Map</h2>
-        <div id="network" style="height: 400px; border: 1px solid lightgray;"></div>
-    </div>
 
-    <div class="container mt-5" id="switches-container">
-        <h2>FortiSwitches</h2>
-        <!-- FortiSwitch data will be loaded here via JavaScript -->
-    </div>
+    <!-- Hierarchical Table -->
+    <table class="hierarchical-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Name</th>
+                <th>IP Address</th>
+                <th>MAC Address</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="dashboard-table-body">
+            <!-- Data will be dynamically loaded here -->
+        </tbody>
+    </table>
 </div>
 
 <script>
-    // Network visualization
-    let network = null;
-    const nodes = new vis.DataSet();
-    const edges = new vis.DataSet();
-    
-    // DOM elements
-    const countdownElement = document.getElementById('refresh-timer');
-    const vendorFilterSelect = document.getElementById('vendor-filter');
-    const switchesContainer = document.getElementById('switches-container');
-    
-    // Function to create network map
-    function createNetworkMap() {
-        // Clear existing nodes and edges
-        nodes.clear();
-        edges.clear();
-        
-        // Add FortiGate node
-        nodes.add({
-            id: 'fortigate',
-            label: 'FortiGate\n192.168.0.254',
-            shape: 'image',
-            image: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iI0ZGNTcyMiIgZD0iTTM3IDI0YzAgNy4yLTUuOCAxMy0xMyAxM3MtMTMtNS44LTEzLTEzIDUuOC0xMyAxMy0xMyAxMyA1LjggMTMgMTN6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTMwIDIxaC02di02aC00djZoLTZ2NGg2djZoNHYtNmg2eiIvPjwvc3ZnPg==',
-            size: 40,
-            font: { size: 14, color: '#ffffff', face: 'Arial', background: '#FF5722' },
-            color: { background: '#FF5722', border: '#D84315' },
-            shadow: { enabled: true }
-        });
-        
-        // Fetch FortiSwitch data
-        fetch('/api/switches')
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    console.error('Error fetching switch data:', data.error);
-                    showToast(`Error: ${data.error}`, 'error');
-                    // Ensure FortiGate node still renders
-                    createNetworkMap();
-                    return false;
-                }
-                
-                const switches = data.switches;
-                
-                // Add FortiSwitch nodes
-                switches.forEach((switchData, index) => {
-                    // Add FortiSwitch node
-                    const switchId = `switch_${switchData.serial}`;
-                    nodes.add({
-                        id: switchId,
-                        label: `${switchData.name}\n${switchData.ip}`,
-                        shape: 'image',
-                        image: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzAyODhEMSIgZD0iTTQgMjhoNDB2MTBINHoiLz48cGF0aCBmaWxsPSIjMDI4OEQxIiBkPSJNOCAxMGgzMnYxNEg4eiIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0xMCAxMmgydjJoLTJ6TTEwIDE2aDJ2MmgtMnpNMTAgMjBoMnYyaC0yek0xNiAxMmgydjJoLTJ6TTE2IDE2aDJ2MmgtMnpNMTYgMjBoMnYyaC0yek0yMiAxMmgydjJoLTJ6TTIyIDE2aDJ2MmgtMnpNMjIgMjBoMnYyaC0yek0yOCAxMmgydjJoLTJ6TTI4IDE2aDJ2MmgtMnpNMjggMjBoMnYyaC0yek0zNCAxMmgydjJoLTJ6TTM0IDE2aDJ2MmgtMnpNMzQgMjBoMnYyaC0yek0xMCAzMGgydjJoLTJ6TTE2IDMwaDJ2MmgtMnpNMjIgMzBoMnYyaC0yek0yOCAzMGgydjJoLTJ6TTM0IDMwaDJ2MmgtMnoiLz48L3N2Zz4=',
-                        size: 30,
-                        font: { size: 12, color: '#ffffff', face: 'Arial', background: '#0288D1' },
-                        color: { background: '#0288D1', border: '#01579B' },
-                        shadow: { enabled: true }
-                    });
-                    
-                    // Connect FortiSwitch to FortiGate
-                    edges.add({
-                        from: 'fortigate',
-                        to: switchId,
-                        width: 2,
-                        arrows: {
-                            to: { enabled: false }
-                        },
-                        color: { color: '#0288D1', highlight: '#01579B' }
-                    });
-                    
-                    // Add connected devices
-                    if (switchData.connected_devices && switchData.connected_devices.length > 0) {
-                        switchData.connected_devices.forEach((device, deviceIndex) => {
-                            if (device.port === 'port23') return; // Skip FortiGate connection
-                            
-                            const deviceId = `device_${switchData.serial}_${deviceIndex}`;
-                            const deviceType = device.device_type || 'Unknown';
-                            const vendor = device.vendor || 'Unknown';
-                            
-                            // Choose icon based on device type or vendor
-                            let deviceImage = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzYxNjE2MSIgZD0iTTQwIDM4SDhjLTIuMiAwLTQtMS44LTQtNFYxNGMwLTIuMiAxLjgtNCA0LTRoMzJjMi4yIDAgNCAxLjggNCA0djIwYzAgMi4yLTEuOCA0LTQgNHoiLz48cGF0aCBmaWxsPSIjNDI0MjQyIiBkPSJNNDAgMzhIOFYxNGgzMnYyNHoiLz48cGF0aCBmaWxsPSIjOUU5RTlFIiBkPSJNNCA0MmgxMHYySDR6TTM0IDQyaDEwdjJIMzR6Ii8+PHBhdGggZmlsbD0iIzQyNDI0MiIgZD0iTTE0IDQyaDIwdjJIMTR6Ii8+PHBhdGggZmlsbD0iI0UwRTBFMCIgZD0iTTI0IDE4YzMuMyAwIDYgMi43IDYgNnMtMi43IDYtNiA2LTYtMi43LTYtNiAyLjctNiA2LTZ6Ii8+PC9zdmc+'; // Default computer
-                            
-                            if (deviceType.toLowerCase().includes('fortigate') || vendor.toLowerCase().includes('fortinet')) {
-                                deviceImage = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iI0ZGNTcyMiIgZD0iTTM3IDI0YzAgNy4yLTUuOCAxMy0xMyAxM3MtMTMtNS44LTEzLTEzIDUuOC0xMyAxMy0xMyAxMyA1LjggMTMgMTN6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTMwIDIxaC02di02aC00djZoLTZ2NGg2djZoNHYtNmg2eiIvPjwvc3ZnPg==';
-                            } else if (deviceType.toLowerCase().includes('switch') || vendor.toLowerCase().includes('switch')) {
-                                deviceImage = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzAyODhEMSIgZD0iTTQgMjhoNDB2MTBINHoiLz48cGF0aCBmaWxsPSIjMDI4OEQxIiBkPSJNOCAxMGgzMnYxNEg4eiIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0xMCAxMmgydjJoLTJ6TTEwIDE2aDJ2MmgtMnpNMTAgMjBoMnYyaC0yek0xNiAxMmgydjJoLTJ6TTE2IDE2aDJ2MmgtMnpNMTYgMjBoMnYyaC0yek0yMiAxMmgydjJoLTJ6TTIyIDE2aDJ2MmgtMnpNMjIgMjBoMnYyaC0yek0yOCAxMmgydjJoLTJ6TTI4IDE2aDJ2MmgtMnpNMjggMjBoMnYyaC0yek0zNCAxMmgydjJoLTJ6TTM0IDE2aDJ2MmgtMnpNMzQgMjBoMnYyaC0yek0xMCAzMGgydjJoLTJ6TTE2IDMwaDJ2MmgtMnpNMjIgMzBoMnYyaC0yek0yOCAzMGgydjJoLTJ6TTM0IDMwaDJ2MmgtMnoiLz48L3N2Zz4=';
-                            } else if (deviceType.toLowerCase().includes('server') || vendor.toLowerCase().includes('server')) {
-                                deviceImage = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzQ1NUE2NCIgZD0iTTQ0IDEyYzAtMi4yLTEuOC00LTQtNEg4Yy0yLjIgMC00IDEuOC00IDR2MjRjMCAyLjIgMS44IDQgNCA0aDMyYzIuMiAwIDQtMS44IDQtNFYxMnoiLz48cGF0aCBmaWxsPSIjNzg5MDlDIiBkPSJNOCAxMmgzMnY0SDh6TTggMjBoMzJ2NEg4ek04IDI4aDMydjRIOHoiLz48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMTIgMTRoNHYyaC00ek0xMiAyMmg0djJoLTR6TTEyIDMwaDR2MmgtNHoiLz48L3N2Zz4=';
-                            } else if (vendor.toLowerCase().includes('xbox') || deviceType.toLowerCase().includes('xbox')) {
-                                deviceImage = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzIxMjEyMSIgZD0iTTM5LjkgMjRjMCA4LjgtNy4yIDE1LjktMTUuOSAxNS45UzguMSAzMi44IDguMSAyNCA3LjIgOC4xIDE1LjkgOC4xIDM5LjkgMTUuMiAzOS45IDI0eiIvPjxwYXRoIGZpbGw9IiM3RkJBMDAiIGQ9Ik0yNCAzLjNDMTIuNSAzLjMgMy4zIDEyLjUgMy4zIDI0UzEyLjUgNDQuNyAyNCA0NC43IDQ0LjcgMzUuNSA0NC43IDI0IDM1LjUgMy4zIDI0IDMuM3ptMTIuNyAzMi4yYy0xLjkgMS45LTQuNCAxLjUtNy42LS45LTIuOS0yLjItNS42LTUuOS03LjYtOS44LTIgMy45LTQuNiA3LjYtNy42IDkuOC0zLjIgMi40LTUuNyAyLjgtNy42LjktMi42LTIuNi0yLjgtNy41IDEuMi0xMi45IDMuMS00LjIgNy45LTcuNSAxNCTcuNXMxMC45IDMuMyAxNCA3LjVjNCA1LjQgMy44IDEwLjMgMS4yIDEyLjl6Ii8+PC9zdmc+';
-                            }
-                            
-                            // Add device node
-                            nodes.add({
-                                id: deviceId,
-                                label: `${device.device_name}\n[${vendor}]\n${device.device_ip}`,
-                                shape: 'image',
-                                image: deviceImage,
-                                size: 24,
-                                font: { size: 10, color: '#000000', face: 'Arial' },
-                                shadow: { enabled: true }
-                            });
-                            
-                            // Connect device to switch
-                            edges.add({
-                                from: switchId,
-                                to: deviceId,
-                                label: device.port,
-                                font: { size: 8, color: '#666666' },
-                                width: 1,
-                                arrows: {
-                                    to: { enabled: false }
-                                },
-                                color: { color: '#9E9E9E', highlight: '#616161' }
-                            });
-                        });
-                    }
-                });
-                
-                // Create network if it doesn't exist
-                if (!network) {
-                    const container = document.getElementById('network');
-                    const data = { nodes, edges };
-                    const options = {
-                        nodes: {
-                            borderWidth: 2,
-                            shadow: true
-                        },
-                        edges: {
-                            smooth: {
-                                type: 'continuous'
-                            }
-                        },
-                        physics: {
-                            stabilization: true,
-                            barnesHut: {
-                                gravitationalConstant: -2000,
-                                springConstant: 0.04,
-                                springLength: 95
-                            }
-                        },
-                        layout: {
-                            hierarchical: {
-                                enabled: false
-                            }
-                        }
-                    };
-                    network = new vis.Network(container, data, options);
-                } else {
-                    // Just update the data
-                    network.setData({ nodes, edges });
-                }
-            })
-            .catch(error => {
-                console.error('Error creating network map:', error);
-            });
-    }
-    
-    // Function to fetch FortiSwitch data and update the UI
-    function fetchSwitchData() {
-        return fetch('/api/switches')
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    console.error('Error fetching switch data:', data.error);
-                    showToast(`Error: ${data.error}`, 'error');
-                    // Render network map with only FortiGate if switches fail
-                    createNetworkMap();
-                    return false;
-                }
-
-                const switches = data.switches;
-                // If no switches returned, show a warning and render network map
-                if (!Array.isArray(switches) || switches.length === 0) {
-                    switchesContainer.innerHTML = '<div class="alert alert-warning">No FortiSwitch data available. Please try again later.</div>';
-                    createNetworkMap();
-                    return false;
-                }
-
-                // Clear the switches container
-                switchesContainer.innerHTML = '<h2>FortiSwitches</h2>';
-                
-                // Populate vendor filter
-                const vendors = new Set();
-                
-                // Create HTML for each switch
-                switches.forEach(switchData => {
-                    const switchCard = document.createElement('div');
-                    switchCard.className = 'card mb-4';
-                    
-                    // Create card header
-                    const cardHeader = document.createElement('div');
-                    cardHeader.className = 'card-header';
-                    cardHeader.innerHTML = `<h3>${switchData.name} (${switchData.model})</h3>`;
-                    
-                    // Create card body
-                    const cardBody = document.createElement('div');
-                    cardBody.className = 'card-body';
-                    
-                    // Create switch info row
-                    const infoRow = document.createElement('div');
-                    infoRow.className = 'row';
-                    
-                    // Left column
-                    const leftCol = document.createElement('div');
-                    leftCol.className = 'col-md-6';
-                    leftCol.innerHTML = `
-                        <p><strong>Serial:</strong> ${switchData.serial}</p>
-                        <p><strong>Status:</strong> 
-                            ${switchData.status === 'online' ? 
-                                '<span class="badge bg-success">Online</span>' : 
-                                '<span class="badge bg-danger">Offline</span>'}
-                        </p>
-                        <p><strong>Version:</strong> ${switchData.version}</p>
-                    `;
-                    
-                    // Right column
-                    const rightCol = document.createElement('div');
-                    rightCol.className = 'col-md-6';
-                    rightCol.innerHTML = `
-                        <p><strong>IP Address:</strong> ${switchData.ip}</p>
-                        <p><strong>MAC Address:</strong> ${switchData.mac}</p>
-                        <p><a href="/switches/change-ip/${switchData.serial}" class="btn btn-warning btn-sm">
-                            <i class="bi bi-pencil"></i> Change IP Address
-                        </a></p>
-                    `;
-                    
-                    // Add columns to row
-                    infoRow.appendChild(leftCol);
-                    infoRow.appendChild(rightCol);
-                    
-                    // Create connected devices section
-                    const devicesSection = document.createElement('div');
-                    devicesSection.innerHTML = '<h4 class="mt-4">Connected Devices</h4>';
-                    
-                    if (switchData.connected_devices && switchData.connected_devices.length > 0) {
-                        const table = document.createElement('table');
-                        table.className = 'table table-striped table-bordered';
-                        
-                        // Table header
-                        table.innerHTML = `
-                            <thead>
-                                <tr>
-                                    <th>Port</th>
-                                    <th>Device Name</th>
-                                    <th>MAC Address</th>
-                                    <th>IP Address</th>
-                                    <th>Type</th>
-                                    <th>Vendor</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                        `;
-                        
-                        // Table body
-                        const tbody = document.createElement('tbody');
-                        switchData.connected_devices.forEach(device => {
-                            const vendor = device.vendor || 'Unknown';
-                            vendors.add(vendor);
-                            
-                            const tr = document.createElement('tr');
-                            tr.className = 'device-row';
-                            tr.setAttribute('data-vendor', vendor);
-                            
-                            tr.innerHTML = `
-                                <td>${device.port}</td>
-                                <td>${device.device_name}</td>
-                                <td>${device.device_mac}</td>
-                                <td>${device.device_ip}</td>
-                                <td>${device.device_type}</td>
-                                <td>
-                                    <span class="vendor-badge" style="background-color: ${device.vendor_color || '#505050'}">
-                                        ${vendor}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-info lookup-vendor" data-mac="${device.device_mac}">Lookup</button>
-                                </td>
-                            `;
-                            
-                            tbody.appendChild(tr);
-                        });
-                        
-                        table.appendChild(tbody);
-                        devicesSection.appendChild(table);
-                    } else {
-                        devicesSection.innerHTML += '<div class="alert alert-info">No connected devices found</div>';
-                    }
-                    
-                    // Add all elements to card body
-                    cardBody.appendChild(infoRow);
-                    cardBody.appendChild(devicesSection);
-                    
-                    // Add header and body to card
-                    switchCard.appendChild(cardHeader);
-                    switchCard.appendChild(cardBody);
-                    
-                    // Add card to container
-                    switchesContainer.appendChild(switchCard);
-                });
-                
-                // Update vendor filter options
-                vendorFilterSelect.innerHTML = '<option value="all">All Vendors</option>';
-                vendors.forEach(vendor => {
-                    const option = document.createElement('option');
-                    option.value = vendor;
-                    option.textContent = vendor;
-                    vendorFilterSelect.appendChild(option);
-                });
-                
-                // Create network map
-                createNetworkMap();
-                
-                return true;
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-                showToast(`Error: ${error.message}`, 'error');
-                return false;
-            });
-    }
-    
-    // Function to filter devices by vendor
-    function filterByVendor(vendor) {
-        const rows = document.querySelectorAll('.device-row');
-        rows.forEach(row => {
-            if (vendor === 'all' || row.getAttribute('data-vendor') === vendor) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    }
-    
-    // Function to look up vendor online
-    function lookupVendorOnline(mac) {
-        // Show loading indicator
-        const loadingToast = showToast('Looking up vendor information...', 'info');
-        
-        fetch(`/api/lookup-vendor?mac=${encodeURIComponent(mac)}`)
-            .then(response => response.json())
-            .then(data => {
-                // Hide loading indicator
-                hideToast(loadingToast);
-                
-                if (data.success) {
-                    showToast(`Vendor found: ${data.vendor}`, 'success');
-                    // Refresh the data to show the updated vendor
-                    fetchSwitchData();
-                } else {
-                    showToast(`Vendor lookup failed: ${data.error}`, 'error');
-                }
-            })
-            .catch(error => {
-                hideToast(loadingToast);
-                showToast(`Error: ${error.message}`, 'error');
-            });
-    }
-    
-    // Toast notification functions
-    function showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.innerHTML = `
-            <div class="toast-header">
-                <strong class="me-auto">${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
-                <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
-            </div>
-            <div class="toast-body">${message}</div>
-        `;
-        
-        // Add toast container if it doesn't exist
-        let toastContainer = document.querySelector('.toast-container');
-        if (!toastContainer) {
-            toastContainer = document.createElement('div');
-            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-            document.body.appendChild(toastContainer);
-        }
-        
-        toastContainer.appendChild(toast);
-        return toast;
-    }
-    
-    function hideToast(toast) {
-        if (toast && toast.parentElement) {
-            toast.remove();
-        }
-    }
-    
-    // Event listeners
     document.addEventListener('DOMContentLoaded', function() {
-        // Initial data fetch
-        fetchSwitchData();
-        
-        // Add event listener for vendor filter
-        vendorFilterSelect.addEventListener('change', function() {
-            filterByVendor(this.value);
-        });
-        
-        // Add event listener for vendor lookup buttons
-        document.addEventListener('click', function(event) {
-            if (event.target.classList.contains('lookup-vendor')) {
-                const mac = event.target.getAttribute('data-mac');
-                if (mac) {
-                    lookupVendorOnline(mac);
-                }
-            }
-        });
-        
-        // Add event listener for refresh vendor cache button
-        document.getElementById('refresh-vendor-cache').addEventListener('click', function() {
-            fetch('/api/refresh-vendor-cache')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast('Vendor cache refreshed successfully', 'success');
-                        fetchSwitchData();
-                    } else {
-                        showToast(`Failed to refresh vendor cache: ${data.error}`, 'error');
+        // Fetch and populate summary widgets
+        fetch('/api/dashboard-summary')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('device-count').textContent = data.deviceCount;
+                document.getElementById('switch-count').textContent = data.switchCount;
+                document.getElementById('status-count').textContent = data.statusCount;
+            })
+            .catch(error => console.error('Error fetching summary:', error));
+
+        // Fetch and populate hierarchical table
+        fetch('/api/dashboard-data')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('dashboard-table-body');
+                tableBody.innerHTML = '';
+
+                data.forEach(entry => {
+                    const row = document.createElement('tr');
+                    row.className = 'expandable-row';
+                    row.innerHTML = `
+                        <td>${entry.type}</td>
+                        <td>${entry.name}</td>
+                        <td>${entry.ip}</td>
+                        <td>${entry.mac}</td>
+                        <td>${entry.status}</td>
+                        <td><button class="btn btn-sm btn-info">Details</button></td>
+                    `;
+                    tableBody.appendChild(row);
+
+                    if (entry.children && entry.children.length > 0) {
+                        const hiddenRow = document.createElement('tr');
+                        hiddenRow.className = 'hidden-row';
+                        hiddenRow.innerHTML = `<td colspan="6">${JSON.stringify(entry.children)}</td>`;
+                        tableBody.appendChild(hiddenRow);
+
+                        row.addEventListener('click', function() {
+                            hiddenRow.style.display = hiddenRow.style.display === 'none' ? '' : 'none';
+                        });
                     }
-                })
-                .catch(error => {
-                    showToast(`Error: ${error.message}`, 'error');
                 });
-        });
+            })
+            .catch(error => console.error('Error fetching dashboard data:', error));
     });
 </script>
 </body>

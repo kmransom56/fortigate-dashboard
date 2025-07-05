@@ -43,6 +43,49 @@ session = requests.Session()
 session.verify = os.getenv("FORTIGATE_VERIFY_SSL", "false").lower() == "true"
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# Cache keys for session reuse
+FORTIGATE_COOKIE_KEY = "fortigate_session_cookie"
+FORTIGATE_CSRF_KEY = "fortigate_session_csrf"
+
+API_TOKEN = os.getenv("FORTIGATE_API_TOKEN")
+
+
+# -- helper functions for session reuse ---------------------------------
+
+
+def _cache_session():
+    """Save current session cookies & CSRF token to redis with TTL."""
+    try:
+        cookie_dict = session.cookies.get_dict()
+        if cookie_dict:
+            redis_client.set(
+                FORTIGATE_COOKIE_KEY, json.dumps(cookie_dict), ex=SESSION_TTL
+            )
+        csrf = session.headers.get("X-CSRFTOKEN")
+        if csrf:
+            redis_client.set(FORTIGATE_CSRF_KEY, csrf, ex=SESSION_TTL)
+    except Exception as e:
+        logger.warning(f"Unable to cache FortiGate session in redis: {e}")
+
+
+async def _restore_session_from_cache() -> bool:
+    """Load cookies/CSRF from redis into requests session. Returns True if restored."""
+    try:
+        cookie_json = redis_client.get(FORTIGATE_COOKIE_KEY)
+        if not cookie_json:
+            return False
+        cookie_json = await cookie_json  # Await the data if it's an Awaitable
+        cookies = json.loads(cookie_json.decode("utf-8"))  # Decode to string
+        session.cookies.update(cookies)
+        csrf = redis_client.get(FORTIGATE_CSRF_KEY)
+        if csrf:
+            csrf = str(csrf)  # Ensure csrf is a string
+            session.headers.update({"X-CSRFTOKEN": csrf})
+        return True
+    except Exception as e:
+        logger.warning(f"Unable to restore FortiGate session from redis: {e}")
+        return False
+
 
 def login():
     if not FORTIGATE_USER or not FORTIGATE_SECRET:
@@ -58,15 +101,29 @@ def login():
     # Extract CSRF token from cookie
     csrftoken = session.cookies.get("ccsrftoken")
     if not csrftoken:
+        # Some FortiOS versions set the CSRF token only after loading the root page
+        try:
+            session.get(f"https://{FORTIGATE_HOST}/", timeout=20)
+            csrftoken = session.cookies.get("ccsrftoken")
+        except Exception:
+            pass
+    if not csrftoken:
         raise Exception("Missing CSRF token after login")
     token = csrftoken.strip('"')
     session.headers.update({"X-CSRFTOKEN": token})
+    # cache cookies and csrf so other workers can reuse without new login
+    _cache_session()
 
 
 def ensure_logged_in():
-    if not redis_client.exists(SESSION_KEY):
-        login()
-        redis_client.set(SESSION_KEY, "1", ex=SESSION_TTL)
+    """Ensure we have a valid FortiGate session. Tries cached session first."""
+    if _restore_session_from_cache():
+        return  # successfully reused existing session
+
+    # No cached session – perform login and mark as active
+    login()
+    # simple flag so other code knows we are logged in; actual cookies cached via _cache_session
+    redis_client.set(SESSION_KEY, "1", ex=SESSION_TTL)
 
 
 # Suppress only the InsecureRequestWarning from urllib3
@@ -86,11 +143,16 @@ def get_fortiswitches():
     According to the FortiOS 7.6.3 API documentation, the correct endpoint is:
     /api/v2/monitor/switch-controller/managed-switch/status
     """
-    # Ensure authenticated session
-    ensure_logged_in()
+    # Decide authentication method: API token if provided, otherwise session login
+    headers = {}
+    params = {}  # Ensure params is initialized before use
+    if API_TOKEN:
+        params["access_token"] = API_TOKEN
+    else:
+        # Ensure authenticated session (may set cookies)
+        ensure_logged_in()
 
     url = f"https://{FORTIGATE_HOST}/api/v2/monitor/switch-controller/managed-switch/status"
-    params = {}
 
     logger.info(f"Making request to FortiGate API for FortiSwitch information: {url}")
 
@@ -107,15 +169,25 @@ def get_fortiswitches():
         pass
 
     try:
-        # Retry on rate limiting (429) with backoff (after login)
-        ensure_logged_in()
+        # Retry on rate limiting (429) with backoff. If using cookies, ensure session alive.
+        if not API_TOKEN:
+            ensure_logged_in()
         logger.warning("SSL verification disabled for testing")
         max_retries = int(os.getenv("FORTISWITCH_MAX_RETRIES", "3"))
         delay = int(os.getenv("FORTISWITCH_RETRY_DELAY", "1"))
         response = None
         for attempt in range(1, max_retries + 1):
-            # Use authenticated session for API call
-            response = session.get(url, params=params, timeout=30)
+            # Choose correct request object depending on auth
+            if API_TOKEN:
+                response = requests.get(
+                    url,
+                    headers=headers,
+                    params=params,
+                    timeout=30,
+                    verify=session.verify,
+                )
+            else:
+                response = session.get(url, params=params, timeout=30)
             if response.status_code == 429:
                 logger.warning(
                     f"Attempt {attempt}/{max_retries}: rate limited (429), retrying after {delay}s..."
@@ -159,6 +231,30 @@ def get_fortiswitches():
 
         # Parse the response
         data = response.json()
+        # If empty results, try alternate endpoint (without /status)
+        if isinstance(data, dict) and (not data.get("results")):
+            alt_url = f"https://{FORTIGATE_HOST}/api/v2/monitor/switch-controller/managed-switch"
+            logger.info(
+                "Primary endpoint returned empty; trying alternate endpoint for managed-switch list"
+            )
+            if API_TOKEN:
+                response = requests.get(
+                    alt_url,
+                    headers=headers,
+                    params=params,
+                    timeout=30,
+                    verify=session.verify,
+                )
+            else:
+                ensure_logged_in()
+                response = session.get(alt_url, params=params, timeout=30)
+            if response.status_code < 400:
+                data = response.json()
+            else:
+                logger.warning(
+                    f"Alternate endpoint responded with status {response.status_code}"
+                )
+
         logger.info(f"FortiGate API response data type: {type(data)}")
 
         # Log the full response for debugging

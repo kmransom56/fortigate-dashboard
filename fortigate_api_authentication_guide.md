@@ -20,14 +20,14 @@ curl --cacert app/certs/fortigate.pem -X 'GET' \
 curl --cacert app/certs/fortigate.pem -X 'GET' \
   'https://192.168.0.254:443/api/v2/monitor/system/interface' \
   -H 'accept: application/json' \
-  -H 'Authorization: Bearer hmNqQ0st7xrjnyQHt8dzpnkqm5hw5N'
+  -H 'Authorization: Bearer HbsysGgkc7wd1pp3xzQ095bb7jhzk8
 ```
 
 ### 2. Using Python Requests
 
 **Incorrect Method (Query Parameter):**
 ```python
-url = "https://192.168.0.254/api/v2/monitor/system/interface"
+curl = "https://192.168.0.254/api/v2/monitor/system/interface"
 params = {"access_token": API_TOKEN}
 headers = {"Accept": "application/json"}
 response = requests.get(url, headers=headers, params=params, verify=CERT_PATH)
