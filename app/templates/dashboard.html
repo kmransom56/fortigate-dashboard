@@ -143,11 +143,14 @@
                                             allDevices = allDevices.concat(switchInfo.connected_devices);
                                         }
                                     });
-                                    
+
+                                    // Alias connected_devices as devices for compatibility
+                                    const devices = allDevices;
+
                                     // If we have devices from the API response, use them
-                                    if (allDevices.length > 0) {
+                                    if (devices.length > 0) {
                                         // Populate the device table
-                                        populateDeviceTable(allDevices);
+                                        populateDeviceTable(devices);
                                     }
                                 }
                             })
@@ -400,14 +403,14 @@ function getVendorFromMacPrefix(macPrefix) {
 
 // Base64 encoded SVG icons
 const icons = {
-    fortigate: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjRkYwMDAwIiBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjxwYXRoIGZpbGw9IiNGRjAwMDAiIGQ9Ik0zNjMuNyAxMzQuOWwtMTA3LjcgMTA3LjdMMTQ4LjMgMTM1Yy00LjctNC43LTEyLjMtNC43LTE3IDBsLTIyLjYgMjIuNmMtNC43IDQuNy00LjcgMTIuMyAwIDE3bDEwNy43IDEwNy43LTEwNy43IDEwNy43Yy00LjcgNC43LTQuNyAxMi4zIDAgMTdsMjIuNiAyMi42YzQuNyA0LjcgMTIuMyA0LjcgMTcgMGwxMDcuNy0xMDcuNyAxMDcuNyAxMDcuN2M0LjcgNC43IDEyLjMgNC43IDE3IDBsMjIuNi0yMi42YzQuNy00LjcgNC43LTEyLjMgMC0xN0wyOTUuMyAyODIuM2wxMDcuNy0xMDcuN2M0LjctNC43IDQuNy0xMi4zIDAtMTdsLTIyLjYtMjIuNmMtNC43LTQuNy0xMi4zLTQuNy0xNi43LS4xeiIvPjwvc3ZnPg==',
-    interface: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMDA3NkNFIiBkPSJNNDY0IDY0SDQ4QzIxLjUgNjQgMCA4NS41IDAgMTEydjI4OGMwIDI2LjUgMjEuNSA0OCA0OCA0OGg0MTZjMjYuNSAwIDQ4LTIxLjUgNDgtNDhWMTEyYzAtMjYuNS0yMS41LTQ4LTQ4LTQ4em0wIDMzNmMwIDguOC03LjIgMTYtMTYgMTZINjRjLTguOCAwLTE2LTcuMi0xNi0xNlYyNDBoMTYwdjY0aDY0di02NGgxOTJ2MTYwem0wLTIyNEg2NHYtNjRjMC04LjggNy4yLTE2IDE2LTE2aDM2OGM4LjggMCAxNiA3LjIgMTYgMTZ2NjR6Ii8+PC9zdmc+',
-    wan: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMDA3NkNFIiBkPSJNMzg3LjkgMzQ3LjJjLTMxLjQtMzEuNC04Mi41LTMxLjQtMTEzLjkgMGwtMjIuNiAyMi42Yy02LjIgNi4yLTE2LjQgNi4yLTIyLjYgMGwtOTEuNS05MS41Yy02LjItNi4yLTYuMi0xNi40IDAtMjIuNmwyMi42LTIyLjZjMzEuNC0zMS40IDMxLjQtODIuNSAwLTExMy45cy04Mi41LTMxLjQtMTEzLjkgMGwtMjIuNiAyMi42Yy02LjIgNi4yLTYuMiAxNi40IDAgMjIuNmwyNzQuNCgyNzQuNGM2LjIgNi4yIDE2LjQgNi4yIDIyLjYgMGwyMi42LTIyLjZjMzEuNC0zMS40IDMxLjQtODIuNSAwLTExMy45ek0xODQuMiA2Ni44YzIwLjUtMjAuNSA1My45LTIwLjUgNzQuNCAwczIwLjUgNTMuOSAwIDc0LjRsLTIyLjYgMjIuNmMtNi4yIDYuMi02LjIgMTYuNCAwIDIyLjZsOTEuNSA5MS41YzYuMiA2LjIgMTYuNCA2LjIgMjIuNiAwbDIyLjYtMjIuNmMyMC41LTIwLjUgNTMuOS0yMC41IDc0LjQgMHMyMC41IDUzLjkgMCA3NC40bC0yMi42IDIyLjZjLTYuMiA2LjItNi4yIDE2LjQgMCAyMi42bDIyLjYgMjIuNmM2LjIgNi4yIDE2LjQgNi4yIDIyLjYgMGw0NS4zLTQ1LjNjNTAuMy01MC4zIDUwLjMtMTMxLjcgMC0xODItMzEuNC0zMS40LTcyLjEtNDIuOS0xMTEuNC0zNC41IDkuNy00NS4xLTEuNy05My43LTM0LjUtMTI2LjUtNTAuMy01MC4zLTEzMS43LTUwLjMtMTgyIDBsLTQ1LjMgNDUuM2MtNi4yIDYuMi02LjIgMTYuNCAwIDIyLjZsMjIuNiAyMi42YzYuMiA2LjIgMTYuNCA2LjIgMjIuNiAwbDQ1LjMtNDUuMnoiLz48L3N2Zz4=',
-    lan: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMDA3NkNFIiBkPSJNNDg4IDY0aC04Yy0xMy4yNSAwLTI0IDEwLjc0LTI0IDI0djEzMmgtNDhWOTZjMC0yNi41MS0yMS40OS00OC00OC00OEgxNTJjLTI2LjUxIDAtNDggMjEuNDktNDggNDh2MTI4SDU2VjgwYzAtNC40Mi0zLjU4LTgtOC04aC04Yy0xMy4yNSAwLTI0IDEwLjc0LTI0IDI0djIwOGMwIDEzLjI1IDEwLjc5IDI0IDI0IDI0aDhjNC40MiAwIDgtMy41OCA4LThoNDh2MTI4YzAgMjYuNTEgMjEuNDkgNDggNDggNDhoMjA4YzI2LjUxIDAgNDgtMjEuNDkgNDgtNDhWMzI4aDQ4YzQuNDIgMCA4LTMuNTggOC04di04YzAtMTMuMjYtMTAuNzUtMjQtMjQtMjRoLThjLTQuNDIgMC04IDMuNTgtOCA4djEzMmgtNDhWOTZjMC04LjgyIDcuMTgtMTYgMTYtMTZoMjA4YzguODIgMCAxNiA3LjE4IDE2IDE2djEyOGgtNDhWODhjMC0xMy4yNi0xMC43NS0yNC0yNC0yNHptLTMzNiA4MGMwLTguODIgNy4xOC0xNiAxNi0xNmg2NGM4LjgyIDAgMTYgNy4xOCAxNiAxNnY0OGMwIDguODIgLTcuMTggMTYtMTYgMTZoLTY0Yy04LjgyIDAtMTYtNy4xOC0xNi0xNnYtNDh6bTEyOCAxNzZjMCA4LjgyLTcuMTggMTYtMTYgMTZoLTY0Yy04LjgyIDAtMTYtNy4xOC0xNi0xNnYtNDhjMC04LjgyIDcuMTggLTE2IDE2LTE2aDY0YzguODIgMCAxNiA3LjE4IDE2IDE2djQ4em0xNDQtMTc2YzAgOC44Mi03LjE4IDE2LTE2IDE2aC02NGMtOC44MiAwLTE2LTcuMTgtMTYtMTZ2LTQ4YzAtOC44MiA3LjE4LTE2IDE2LTE2aDY0YzguODIgMCAxNiA3LjE4IDE2IDE2djQ4em0tMTQ0IDBjMCA4LjgyLTcuMTggMTYtMTYgMTZoLTY0Yy04LjgyIDAtMTYtNy4xOC0xNi0xNnYtNDhjMC04LjgyIDcuMTgtMTYgMTYtMTZoNjRjOC44MiAwIDE2IDcuMTggMTYgMTZ2NDh6Ii8+PC9zdmc+'
+    fortigate: '/static/icons/fortinet-icons/fortigate.svg',
+    wan: '/static/icons/fortinet-icons/wan.svg',
+    lan: '/static/icons/fortinet-icons/lan.svg',
+    interface: '/static/icons/device.svg',
+    device: '/static/icons/device.svg'
 };
 
 function updateNetwork(interfaces, devices = []) {
-    // Build nodes
     var nodes = new vis.DataSet([
         { 
             id: 1, 
@@ -420,28 +423,22 @@ function updateNetwork(interfaces, devices = []) {
     ]);
 
     var edges = [];
-
     let counter = 2;
-    
-    // Add interfaces first
+
     for (const [name, iface] of Object.entries(interfaces)) {
-        // Skip interfaces with no IP or 0.0.0.0 IP
         if (!iface.ip || iface.ip === '0.0.0.0') {
             continue;
         }
-        
-        // Select appropriate icon based on interface name
+
         let interfaceIcon = icons.interface;
         let iconColor = '#0076CE';
-        
+
         if (iface.name.toLowerCase().includes('wan')) {
             interfaceIcon = icons.wan;
-        } else if (iface.name.toLowerCase().includes('lan') || 
-                   iface.name.toLowerCase().includes('port') || 
-                   iface.name.toLowerCase().includes('internal')) {
+        } else if (iface.name.toLowerCase().includes('lan') || iface.name.toLowerCase().includes('port')) {
             interfaceIcon = icons.lan;
         }
-        
+
         nodes.add({
             id: counter,
             label: `${iface.name}\n${iface.ip}`,
@@ -462,25 +459,12 @@ function updateNetwork(interfaces, devices = []) {
         });
         counter++;
     }
-    
-    // Add connected devices
+
     if (devices && devices.length > 0) {
         devices.forEach(device => {
-            // Skip devices with no IP or unknown IP
-            if (!device.ip || device.ip === 'Unknown') {
-                return;
-            }
-            
-            // Determine device icon and color based on type
-            let deviceIcon = icons.interface;
+            let deviceIcon = icons.device;
             let deviceColor = '#0076CE';
-            
-            if (device.type === 'FortiSwitch') {
-                deviceIcon = icons.lan;
-                deviceColor = '#0076CE';
-            }
-            
-            // Add the device to the network
+
             nodes.add({
                 id: counter,
                 label: `${device.name}\n${device.ip}\n[${device.vendor}]`,
@@ -490,24 +474,9 @@ function updateNetwork(interfaces, devices = []) {
                 color: { border: device.status === 'online' ? '#00b300' : '#ff0000' },
                 font: { size: 14, color: deviceColor, face: 'Tahoma', strokeWidth: 2, strokeColor: '#ffffff' }
             });
-            
-            // Connect the device to the appropriate interface if possible
-            let connectedTo = 1; // Default to FortiGate
-            
-            // Try to find the interface this device is connected to
-            if (device.port) {
-                // Look through interfaces to find a matching name
-                for (let i = 2; i < counter; i++) {
-                    const node = nodes.get(i);
-                    if (node && node.label && node.label.toLowerCase().includes(device.port.toLowerCase())) {
-                        connectedTo = i;
-                        break;
-                    }
-                }
-            }
-            
+
             edges.push({
-                from: connectedTo,
+                from: 1,
                 to: counter,
                 width: 2,
                 color: { color: device.status === 'online' ? '#00b300' : '#ff0000' },
@@ -515,18 +484,16 @@ function updateNetwork(interfaces, devices = []) {
                     to: { enabled: true, scaleFactor: 0.5 }
                 }
             });
-            
+
             counter++;
         });
     }
 
-    // Prepare data
     var data = {
         nodes: nodes,
         edges: edges
     };
 
-    // Configure layout and physics
     var options = {
         nodes: {
             borderWidth: 2,
@@ -535,18 +502,7 @@ function updateNetwork(interfaces, devices = []) {
         edges: {
             smooth: {
                 type: 'continuous'
-            },
-            shadow: true
-        },
-        physics: {
-            barnesHut: {
-                gravitationalConstant: -2000,
-                centralGravity: 0.3,
-                springLength: 150,
-                springConstant: 0.04,
-                damping: 0.09
-            },
-            solver: 'barnesHut'
+            }
         },
         layout: {
             improvedLayout: true,
@@ -563,13 +519,11 @@ function updateNetwork(interfaces, devices = []) {
         }
     };
 
-    // Initialize network
     if (network) {
         network.setData(data);
     } else {
         network = new vis.Network(container, data, options);
     }
-    
 }
 
 // Function to check WAN status and show alerts

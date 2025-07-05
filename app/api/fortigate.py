@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from app.services.fortiswitch_service import get_fortiswitches, change_fortiswitch_ip
 import requests
 from app.services.fortiswitch_service import FORTIGATE_HOST, API_TOKEN
+from app.services.utils import get_connected_devices
 
 class SwitchIPChangeRequest(BaseModel):
     switch_serial: str
@@ -428,7 +429,8 @@ async def get_dashboard_data():
         switches = get_fortiswitches()
         arp_table = await get_arp_table()
         detected_devices = await get_detected_devices()
-        system_status = await get_system_status()
+        system_status = get_system_status()
+        connected_devices = await get_connected_devices()
 
         # Combine data into a single response
         dashboard_data = {
@@ -437,6 +439,7 @@ async def get_dashboard_data():
             "arp_table": arp_table,
             "detected_devices": detected_devices,
             "system_status": system_status,
+            "connected_devices": connected_devices,
         }
 
         return {"success": True, "data": dashboard_data}

@@ -59,8 +59,11 @@ def get_interfaces():
     """
     try:
         # Use Authorization header with Bearer token
-        url = f"{FORTIGATE_HOST}/api/v2/monitor/system/interface"
-        params = {}
+        # Ensure URL includes https:// scheme
+        if not FORTIGATE_HOST.startswith("https://"):
+            url = f"https://{FORTIGATE_HOST}/api/v2/monitor/system/interface"
+        else:
+            url = f"{FORTIGATE_HOST}/api/v2/monitor/system/interface"
         headers = {"Accept": "application/json", "Authorization": f"Bearer {API_TOKEN}"}
 
         # Attempt to return cached response from Redis
@@ -71,16 +74,13 @@ def get_interfaces():
             data = json.loads(cached)  # type: ignore
             return process_interface_data(data)
         logger.info(f"Making request to FortiGate API: {url}")
-        logger.info(f"Request parameters: {params}")
 
         # Retry on 429 Too Many Requests with exponential backoff
         max_retries = 3
         response = None  # initialize response
         for attempt in range(max_retries):
             logger.warning("SSL verification disabled for testing")
-            response = requests.get(
-                url, headers=headers, params=params, verify=False, timeout=10
-            )
+            response = requests.get(url, headers=headers, verify=False, timeout=10)
             if response.status_code == 429:
                 wait = 2**attempt
                 logger.warning(
