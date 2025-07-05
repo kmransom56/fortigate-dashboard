@@ -1,0 +1,78 @@
+{
+  "test_timestamp": "2024-01-01T00:00:00",
+  "tests_performed": {
+    "connections": {
+      "fortigate": {
+        "status": "success",
+        "message": "Connection successful"
+      },
+      "fortimanager": {
+        "status": "skipped",
+        "message": "FortiManager not configured"
+      }
+    },
+    "basic_endpoints": {
+      "monitor/system/status": {
+        "success": true,
+        "has_data": true
+      },
+      "monitor/switch-controller/detected-device": {
+        "success": true,
+        "has_data": true
+      },
+      "monitor/switch-controller/managed-switch": {
+        "success": false,
+        "has_data": false
+      },
+      "cmdb/system/interface": {
+        "success": true,
+        "has_data": true
+      }
+    },
+    "switch_controller": {
+      "monitor/switch-controller/detected-device": {
+        "success": true,
+        "response_type": "dict",
+        "has_results": true
+      },
+      "monitor/switch-controller/managed-switch": {
+        "success": false,
+        "response_type": "dict",
+        "has_results": false
+      },
+      "monitor/switch-controller/port-stats": {
+        "success": false,
+        "response_type": "dict",
+        "has_results": false
+      },
+      "monitor/switch-controller/vlan": {
+        "success": false,
+        "response_type": "dict",
+        "has_results": false
+      },
+      "monitor/switch-controller/dhcp-snooping": {
+        "success": false,
+        "response_type": "dict",
+        "has_results": false
+      }
+    },
+    "api_discovery": {
+      "total_endpoints": 246,
+      "categories": 5,
+      "category_breakdown": {
+        "system": 191,
+        "switch_controller": 28,
+        "monitoring": 23,
+        "network": 8,
+        "firewall": 2
+      },
+      "test_monitor_switch_controller_managed_switch_port_stats": true
+    }
+  },
+  "summary": {
+    "total_tests": 12,
+    "successful_tests": 7,
+    "success_rate": "58.3%",
+    "overall_status": "FAIL"
+  }
+}

@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  fortinet-mcp-server:
+    build: .
+    container_name: fortinet-mcp-server
+    ports:
+      - "5000:5000"
+      - "8000:8000"
+    environment:
+      - SERVICE_MODE=mcp
+      - ENVIRONMENT=production
+      - FORTIGATE_HOST=${FORTIGATE_HOST:-192.168.0.254}
+      - FORTIGATE_API_TOKEN=${FORTIGATE_API_TOKEN}
+      - FORTIGATE_VDOM=${FORTIGATE_VDOM:-root}
+      - FORTIGATE_USERNAME=${FORTIGATE_USERNAME:-admin}
+      - FORTIGATE_PASSWORD=${FORTIGATE_PASSWORD}
+      - FORTIMANAGER_HOST=${FORTIMANAGER_HOST}
+      - FORTIMANAGER_API_TOKEN=${FORTIMANAGER_API_TOKEN}
+      - FORTIMANAGER_USERNAME=${FORTIMANAGER_USERNAME}
+      - FORTIMANAGER_PASSWORD=${FORTIMANAGER_PASSWORD}
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./fortiosapi:/app/fortiosapi
+    networks:
+      - fortinet-network
+    restart: unless-stopped
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  fortinet-rest-bridge:
+    build: .
+    container_name: fortinet-rest-bridge
+    ports:
+      - "5001:5000"
+    environment:
+      - SERVICE_MODE=rest
+      - ENVIRONMENT=production
+      - FORTIGATE_HOST=${FORTIGATE_HOST:-192.168.0.254}
+      - FORTIGATE_API_TOKEN=${FORTIGATE_API_TOKEN}
+      - FORTIGATE_VDOM=${FORTIGATE_VDOM:-root}
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./fortiosapi:/app/fortiosapi
+    networks:
+      - fortinet-network
+    restart: unless-stopped
+    depends_on:
+      - redis
+    profiles:
+      - rest-api
+
+  redis:
+    image: redis:7-alpine
+    container_name: fortinet-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - fortinet-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  nginx:
+    image: nginx:alpine
+    container_name: fortinet-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - fortinet-network
+    depends_on:
+      - fortinet-mcp-server
+      - fortinet-rest-bridge
+    restart: unless-stopped
+    profiles:
+      - proxy
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: fortinet-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - fortinet-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fortinet-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - fortinet-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+
+volumes:
+  redis-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  fortinet-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

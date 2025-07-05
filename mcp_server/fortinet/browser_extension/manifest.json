@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Fortinet MCP Network Manager",
+  "version": "1.0",
+  "description": "Access your Fortinet MCP server with 246 endpoints directly from browser",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "background"
+  ],
+  "host_permissions": [
+    "http://localhost:5000/*",
+    "https://192.168.0.254/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Fortinet Network Manager"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}

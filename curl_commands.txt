@@ -1,3 +1,6 @@
-curl -X GET "https://192.168.0.254/api/v2/monitor/network/arp" -H "Authorization: Bearer HbsysGgkc7wd1pp3xzQ095bb7jhzk8" -k
+curl -X GET "https://192.168.0.254/api/v2/monitor/network/arp" -H "Authorization: Bearer HsysGgkc7wd1pp3xzQ095bb7jhzk8" -k --cacert app/certs/fortigate.pem
+
 curl -X GET "https://192.168.0.254/api/v2/monitor/system/interface" -H "Authorization: Bearer HbsysGgkc7wd1pp3xzQ095bb7jhzk8" -k --cacert app/certs/fortigate.pem
-curl -X GET "https://192.168.0.254/api/v2/monitor/switch-controller/managed-switch/status" -H "Authorization: Bearer HbsysGgkc7wd1pp3xzQ095bb7jhzk8" -k
+curl -X GET "https://192.168.0.254/api/v2/monitor/system/interface" -H "Authorization: Bearer HbsysGgkc7wd1pp3xzQ095bb7jhzk8" -k
+curl -X GET "https://192.168.0.254/api/v2/monitor/switch-controller/detected-device" -H "Authorization: Bearer HbsysGgkc7wd1pp3xzQ095bb7jhzk8" -k
+

@@ -1,0 +1,102 @@
+{
+  "name": "fortinet-mcp-server",
+  "version": "1.0.0",
+  "description": "A comprehensive Model Context Protocol (MCP) server for Fortinet FortiGate and FortiSwitch management with 246 auto-discovered API endpoints",
+  "main": "fortinet_server_enhanced.py",
+  "scripts": {
+    "start": "python3 fortinet_server_enhanced.py",
+    "test": "python3 test_server.py",
+    "demo": "python3 examples/comprehensive_demo.py",
+    "rest": "python3 mcp_rest_bridge.py",
+    "install": "./install_mcp.sh",
+    "health": "python3 -c \"from fortinet_server_enhanced import fg_api; print(fg_api.test_connection())\"",
+    "endpoints": "python3 -c \"from fortinet_server_enhanced import discovered_endpoints; print(f'Total endpoints: {len(discovered_endpoints)}')\"",
+    "lint": "flake8 *.py",
+    "format": "black *.py",
+    "type-check": "mypy *.py"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/fortinet-mcp-server.git"
+  },
+  "keywords": [
+    "fortinet",
+    "fortigate",
+    "fortiswitch",
+    "mcp",
+    "model-context-protocol",
+    "network-management",
+    "api",
+    "automation",
+    "ai",
+    "claude",
+    "security",
+    "networking"
+  ],
+  "author": "Fortinet MCP Server Contributors",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/fortinet-mcp-server/issues"
+  },
+  "homepage": "https://github.com/yourusername/fortinet-mcp-server#readme",
+  "engines": {
+    "python": ">=3.8"
+  },
+  "directories": {
+    "examples": "examples",
+    "docs": "docs"
+  },
+  "files": [
+    "fortinet_server_enhanced.py",
+    "mcp_rest_bridge.py",
+    "test_server.py",
+    "install_mcp.sh",
+    "requirements.txt",
+    "README.md",
+    "LICENSE",
+    "DEPLOYMENT_GUIDE.md",
+    "FORTIGATE_API_COVERAGE.md",
+    "USAGE_SUMMARY.md",
+    "examples/",
+    "browser_extension/"
+  ],
+  "devDependencies": {
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0"
+  },
+  "peerDependencies": {
+    "python": ">=3.8"
+  },
+  "config": {
+    "python_version": "3.8",
+    "mcp_version": "0.1.0"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/yourusername"
+  },
+  "contributors": [
+    {
+      "name": "Keith",
+      "email": "keith@example.com",
+      "role": "creator"
+    }
+  ],
+  "badges": [
+    {
+      "description": "MIT License",
+      "href": "https://opensource.org/licenses/MIT",
+      "url": "https://img.shields.io/badge/License-MIT-yellow.svg"
+    },
+    {
+      "description": "Python 3.8+",
+      "href": "https://www.python.org/downloads/",
+      "url": "https://img.shields.io/badge/python-3.8+-blue.svg"
+    },
+    {
+      "description": "MCP Compatible",
+      "href": "https://modelcontextprotocol.io/",
+      "url": "https://img.shields.io/badge/MCP-Compatible-green.svg"
+    }
+  ]
+}

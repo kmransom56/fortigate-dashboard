@@ -1,0 +1,64 @@
+{
+  "timestamp": "2025-07-05T06:25:32.935854",
+  "server_info": {
+    "total_endpoints": 246,
+    "categories": [
+      "system",
+      "switch_direct",
+      "configuration"
+    ],
+    "mcp_server_version": "enhanced"
+  },
+  "fortigate_status": {
+    "hostname": "netintegratefw",
+    "version": "Unknown",
+    "serial": "Unknown",
+    "status": "online"
+  },
+  "detected_devices": {
+    "count": 6,
+    "devices": [
+      {
+        "mac": "10:7c:61:3f:2b:5d",
+        "port": "port19",
+        "switch_id": "S124EPTQ22000276",
+        "vlan_id": 1000
+      },
+      {
+        "mac": "3c:18:a0:d4:cf:68",
+        "port": "port21",
+        "switch_id": "S124EPTQ22000276",
+        "vlan_id": 1000
+      },
+      {
+        "mac": "54:bf:64:51:72:9d",
+        "port": "port18",
+        "switch_id": "S124EPTQ22000276",
+        "vlan_id": 1000
+      },
+      {
+        "mac": "dc:a6:32:eb:46:f7",
+        "port": "port22",
+        "switch_id": "S124EPTQ22000276",
+        "vlan_id": 1000
+      },
+      {
+        "mac": "fc:8c:11:b9:ee:de",
+        "port": "port17",
+        "switch_id": "S124EPTQ22000276",
+        "vlan_id": 1000
+      },
+      {
+        "mac": "94:ff:3c:c2:8d:7a",
+        "port": "internal",
+        "switch_id": "S124EPTQ22000276",
+        "vlan_id": 4094
+      }
+    ]
+  },
+  "health_summary": {
+    "fortigate_online": true,
+    "devices_detected": true,
+    "mcp_server_functional": true
+  }
+}
