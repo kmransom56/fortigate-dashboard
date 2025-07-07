@@ -98,6 +98,7 @@ def fgt_api(
             )
             session_manager = get_session_manager()
             result = session_manager.make_api_request(endpoint)
+            logger.info(f"Session API response for {endpoint}: {result}")  # Added log
 
             # If session auth failed, fall back to token auth
             if "error" in result and result.get("error") == "authentication_failed":
@@ -109,6 +110,9 @@ def fgt_api(
                 else:
                     # Try to load token as fallback
                     fallback_token = load_api_token()
+                    logger.info(
+                        f"Fallback API token loaded: {'<present>' if fallback_token else '<not present>'}"
+                    )  # Added log
                     if fallback_token:
                         return _fgt_api_with_token(
                             endpoint, fallback_token, fortigate_ip
@@ -119,6 +123,9 @@ def fgt_api(
             # Token-based authentication
             if not api_token:
                 api_token = load_api_token()
+                logger.info(
+                    f"API token loaded for token auth: {'<present>' if api_token else '<not present>'}"
+                )  # Added log
                 if not api_token:
                     return {"error": "no_token", "message": "No API token available"}
 
@@ -181,7 +188,9 @@ def _fgt_api_with_token(
         # Success case
         try:
             data = response.json()
-            logger.info(f"API request successful for {endpoint}")
+            logger.info(
+                f"API request successful for {endpoint}. Response: {data}"
+            )  # Modified log
             return data
         except json.JSONDecodeError:
             logger.error("Failed to parse JSON response")
