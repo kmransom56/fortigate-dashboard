@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.services.fortigate_service import get_interfaces
-from app.services.fortiswitch_service import get_fortiswitches
+from app.services.fortiswitch_service_optimized import get_fortiswitches_optimized
+import asyncio
 import logging
 
 # Configure logging
@@ -24,7 +25,7 @@ async def get_fortigate_interfaces():
 async def get_fortigate_switches():
     try:
         logger.debug("API endpoint /fortigate/api/switches called")
-        switches = get_fortiswitches()
+        switches = await get_fortiswitches_optimized()
         return switches
     except Exception as e:
         logger.error(f"Error in /fortigate/api/switches endpoint: {e}")
