@@ -18,8 +18,67 @@
   </div>
 
   <div class="mt-5">
-    <h2><i class="fa-solid fa-diagram-project"></i> Network Map</h2>
-    <div id="network" style="height: 400px; border: 1px solid lightgray;"></div>
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-project-diagram"></i> Network Topology</h5>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-primary" onclick="fitNetwork()">
+                <i class="fas fa-expand-arrows-alt"></i> Fit View
+              </button>
+              <button class="btn btn-outline-primary" onclick="togglePhysics()">
+                <i class="fas fa-play"></i> Physics
+              </button>
+              <button class="btn btn-outline-primary" onclick="exportTopology()">
+                <i class="fas fa-download"></i> Export
+              </button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div id="network" style="height: 500px; border: 1px solid #dee2e6;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0"><i class="fas fa-list"></i> Device Legend</h6>
+          </div>
+          <div class="card-body">
+            <div class="legend-item mb-2 d-flex align-items-center">
+              <i class="fa-solid" style="color: #e74c3c; font-size: 18px;">&#xf233;</i>
+              <span class="ms-2">FortiGate Firewall</span>
+            </div>
+            <div class="legend-item mb-2 d-flex align-items-center">
+              <i class="fa-solid" style="color: #3498db; font-size: 18px;">&#xf6ff;</i>
+              <span class="ms-2">Network Switch</span>
+            </div>
+            <div class="legend-item mb-2 d-flex align-items-center">
+              <i class="fa-solid" style="color: #27ae60; font-size: 16px;">&#xf108;</i>
+              <span class="ms-2">Workstation/PC</span>
+            </div>
+            <div class="legend-item mb-2 d-flex align-items-center">
+              <i class="fa-solid" style="color: #9b59b6; font-size: 18px;">&#xf1eb;</i>
+              <span class="ms-2">Wireless Access Point</span>
+            </div>
+            <div class="legend-item mb-2 d-flex align-items-center">
+              <i class="fa-solid" style="color: #7f8c8d; font-size: 16px;">&#xf02f;</i>
+              <span class="ms-2">Printer</span>
+            </div>
+            <div class="legend-item mb-2 d-flex align-items-center">
+              <i class="fa-solid" style="color: #2c3e50; font-size: 18px;">&#xf233;</i>
+              <span class="ms-2">Server</span>
+            </div>
+            <hr>
+            <small class="text-muted">
+              <i class="fas fa-info-circle"></i> 
+              Hover over devices for details
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="mt-5">
@@ -78,10 +137,16 @@ function updateSwitchesView(switches) {
                 ${allDevices.map(dev => `
                   <tr>
                     <td>${dev.port}</td>
-                    <td>${dev.device_name || 'Unknown'}</td>
+                    <td>
+                      <i class="fa-solid" style="color: ${dev.icon_color || '#95a5a6'};">&#x${(dev.icon_code || '\uf108').substring(2)};</i>
+                      ${dev.device_name || 'Unknown'}
+                    </td>
                     <td>${dev.device_mac || 'Unknown'}</td>
                     <td>${dev.device_ip || 'Unknown'}</td>
-                    <td>${dev.device_type || 'Unknown'}</td>
+                    <td>
+                      <span class="badge bg-secondary">${dev.restaurant_device_type || dev.device_type || 'Unknown'}</span>
+                      ${dev.classification_confidence > 0.5 ? '<i class="fa-solid fa-check-circle text-success ms-1" title="High confidence classification"></i>' : ''}
+                    </td>
                   </tr>`).join('')}
               </tbody>
             </table>` : `<p class="text-muted">No connected devices found.</p>`;
@@ -122,50 +187,116 @@ function updateNetwork(switches) {
 
     nodes.add({
         id: 1,
-        label: "FortiGate",
+        label: "FortiGate\nMain",
         shape: "icon",
         icon: {
             face: "FontAwesome",
-            code: "\uf233",  // fa-server
+            code: "\uf233",
             size: 50,
             color: "#e74c3c"
-        }
+        },
+        color: {
+            border: '#c0392b',
+            background: '#ffffff',
+            highlight: {
+                border: '#a93226',
+                background: '#f8f9fa'
+            }
+        },
+        title: `<div style="padding: 10px; font-family: Arial, sans-serif;">
+            <strong style="color: #2c3e50;">FortiGate Firewall</strong><br/>
+            <span style="color: #27ae60;"><i class="fas fa-circle" style="font-size: 8px;"></i> Online</span><br/>
+            <strong>Model:</strong> FortiGate<br/>
+            <strong>Status:</strong> Active<br/>
+            <strong>Role:</strong> Main Gateway
+        </div>`
     });
 
     let switchId = 2;
     switches.forEach(sw => {
         const switchNodeId = switchId++;
+        const deviceCount = sw.ports?.reduce((count, port) => count + (port.connected_devices?.length || 0), 0) || 0;
+        
         nodes.add({
             id: switchNodeId,
-            label: `${sw.name}\\n${sw.ip}`,
+            label: `${sw.name}\\n(${deviceCount} devices)`,
             shape: "icon",
             icon: {
                 face: "FontAwesome",
-                code: "\uf6ff",  // fa-network-wired
+                code: "\uf6ff",
                 size: 40,
                 color: "#3498db"
-            }
+            },
+            color: {
+                border: '#2980b9',
+                background: '#ffffff',
+                highlight: {
+                    border: '#1f618d',
+                    background: '#f8f9fa'
+                }
+            },
+            title: `<div style="padding: 10px; font-family: Arial, sans-serif;">
+                <strong style="color: #2c3e50;">${sw.name}</strong><br/>
+                <span style="color: #27ae60;"><i class="fas fa-circle" style="font-size: 8px;"></i> Connected</span><br/>
+                <strong>IP:</strong> ${sw.ip}<br/>
+                <strong>Model:</strong> ${sw.model}<br/>
+                <strong>Connected Devices:</strong> ${deviceCount}<br/>
+                <strong>Status:</strong> ${sw.status === 'online' ? 'Online' : 'Offline'}
+            </div>`
         });
-        edges.push({ from: 1, to: switchNodeId });
+        edges.push({ 
+            from: 1, 
+            to: switchNodeId,
+            color: { color: '#34495e', highlight: '#3498db' },
+            width: 3
+        });
 
         let deviceNodeId = switchNodeId * 100;
         sw.ports?.forEach(port => {
             port.connected_devices?.forEach(dev => {
                 const ip = dev.device_ip || "";
                 const type = (dev.device_type || "").toLowerCase();
+                const deviceType = dev.restaurant_device_type || dev.device_type || 'Unknown Device';
+                const confidence = dev.classification_confidence || 0;
+                const confidenceText = confidence > 0.7 ? 'High' : confidence > 0.4 ? 'Medium' : 'Low';
+                const confidenceColor = confidence > 0.7 ? '#27ae60' : confidence > 0.4 ? '#f39c12' : '#e74c3c';
                 const label = `${dev.device_name || "Unknown"}\\n${ip}`;
+                
                 nodes.add({
                     id: deviceNodeId,
                     label: label,
                     shape: "icon",
                     icon: {
                         face: "FontAwesome",
-                        code: "\uf108",  // fa-desktop
-                        size: 30,
-                        color: "#2ecc71"
-                    }
+                        code: dev.icon_code || "\uf108",
+                        size: dev.icon_size || 30,
+                        color: dev.icon_color || "#2ecc71"
+                    },
+                    color: {
+                        border: dev.icon_color || "#2ecc71",
+                        background: '#ffffff',
+                        highlight: {
+                            border: dev.icon_color || "#2ecc71",
+                            background: '#f8f9fa'
+                        }
+                    },
+                    title: `<div style="padding: 10px; font-family: Arial, sans-serif;">
+                        <strong style="color: #2c3e50;">${dev.device_name || 'Unknown Device'}</strong><br/>
+                        <strong>Type:</strong> ${deviceType}<br/>
+                        <strong>MAC:</strong> ${dev.device_mac || 'Unknown'}<br/>
+                        <strong>IP:</strong> ${ip || 'Unknown'}<br/>
+                        <strong>Port:</strong> ${port.name}<br/>
+                        <strong>Classification:</strong> <span style="color: ${confidenceColor};">${confidenceText} Confidence</span><br/>
+                        ${dev.manufacturer ? `<strong>Manufacturer:</strong> ${dev.manufacturer}<br/>` : ''}
+                        ${dev.security_level ? `<strong>Security Level:</strong> ${dev.security_level}` : ''}
+                    </div>`
                 });
-                edges.push({ from: switchNodeId, to: deviceNodeId });
+                edges.push({ 
+                    from: switchNodeId, 
+                    to: deviceNodeId,
+                    color: { color: '#7f8c8d', highlight: '#3498db' },
+                    width: 2
+                });
                 nodeMeta[deviceNodeId] = { ip, type };
                 deviceNodeId++;
             });
@@ -173,12 +304,73 @@ function updateNetwork(switches) {
     });
 
     const network = new vis.Network(container, { nodes, edges }, {
-        nodes: {
-            shapeProperties: { useImageSize: true },
-            font: { size: 14 }
+        layout: {
+            hierarchical: {
+                enabled: true,
+                direction: 'UD',
+                sortMethod: 'directed',
+                levelSeparation: 150,
+                nodeSpacing: 200,
+                treeSpacing: 200
+            }
         },
-        edges: { width: 2 },
-        physics: true
+        physics: {
+            enabled: false
+        },
+        nodes: {
+            shape: 'icon',
+            size: 40,
+            font: {
+                size: 12,
+                color: '#2c3e50',
+                face: 'Arial',
+                strokeWidth: 2,
+                strokeColor: '#ffffff'
+            },
+            borderWidth: 2,
+            shadow: {
+                enabled: true,
+                color: 'rgba(0,0,0,0.2)',
+                size: 5,
+                x: 2,
+                y: 2
+            }
+        },
+        edges: {
+            width: 2,
+            color: {
+                color: '#34495e',
+                highlight: '#3498db',
+                hover: '#3498db'
+            },
+            smooth: {
+                enabled: true,
+                type: 'continuous',
+                roundness: 0.5
+            },
+            arrows: {
+                to: {
+                    enabled: false
+                }
+            }
+        },
+        interaction: {
+            hover: true,
+            selectConnectedEdges: false,
+            tooltipDelay: 200,
+            zoomView: true,
+            dragView: true
+        }
+    });
+    
+    window.networkMap = network;
+    
+    network.on("hoverNode", function (params) {
+        document.body.style.cursor = 'pointer';
+    });
+    
+    network.on("blurNode", function (params) {
+        document.body.style.cursor = 'default';
     });
 
     network.on("click", function (params) {
@@ -190,6 +382,53 @@ function updateNetwork(switches) {
         const uri = isWindows ? `rdp://${ip}` : `ssh://${ip}`;
         window.open(uri, '_blank');
     });
+}
+
+function fitNetwork() {
+    if (window.networkMap) {
+        window.networkMap.fit({
+            animation: {
+                duration: 1000,
+                easingFunction: 'easeInOutQuad'
+            }
+        });
+    }
+}
+
+function togglePhysics() {
+    if (window.networkMap) {
+        const button = event.target.closest('button');
+        const isEnabled = window.networkMap.physics.physicsEnabled;
+        
+        if (isEnabled) {
+            window.networkMap.setOptions({ physics: { enabled: false } });
+            button.innerHTML = '<i class="fas fa-play"></i> Physics';
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-primary');
+        } else {
+            window.networkMap.setOptions({ physics: { enabled: true } });
+            button.innerHTML = '<i class="fas fa-pause"></i> Physics';
+            button.classList.remove('btn-outline-primary');
+            button.classList.add('btn-success');
+            
+            setTimeout(() => {
+                window.networkMap.setOptions({ physics: { enabled: false } });
+                button.innerHTML = '<i class="fas fa-play"></i> Physics';
+                button.classList.remove('btn-success');
+                button.classList.add('btn-outline-primary');
+            }, 3000);
+        }
+    }
+}
+
+function exportTopology() {
+    if (window.networkMap) {
+        const canvas = window.networkMap.canvas.frame.canvas;
+        const link = document.createElement('a');
+        link.download = 'network-topology.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    }
 }
 </script>
 </body>

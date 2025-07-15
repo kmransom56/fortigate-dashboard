@@ -70,28 +70,29 @@ def scrape_fortinet_media():
 
 # ------------------------------ main ----------------------------------------
 if __name__ == "__main__":
-    print("Searching Simple Icons for 'Fortinet'…")
-    matches = list_simpleicons("fortinet")
-    if matches:
-        print(f"Found {len(matches)} matches:")
-        for m in matches:
-            # Debug: print all available keys in the first match
-            if matches.index(m) == 0:
-                print(f"Available fields: {list(m.keys())}")
-
-            title = m.get("title", "Unknown")
-            slug = m.get("slug") or m.get("title", "").lower().replace(" ", "")
-            print(f" • {title}  (slug = {slug})")
-
-        # Try to download the first match
-        first_match = matches[0]
-        slug = first_match.get("slug") or first_match.get("title", "").lower().replace(
-            " ", ""
-        )
-        if slug:
-            download_simpleicon(slug)
-    else:
-        print("No Fortinet icons found")
-
+    enterprise_keywords = [
+        "cisco", "juniper", "arista", "fortinet", "hp", "dell", 
+        "server", "router", "switch", "firewall", "printer", "camera"
+    ]
+    
+    print("Searching for enterprise device icons...")
+    for keyword in enterprise_keywords:
+        print(f"\nSearching Simple Icons for '{keyword}'...")
+        matches = list_simpleicons(keyword)
+        if matches:
+            print(f"Found {len(matches)} matches for {keyword}:")
+            for m in matches:
+                title = m.get("title", "Unknown")
+                slug = m.get("slug") or m.get("title", "").lower().replace(" ", "")
+                print(f" • {title}  (slug = {slug})")
+                
+                if matches.index(m) < 2 and slug:
+                    try:
+                        download_simpleicon(slug)
+                    except Exception as e:
+                        print(f"Error downloading {slug}: {e}")
+        else:
+            print(f"No icons found for {keyword}")
+    
     print("\nSearching Fortinet media page...")
     scrape_fortinet_media()
