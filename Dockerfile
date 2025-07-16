@@ -21,11 +21,14 @@ COPY requirements.txt ./requirements.txt
 # Install dependencies
 RUN uv pip install --no-cache-dir --system -r requirements.txt
 
+
 # Copy the application code
-COPY /app ./app
-COPY /tools ./tools
-COPY /scripts ./scripts
-COPY /secrets ./secrets
+COPY app ./app
+COPY tools ./tools
+COPY scripts ./scripts
+COPY secrets ./secrets
+# Ensure icons.db is copied
+COPY app/static/icons.db ./app/static/icons.db
 
 # Expose the port the app runs on
 EXPOSE 10000
