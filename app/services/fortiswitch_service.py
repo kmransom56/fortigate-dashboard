@@ -1,3 +1,20 @@
+# --- WAN Interface Helper ---
+def get_wan_ips():
+    """Get WAN interface IPs from FortiGate."""
+    try:
+        from app.services.fortigate_service import get_interfaces
+
+        interfaces = get_interfaces()
+        wan_ips = []
+        for name, iface in interfaces.items():
+            if name.lower().startswith("wan") and iface.get("ip"):
+                wan_ips.append({"name": name, "ip": iface["ip"]})
+        return wan_ips
+    except Exception as e:
+        logger.error(f"Error getting WAN IPs: {e}")
+        return []
+
+
 import os
 import logging
 import requests
@@ -440,6 +457,7 @@ def get_fortiswitches_enhanced():
     detected_devices_data = get_detected_devices()
     dhcp_data = get_fgt_dhcp()
     arp_data = get_system_arp()
+    wan_ips = get_wan_ips()
     logger.info("--- Finished fetching API data ---")
 
     # 2. Build lookup maps
@@ -526,7 +544,8 @@ def get_fortiswitches_enhanced():
     logger.info(
         f"=== Enhanced discovery complete. Processed {len(switches)} switches ==="
     )
-    return switches
+    # Return switches and WAN IPs for hierarchical view
+    return {"switches": switches, "wan_ips": wan_ips}
 
 
 # --- Compatibility wrapper ---

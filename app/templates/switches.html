@@ -39,9 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
 async function fetchAndUpdateSwitches() {
     try {
         const response = await fetch('/fortigate/api/switches');
-        const switches = await response.json();
-        updateSwitchesView(switches);
-        updateNetwork(switches);
+        const data = await response.json();
+        updateSwitchesView(data.switches);
+        updateNetwork(data);
     } catch (err) {
         console.error('Error fetching switch data:', err);
     }
@@ -53,7 +53,6 @@ function updateSwitchesView(switches) {
 
     switches.forEach(sw => {
         let allDevices = [];
-
         sw.ports?.forEach(port => {
             port.connected_devices?.forEach(dev => {
                 allDevices.push({
@@ -151,7 +150,7 @@ function updateSwitchesView(switches) {
     });
 }
 
-function updateNetwork(switches) {
+function updateNetwork(data) {
     const container = document.getElementById('network');
     if (!container) return;
 
@@ -159,8 +158,31 @@ function updateNetwork(switches) {
     const edges = [];
     const nodeMeta = {};
 
+    // Add cloud nodes for WAN IPs
+    let cloudNodeIds = [];
+    let nextNodeId = 1;
+    if (data.wan_ips && data.wan_ips.length) {
+        data.wan_ips.forEach((wan, idx) => {
+            const cloudId = nextNodeId++;
+            cloudNodeIds.push(cloudId);
+            nodes.add({
+                id: cloudId,
+                label: `Cloud\n${wan.name}: ${wan.ip}`,
+                shape: "icon",
+                icon: {
+                    face: "FontAwesome",
+                    code: "\uf0c2", // fa-cloud
+                    size: 50,
+                    color: "#7f8c8d"
+                }
+            });
+        });
+    }
+
+    // FortiGate node
+    const fgtNodeId = nextNodeId++;
     nodes.add({
-        id: 1,
+        id: fgtNodeId,
         label: "FortiGate",
         shape: "icon",
         icon: {
@@ -170,13 +192,18 @@ function updateNetwork(switches) {
             color: "#e74c3c"
         }
     });
+    // Connect cloud to FortiGate
+    cloudNodeIds.forEach(cloudId => {
+        edges.push({ from: cloudId, to: fgtNodeId });
+    });
 
-    let switchId = 2;
-    switches.forEach(sw => {
+    // Switches
+    let switchId = nextNodeId;
+    data.switches.forEach(sw => {
         const switchNodeId = switchId++;
         nodes.add({
             id: switchNodeId,
-            label: `${sw.name}\\n${sw.ip}`,
+            label: `${sw.name}\n${sw.ip}`,
             shape: "icon",
             icon: {
                 face: "FontAwesome",
@@ -185,14 +212,14 @@ function updateNetwork(switches) {
                 color: "#3498db"
             }
         });
-        edges.push({ from: 1, to: switchNodeId });
+        edges.push({ from: fgtNodeId, to: switchNodeId });
 
         let deviceNodeId = switchNodeId * 100;
         sw.ports?.forEach(port => {
             port.connected_devices?.forEach(dev => {
                 const ip = dev.device_ip || "";
                 const type = (dev.device_type || "").toLowerCase();
-                const label = `${dev.device_name || "Unknown"}\\n${ip}`;
+                const label = `${dev.device_name || "Unknown"}\n${ip}`;
                 nodes.add({
                     id: deviceNodeId,
                     label: label,

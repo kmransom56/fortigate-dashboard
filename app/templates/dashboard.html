@@ -115,66 +115,20 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const interfacesData = {{ interfaces | tojson }};
-      fetch('/api/cloud_status')
-        .then(res => res.json())
-        .then(data => {
-          document.getElementById('cloud-status').textContent = data.status;
-          updateNetwork(interfacesData, data.status);
-        })
-        .catch(() => {
-          document.getElementById('cloud-status').textContent = 'Unavailable';
-          updateNetwork(interfacesData, 'Unavailable');
-        });
-
-      // Device table hover logic
-      const hoverBox = document.createElement('div');
-      hoverBox.className = 'device-hover-box';
-      document.body.appendChild(hoverBox);
-
-      function showHoverBox(device, x, y) {
-        let html = `<strong>${device.device_name || 'Unknown'}</strong><br>`;
-        html += `<span class='text-muted'>${device.device_type || ''}</span><hr style='margin:0.3em 0;'>`;
-        html += `<b>IP:</b> ${device.device_ip || 'N/A'}<br>`;
-        html += `<b>MAC:</b> ${device.device_mac || 'N/A'}<br>`;
-        html += `<b>Manufacturer:</b> ${device.manufacturer || 'N/A'}<br>`;
-        html += `<b>Switch:</b> ${device.switch_name || 'N/A'}<br>`;
-        html += `<b>Port:</b> ${device.port_name || 'N/A'}<br>`;
-        html += `<b>VLAN:</b> ${device.vlan || 'N/A'}<br>`;
-        html += `<b>DHCP Status:</b> ${device.dhcp_status || 'N/A'}<br>`;
-        html += `<b>Last Seen:</b> ${device.last_seen || 'N/A'}<br>`;
-        if (device.recommendations) {
-          html += `<b>Recommendations:</b><ul>`;
-          for (const k in device.recommendations) {
-            html += `<li><strong>${k}:</strong> ${device.recommendations[k]}</li>`;
-          }
-          html += `</ul>`;
-        }
-        hoverBox.innerHTML = html;
-        hoverBox.style.display = 'block';
-        hoverBox.style.left = `${x + 20}px`;
-        hoverBox.style.top = `${y + 10}px`;
-        // Scale box width by content
-        const contentLength = hoverBox.textContent.length;
-        hoverBox.style.width = Math.min(400, Math.max(220, contentLength * 4)) + 'px';
-        hoverBox.style.opacity = 1;
-      }
-
-      function hideHoverBox() {
-        hoverBox.style.display = 'none';
-        hoverBox.style.opacity = 0;
-      }
-
-      document.querySelectorAll('.device-row').forEach(row => {
-        row.addEventListener('mousemove', e => {
-          const device = JSON.parse(row.getAttribute('data-device'));
-          showHoverBox(device, e.pageX, e.pageY);
-        });
-        row.addEventListener('mouseleave', hideHoverBox);
-      });
+      fetchAndUpdateDashboard();
     });
 
-    function updateNetwork(interfaces, cloudStatus) {
+    async function fetchAndUpdateDashboard() {
+      try {
+        const response = await fetch('/fortigate/api/switches');
+        const data = await response.json();
+        updateNetwork(data);
+      } catch (err) {
+        document.getElementById('cloud-status').textContent = 'Unavailable';
+      }
+    }
+
+    function updateNetwork(data) {
       const container = document.getElementById('network');
       if (!container) return;
 
@@ -182,67 +136,85 @@
       const edges = [];
       const nodeMeta = {};
 
-      // Cloud node
-      nodes.add({
-        id: 'cloud',
-        label: 'Cloud',
-        shape: 'icon',
-        icon: {
-          face: 'FontAwesome',
-          code: '\uf0c2', // fa-cloud
-          size: 60,
-          color: cloudStatus === 'Connected' ? '#27ae60' : '#b2bec3'
-        }
-      });
-      // FortiGate node
-      nodes.add({
-        id: 'fortigate',
-        label: 'FortiGate',
-        shape: 'icon',
-        icon: {
-          face: 'FontAwesome',
-          code: '\uf233', // fa-server
-          size: 50,
-          color: '#e74c3c'
-        }
-      });
-      edges.push({ from: 'cloud', to: 'fortigate' });
-
-      // FortiSwitch node
-      nodes.add({
-        id: 'fortiswitch',
-        label: 'FortiSwitch',
-        shape: 'icon',
-        icon: {
-          face: 'FontAwesome',
-          code: '\uf6ff', // fa-network-wired
-          size: 40,
-          color: '#2980b9'
-        }
-      });
-      edges.push({ from: 'fortigate', to: 'fortiswitch' });
-
-      // Device nodes
-      let deviceId = 1;
-      for (const key in interfaces) {
-        if (interfaces.hasOwnProperty(key)) {
-          const iface = interfaces[key];
-          const devNodeId = 'dev' + deviceId++;
+      // Add cloud nodes for WAN IPs
+      let cloudNodeIds = [];
+      let nextNodeId = 1;
+      if (data.wan_ips && data.wan_ips.length) {
+        data.wan_ips.forEach((wan, idx) => {
+          const cloudId = nextNodeId++;
+          cloudNodeIds.push(cloudId);
           nodes.add({
-            id: devNodeId,
-            label: `${iface.name}\n${iface.ip || 'No IP'}`,
-            shape: 'icon',
+            id: cloudId,
+            label: `Cloud\n${wan.name}: ${wan.ip}`,
+            shape: "icon",
             icon: {
-              face: 'FontAwesome',
-              code: '\uf109', // fa-desktop
-              size: 30,
-              color: '#16a085'
+              face: "FontAwesome",
+              code: "\uf0c2", // fa-cloud
+              size: 50,
+              color: "#7f8c8d"
             }
           });
-          edges.push({ from: 'fortiswitch', to: devNodeId });
-          nodeMeta[devNodeId] = { ip: iface.ip, name: iface.name };
-        }
+        });
       }
+
+      // FortiGate node
+      const fgtNodeId = nextNodeId++;
+      nodes.add({
+        id: fgtNodeId,
+        label: "FortiGate",
+        shape: "icon",
+        icon: {
+          face: "FontAwesome",
+          code: "\uf233",  // fa-server
+          size: 50,
+          color: "#e74c3c"
+        }
+      });
+      // Connect cloud to FortiGate
+      cloudNodeIds.forEach(cloudId => {
+        edges.push({ from: cloudId, to: fgtNodeId });
+      });
+
+      // Switches
+      let switchId = nextNodeId;
+      data.switches.forEach(sw => {
+        const switchNodeId = switchId++;
+        nodes.add({
+          id: switchNodeId,
+          label: `${sw.name}\n${sw.ip}`,
+          shape: "icon",
+          icon: {
+            face: "FontAwesome",
+            code: "\uf6ff",  // fa-network-wired
+            size: 40,
+            color: "#3498db"
+          }
+        });
+        edges.push({ from: fgtNodeId, to: switchNodeId });
+
+        let deviceNodeId = switchNodeId * 100;
+        sw.ports?.forEach(port => {
+          port.connected_devices?.forEach(dev => {
+            const ip = dev.device_ip || "";
+            const type = (dev.device_type || "").toLowerCase();
+            const label = `${dev.device_name || "Unknown"}\n${ip}`;
+            nodes.add({
+              id: deviceNodeId,
+              label: label,
+              shape: "icon",
+              icon: {
+                face: "FontAwesome",
+                code: "\uf108",  // fa-desktop
+                size: 30,
+                color: "#2ecc71"
+              }
+            });
+            edges.push({ from: switchNodeId, to: deviceNodeId });
+            nodeMeta[deviceNodeId] = { ip, type };
+            deviceNodeId++;
+          });
+        });
+      });
 
       const network = new vis.Network(container, { nodes, edges }, {
         nodes: {
@@ -250,19 +222,17 @@
           font: { size: 14 }
         },
         edges: { width: 2 },
-        layout: { hierarchical: { direction: 'UD', sortMethod: 'directed' } },
-        physics: false
+        physics: true
       });
 
-      network.on('click', function (params) {
+      network.on("click", function (params) {
         const nodeId = params.nodes[0];
         if (!nodeId || !nodeMeta[nodeId]) return;
-        const { ip, name } = nodeMeta[nodeId];
-        if (ip) {
-          alert(`Device: ${name}\nIP: ${ip}`);
-        } else {
-          alert(`Device: ${name}\nNo IP address available.`);
-        }
+        const { ip, type } = nodeMeta[nodeId];
+        if (!ip) return alert("No IP address available.");
+        const isWindows = type.includes("windows") || type.includes("rdp");
+        const uri = isWindows ? `rdp://${ip}` : `ssh://${ip}`;
+        window.open(uri, '_blank');
       });
     }
   </script>
