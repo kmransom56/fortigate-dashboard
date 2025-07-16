@@ -1,3 +1,16 @@
+# Add this function at the end of the file
+def get_cloud_status() -> str:
+    """Check FortiGate cloud connection status (mock or real API call)"""
+    # TODO: Replace with real API call if available
+    # Example: ping cloud endpoint, check VPN, etc.
+    try:
+        # Simulate cloud check (replace with real logic)
+        # For demo, always return 'Connected'
+        return "Connected"
+    except Exception:
+        return "Disconnected"
+
+
 import os
 import requests
 import json

@@ -361,6 +361,8 @@ def aggregate_port_devices(switch_serial, port_name, detected_map, dhcp_map, arp
 
     logger.debug(f"Port {port_name}: Found {len(detected_devices)} detected devices")
 
+    from app.utils.icon_db import get_icon
+
     for device in detected_devices:
         mac = normalize_mac(device.get("mac"))
         if not mac:
@@ -378,15 +380,31 @@ def aggregate_port_devices(switch_serial, port_name, detected_map, dhcp_map, arp
         # Determine IP address
         ip_address = dhcp_info.get("ip") or arp_info.get("ip", "Unknown")
 
-        # Get manufacturer info
-        manufacturer = device.get("manufacturer", "Unknown")
+        # Get manufacturer info (prefer oui_lookup if not present)
+        manufacturer = device.get("manufacturer")
+        if not manufacturer or manufacturer == "Unknown":
+            try:
+                from app.utils.oui_lookup import get_manufacturer_from_mac
+
+                manufacturer_lookup = get_manufacturer_from_mac(mac)
+                if manufacturer_lookup:
+                    manufacturer = manufacturer_lookup
+            except Exception:
+                pass
+
+        # Try to get icon from DB
+        icon_info = get_icon(manufacturer=manufacturer)
+        if not icon_info:
+            icon_info = get_icon(device_type=device.get("device_type"))
 
         device_info = {
             "device_mac": mac,
             "device_ip": ip_address,
             "device_name": hostname,
-            "device_type": hostname,
+            "device_type": device.get("device_type", hostname),
             "manufacturer": manufacturer,
+            "icon_path": icon_info["icon_path"] if icon_info else None,
+            "icon_title": icon_info["title"] if icon_info else None,
             "source": "switch_controller_detected",
             "vlan": device.get("vlan_id", "N/A"),
             "last_seen": device.get("last_seen", 0),

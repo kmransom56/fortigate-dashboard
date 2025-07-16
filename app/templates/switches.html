@@ -76,9 +76,12 @@ function updateSwitchesView(switches) {
               </thead>
               <tbody>
                 ${allDevices.map(dev => `
-                  <tr>
+                  <tr class="device-row" data-device='${JSON.stringify(dev)}'>
                     <td>${dev.port}</td>
-                    <td>${dev.device_name || 'Unknown'}</td>
+                    <td>
+                      ${(dev.icon_path ? `<img src='/static/${dev.icon_path.split('static/')[1]}' alt='${dev.icon_title || "icon"}' style='height:20px;vertical-align:middle;margin-right:4px;'>` : '')}
+                      ${dev.device_name || 'Unknown'}
+                    </td>
                     <td>${dev.device_mac || 'Unknown'}</td>
                     <td>${dev.device_ip || 'Unknown'}</td>
                     <td>${dev.device_type || 'Unknown'}</td>
@@ -107,8 +110,44 @@ function updateSwitchesView(switches) {
                 </div>
               </div>
               ${devicesTable}
+              <div id="device-hover-box" class="device-hover-box"></div>
             </div>
           </div>`;
+    });
+    // Device table hover logic
+    const hoverBox = document.getElementById('device-hover-box');
+    document.querySelectorAll('.device-row').forEach(row => {
+      row.addEventListener('mousemove', e => {
+        const device = JSON.parse(row.getAttribute('data-device'));
+        let html = `<strong>${device.device_name || 'Unknown'}</strong><br>`;
+        html += `<span class='text-muted'>${device.device_type || ''}</span><hr style='margin:0.3em 0;'>`;
+        html += `<b>IP:</b> ${device.device_ip || 'N/A'}<br>`;
+        html += `<b>MAC:</b> ${device.device_mac || 'N/A'}<br>`;
+        html += `<b>Manufacturer:</b> ${device.manufacturer || 'N/A'}<br>`;
+        html += `<b>Port:</b> ${device.port || 'N/A'}<br>`;
+        html += `<b>VLAN:</b> ${device.vlan || 'N/A'}<br>`;
+        html += `<b>DHCP Status:</b> ${device.dhcp_status || 'N/A'}<br>`;
+        html += `<b>Last Seen:</b> ${device.last_seen || 'N/A'}<br>`;
+        if (device.recommendations) {
+          html += `<b>Recommendations:</b><ul>`;
+          for (const k in device.recommendations) {
+            html += `<li><strong>${k}:</strong> ${device.recommendations[k]}</li>`;
+          }
+          html += `</ul>`;
+        }
+        hoverBox.innerHTML = html;
+        hoverBox.style.display = 'block';
+        hoverBox.style.left = `${e.pageX + 20}px`;
+        hoverBox.style.top = `${e.pageY + 10}px`;
+        // Scale box width by content
+        const contentLength = hoverBox.textContent.length;
+        hoverBox.style.width = Math.min(400, Math.max(220, contentLength * 4)) + 'px';
+        hoverBox.style.opacity = 1;
+      });
+      row.addEventListener('mouseleave', () => {
+        hoverBox.style.display = 'none';
+        hoverBox.style.opacity = 0;
+      });
     });
 }
 
