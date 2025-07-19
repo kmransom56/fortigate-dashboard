@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FortiGate Network Topology</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .topology-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      min-height: 800px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .topology-header {
+      background: linear-gradient(45deg, #FF6B35, #F7931E);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 20px 20px 0 0;
+    }
+    
+    .topology-controls {
+      background: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      padding: 1rem;
+    }
+    
+    .topology-canvas {
+      position: relative;
+      height: 600px;
+      background: radial-gradient(circle at center, #f8f9fa 0%, #ffffff 100%);
+      overflow: hidden;
+    }
+    
+    /* Device Icons */
+    .device-icon {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+    
+    .device-icon:hover {
+      transform: scale(1.1);
+      z-index: 20;
+    }
+    
+    /* Device Types */
+    .fortigate { background: linear-gradient(45deg, #2563eb, #1d4ed8); color: white; }
+    .fortiswitch { background: linear-gradient(45deg, #059669, #047857); color: white; }
+    .endpoint { background: linear-gradient(45deg, #7c3aed, #6d28d9); color: white; }
+    .server { 
+      border-radius: 15px; 
+      background: linear-gradient(45deg, #dc2626, #b91c1c); 
+      color: white;
+      width: 70px;
+      height: 50px;
+    }
+    
+    /* Risk Levels */
+    .risk-low { border: 3px solid #10b981; }
+    .risk-medium { border: 3px solid #f59e0b; }
+    .risk-high { border: 3px solid #ef4444; }
+    .risk-critical { border: 3px solid #dc2626; animation: pulse-warning 2s infinite; }
+    
+    @keyframes pulse-warning {
+      0%, 100% { box-shadow: 0 4px 15px rgba(220,38,38,0.4); }
+      50% { box-shadow: 0 4px 25px rgba(220,38,38,0.8); }
+    }
+    
+    /* Connection Lines */
+    .connection-line {
+      position: absolute;
+      background: #6b7280;
+      height: 2px;
+      transform-origin: left center;
+      z-index: 1;
+      opacity: 0.6;
+      transition: opacity 0.3s ease;
+    }
+    
+    .connection-line.active { background: #2563eb; opacity: 1; height: 4px; }
+    .connection-line.lag { height: 6px; background: #059669; }
+    
+    /* Traffic Bubbles */
+    .traffic-bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(37, 99, 235, 0.1);
+      border: 2px solid #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #2563eb;
+      font-weight: bold;
+      font-size: 12px;
+      z-index: 5;
+    }
+    
+    /* Tooltips */
+    .device-tooltip {
+      position: absolute;
+      background: rgba(0,0,0,0.9);
+      color: white;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      min-width: 200px;
+      z-index: 30;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .device-tooltip.show { opacity: 1; }
+    
+    /* Filter Controls */
+    .filter-button {
+      border: 1px solid #d1d5db;
+      background: white;
+      color: #374151;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      margin: 0.25rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .filter-button.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+    
+    .filter-button:hover {
+      background: #f3f4f6;
+    }
+    
+    .filter-button.active:hover {
+      background: #1d4ed8;
+    }
+    
+    /* Status Indicators */
+    .status-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      color: white;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    
+    .status-online { background: #10b981; }
+    .status-warning { background: #f59e0b; }
+    .status-critical { background: #ef4444; }
+    
+    /* Legend */
+    .topology-legend {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      font-size: 12px;
+      z-index: 25;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 0.5rem 0;
+    }
+    
+    .legend-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .legend-server { border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container-fluid p-4">
+    <div class="topology-container">
+      <!-- Header -->
+      <div class="topology-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h2 class="mb-1"><i class="fas fa-project-diagram me-2"></i>Network Topology</h2>
+            <p class="mb-0 opacity-75">Physical & Logical Security Fabric View</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-light btn-sm" id="refreshTopology">
+              <i class="fas fa-sync-alt me-1"></i>Refresh
+            </button>
+            <div class="dropdown">
+              <button class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-eye me-1"></i>View
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item active" href="#" data-view="physical">Physical Topology</a></li>
+                <li><a class="dropdown-item" href="#" data-view="logical">Logical Topology</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Controls -->
+      <div class="topology-controls">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <div class="d-flex flex-wrap">
+              <span class="me-2 fw-bold">Filter by:</span>
+              <button class="filter-button active" data-filter="all">All Devices</button>
+              <button class="filter-button" data-filter="traffic">Device Traffic</button>
+              <button class="filter-button" data-filter="count">Device Count</button>
+              <button class="filter-button" data-filter="type">Device Type</button>
+              <button class="filter-button" data-filter="risk">Risk Level</button>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="d-flex justify-content-end align-items-center">
+              <span class="me-2">Time Range:</span>
+              <select class="form-select form-select-sm" style="width: auto;">
+                <option value="now">Real-time</option>
+                <option value="5min">Last 5 minutes</option>
+                <option value="1hour">Last hour</option>
+                <option value="24hour">Last 24 hours</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Topology Canvas -->
+      <div class="topology-canvas" id="topologyCanvas">
+        <!-- Connections will be drawn here -->
+      </div>
+      
+      <!-- Legend -->
+      <div class="topology-legend">
+        <h6 class="fw-bold mb-2">Device Legend</h6>
+        <div class="legend-item">
+          <div class="legend-icon fortigate"></div>
+          <span>FortiGate</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon fortiswitch"></div>
+          <span>FortiSwitch</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon endpoint"></div>
+          <span>Endpoint</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon server legend-server"></div>
+          <span>Server</span>
+        </div>
+        <hr class="my-2">
+        <div class="legend-item">
+          <div class="legend-icon" style="border: 3px solid #10b981;"></div>
+          <span>Low Risk</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon" style="border: 3px solid #f59e0b;"></div>
+          <span>Medium Risk</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon" style="border: 3px solid #ef4444;"></div>
+          <span>High Risk</span>
+        </div>
+      </div>
+      
+      <!-- Tooltip -->
+      <div class="device-tooltip" id="deviceTooltip"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    class NetworkTopology {
+      constructor() {
+        this.canvas = document.getElementById('topologyCanvas');
+        this.tooltip = document.getElementById('deviceTooltip');
+        this.devices = [];
+        this.connections = [];
+        this.currentFilter = 'all';
+        this.currentView = 'physical';
+        
+        this.initializeTopology();
+        this.bindEvents();
+        this.startAutoRefresh();
+      }
+      
+      async initializeTopology() {
+        try {
+          // Fetch real topology data from your FortiGate/FortiSwitch APIs
+          const response = await fetch('/api/topology_data');
+          const topologyData = await response.json();
+          
+          this.devices = topologyData.devices || [];
+          this.connections = topologyData.connections || [];
+          
+          console.log('Loaded topology:', this.devices.length, 'devices,', this.connections.length, 'connections');
+          
+        } catch (error) {
+          console.error('Failed to load topology data:', error);
+          
+          // Fallback to sample data if API fails
+          this.devices = [
+            {
+              id: 'fg1',
+              type: 'fortigate',
+              name: 'FortiGate-Main',
+              ip: '192.168.0.254',
+              status: 'online',
+              risk: 'low',
+              position: { x: 400, y: 100 },
+              connections: [],
+              details: {
+                model: 'FortiGate',
+                status: 'API Connection Failed'
+              }
+            }
+          ];
+          this.connections = [];
+        }
+        
+        this.renderTopology();
+      }
+      
+      renderTopology() {
+        // Clear canvas
+        this.canvas.innerHTML = '';
+        
+        // Draw connections first (behind devices)
+        this.drawConnections();
+        
+        // Draw devices
+        this.devices.forEach(device => {
+          if (this.shouldShowDevice(device)) {
+            this.createDeviceElement(device);
+          }
+        });
+      }
+      
+      drawConnections() {
+        this.connections.forEach(connection => {
+          const fromDevice = this.devices.find(d => d.id === connection.from);
+          const toDevice = this.devices.find(d => d.id === connection.to);
+          
+          if (fromDevice && toDevice && this.shouldShowDevice(fromDevice) && this.shouldShowDevice(toDevice)) {
+            this.createConnectionLine(fromDevice, toDevice);
+          }
+        });
+      }
+      
+      createConnectionLine(from, to) {
+        const line = document.createElement('div');
+        line.className = 'connection-line';
+        
+        const dx = to.position.x - from.position.x;
+        const dy = to.position.y - from.position.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        
+        line.style.left = `${from.position.x + 30}px`;
+        line.style.top = `${from.position.y + 30}px`;
+        line.style.width = `${distance}px`;
+        line.style.transform = `rotate(${angle}deg)`;
+        
+        // Add special styling for LAG or high-traffic connections
+        if (from.type === 'fortiswitch' || to.type === 'fortiswitch') {
+          line.classList.add('active');
+        }
+        
+        this.canvas.appendChild(line);
+      }
+      
+      createDeviceElement(device) {
+        const element = document.createElement('div');
+        element.className = `device-icon ${device.type} risk-${device.risk}`;
+        element.style.left = `${device.position.x}px`;
+        element.style.top = `${device.position.y}px`;
+        
+        // Device icon
+        const icon = this.getDeviceIcon(device.type);
+        element.innerHTML = `<i class="${icon}"></i>`;
+        
+        // Status badge
+        if (device.status !== 'online') {
+          const badge = document.createElement('div');
+          badge.className = `status-badge status-${device.status}`;
+          badge.innerHTML = device.status === 'warning' ? '!' : '×';
+          element.appendChild(badge);
+        }
+        
+        // Event listeners
+        element.addEventListener('mouseenter', (e) => this.showTooltip(e, device));
+        element.addEventListener('mouseleave', () => this.hideTooltip());
+        element.addEventListener('click', () => this.selectDevice(device));
+        
+        this.canvas.appendChild(element);
+        
+        // Add device label
+        const label = document.createElement('div');
+        label.style.position = 'absolute';
+        label.style.left = `${device.position.x}px`;
+        label.style.top = `${device.position.y + 70}px`;
+        label.style.fontSize = '12px';
+        label.style.fontWeight = 'bold';
+        label.style.textAlign = 'center';
+        label.style.width = '60px';
+        label.style.color = '#374151';
+        label.textContent = device.name;
+        this.canvas.appendChild(label);
+      }
+      
+      getDeviceIcon(type) {
+        const icons = {
+          fortigate: 'fas fa-shield-alt',
+          fortiswitch: 'fas fa-network-wired',
+          endpoint: 'fas fa-desktop',
+          server: 'fas fa-server'
+        };
+        return icons[type] || 'fas fa-question';
+      }
+      
+      showTooltip(event, device) {
+        const tooltip = this.tooltip;
+        
+        let content = `
+          <div class="fw-bold mb-2">${device.name}</div>
+          <div><strong>IP:</strong> ${device.ip}</div>
+          <div><strong>Status:</strong> <span class="text-${this.getStatusColor(device.status)}">${device.status}</span></div>
+          <div><strong>Risk:</strong> <span class="text-${this.getRiskColor(device.risk)}">${device.risk}</span></div>
+        `;
+        
+        if (device.mac) {
+          content += `<div><strong>MAC:</strong> ${device.mac}</div>`;
+        }
+        
+        // Add device-specific details
+        Object.entries(device.details).forEach(([key, value]) => {
+          const label = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
+          content += `<div><strong>${label}:</strong> ${value}</div>`;
+        });
+        
+        tooltip.innerHTML = content;
+        tooltip.style.left = `${device.position.x + 70}px`;
+        tooltip.style.top = `${device.position.y}px`;
+        tooltip.classList.add('show');
+      }
+      
+      hideTooltip() {
+        this.tooltip.classList.remove('show');
+      }
+      
+      getStatusColor(status) {
+        const colors = { online: 'success', warning: 'warning', critical: 'danger' };
+        return colors[status] || 'secondary';
+      }
+      
+      getRiskColor(risk) {
+        const colors = { low: 'success', medium: 'warning', high: 'danger', critical: 'danger' };
+        return colors[risk] || 'secondary';
+      }
+      
+      shouldShowDevice(device) {
+        if (this.currentFilter === 'all') return true;
+        
+        switch (this.currentFilter) {
+          case 'risk':
+            return device.risk === 'medium' || device.risk === 'high' || device.risk === 'critical';
+          case 'type':
+            return true; // Show all, but could filter by specific types
+          case 'traffic':
+            return device.type === 'fortiswitch' || device.type === 'fortigate';
+          default:
+            return true;
+        }
+      }
+      
+      selectDevice(device) {
+        console.log('Device selected:', device);
+        // Implement device selection logic here
+        // Could open device details panel, etc.
+      }
+      
+      bindEvents() {
+        // Filter buttons
+        document.querySelectorAll('.filter-button').forEach(button => {
+          button.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-button').forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+            this.currentFilter = button.dataset.filter;
+            this.renderTopology();
+          });
+        });
+        
+        // View toggle
+        document.querySelectorAll('[data-view]').forEach(item => {
+          item.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('[data-view]').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            this.currentView = item.dataset.view;
+            this.renderTopology();
+          });
+        });
+        
+        // Refresh button
+        document.getElementById('refreshTopology').addEventListener('click', () => {
+          this.refreshData();
+        });
+      }
+      
+      async refreshData() {
+        console.log('Refreshing topology data...');
+        try {
+          const response = await fetch('/api/topology_data');
+          const topologyData = await response.json();
+          
+          this.devices = topologyData.devices || [];
+          this.connections = topologyData.connections || [];
+          
+          this.renderTopology();
+          console.log('Topology refreshed successfully');
+        } catch (error) {
+          console.error('Failed to refresh topology data:', error);
+        }
+      }
+      
+      startAutoRefresh() {
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+          this.refreshData();
+        }, 30000);
+      }
+    }
+    
+    // Initialize topology when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      new NetworkTopology();
+    });
+  </script>
+</body>
+</html>

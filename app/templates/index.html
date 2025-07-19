@@ -3,24 +3,248 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Welcome - FortiGate App</title>
+  <title>FortiGate Network Management Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .dashboard-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .fortinet-logo {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(45deg, #FF6B35, #F7931E);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2rem;
+      box-shadow: 0 10px 30px rgba(255,107,53,0.3);
+    }
+    
+    .fortinet-logo i {
+      font-size: 3rem;
+      color: white;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .status-widget {
+      background: white;
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin: 0.5rem;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+      border-left: 4px solid;
+    }
+    
+    .status-online { border-left-color: #28a745; }
+    .status-warning { border-left-color: #ffc107; }
+    .status-info { border-left-color: #17a2b8; }
+    
+    .nav-button {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 15px;
+      padding: 1rem 2rem;
+      color: white;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+    }
+    
+    .nav-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102,126,234,0.6);
+      color: white;
+    }
+    
+    .nav-button.secondary {
+      background: linear-gradient(45deg, #6c757d, #495057);
+      box-shadow: 0 5px 15px rgba(108,117,125,0.4);
+    }
+    
+    .nav-button.secondary:hover {
+      box-shadow: 0 8px 25px rgba(108,117,125,0.6);
+    }
+    
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+    }
+    
+    .online { background-color: #28a745; }
+    .offline { background-color: #dc3545; }
+    .warning { background-color: #ffc107; }
+  </style>
 </head>
-<body style="background: #f8fafc;">
-<div class="container mt-5 text-center">
-  <h1 class="mb-4"><i class="fa-solid fa-shield-halved text-primary"></i> Welcome to <span class="text-primary">FortiGate Monitor</span></h1>
-  <a href="/dashboard">
-    <img src="https://images.unsplash.com/photo-1614064641938-58fcdb5b1b46?auto=format&fit=crop&w=1200&q=80" class="img-fluid mb-4 rounded shadow-lg" alt="Firewall" style="max-width:350px;" />
-  </a>
-  <div class="d-grid gap-3 col-6 mx-auto">
-    <a href="/switches" class="btn btn-primary btn-lg shadow">
-      <i class="fa-solid fa-network-wired"></i> View FortiSwitches
-    </a>
-    <a href="/dashboard" class="btn btn-outline-secondary btn-lg shadow">
-      <i class="fa-solid fa-chart-line"></i> View Fortigate
-    </a>
+<body>
+<div class="container-fluid">
+  <div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-xl-8 col-lg-10">
+      <div class="dashboard-card p-5">
+        
+        <!-- Header Section -->
+        <div class="text-center mb-5">
+          <div class="fortinet-logo pulse">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <h1 class="fw-bold text-dark mb-2">FortiGate Network Monitor</h1>
+          <p class="text-muted lead">Enterprise Device Management & Automation Dashboard</p>
+        </div>
+
+        <!-- Status Widgets Row -->
+        <div class="row mb-5" id="statusWidgets">
+          <div class="col-md-4">
+            <div class="status-widget status-online">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-router text-success fa-2x me-3"></i>
+                <div>
+                  <h5 class="mb-1">FortiGate Status</h5>
+                  <p class="mb-0 text-muted">
+                    <span class="status-indicator online"></span>
+                    <span id="fortigate-status">Checking...</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="status-widget status-info">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-network-wired text-info fa-2x me-3"></i>
+                <div>
+                  <h5 class="mb-1">FortiSwitches</h5>
+                  <p class="mb-0 text-muted">
+                    <span class="status-indicator online"></span>
+                    <span id="switch-count">Loading...</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="status-widget status-warning">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-devices text-warning fa-2x me-3"></i>
+                <div>
+                  <h5 class="mb-1">Connected Devices</h5>
+                  <p class="mb-0 text-muted">
+                    <span class="status-indicator online"></span>
+                    <span id="device-count">Scanning...</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="row justify-content-center">
+          <div class="col-md-4 mb-3">
+            <a href="/switches" class="nav-button w-100 text-center d-block">
+              <i class="fas fa-network-wired me-2"></i>
+              Manage FortiSwitches
+              <small class="d-block mt-1 opacity-75">View ports, devices & automation</small>
+            </a>
+          </div>
+          
+          <div class="col-md-4 mb-3">
+            <a href="/topology" class="nav-button w-100 text-center d-block">
+              <i class="fas fa-project-diagram me-2"></i>
+              Network Topology
+              <small class="d-block mt-1 opacity-75">Security Fabric visualization</small>
+            </a>
+          </div>
+          
+          <div class="col-md-4 mb-3">
+            <a href="/dashboard" class="nav-button secondary w-100 text-center d-block">
+              <i class="fas fa-chart-line me-2"></i>
+              FortiGate Dashboard
+              <small class="d-block mt-1 opacity-75">Interfaces, policies & monitoring</small>
+            </a>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-4">
+          <small class="text-muted">
+            <i class="fas fa-cog me-1"></i>
+            Automated with intelligent caching & rate limiting
+          </small>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+
+<!-- Live Status Updates -->
+<script>
+// Fetch live status data
+async function updateStatus() {
+  try {
+    // Update FortiGate status
+    const cloudResponse = await fetch('/api/cloud_status');
+    const cloudData = await cloudResponse.json();
+    document.getElementById('fortigate-status').textContent = cloudData.status || 'Online';
+    
+    // Update device counts (placeholder for now - you can connect to real APIs)
+    document.getElementById('switch-count').textContent = '1 Active Switch';
+    document.getElementById('device-count').textContent = '7 Devices Detected';
+    
+  } catch (error) {
+    console.error('Status update failed:', error);
+    document.getElementById('fortigate-status').textContent = 'Connection Error';
+  }
+}
+
+// Update status on page load and every 30 seconds
+updateStatus();
+setInterval(updateStatus, 30000);
+
+// Add loading animation
+document.addEventListener('DOMContentLoaded', function() {
+  const widgets = document.querySelectorAll('.status-widget');
+  widgets.forEach((widget, index) => {
+    setTimeout(() => {
+      widget.style.opacity = '0';
+      widget.style.transform = 'translateY(20px)';
+      widget.style.transition = 'all 0.5s ease';
+      
+      setTimeout(() => {
+        widget.style.opacity = '1';
+        widget.style.transform = 'translateY(0)';
+      }, 100);
+    }, index * 150);
+  });
+});
+</script>
+
 </body>
 </html>
