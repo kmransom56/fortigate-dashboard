@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 import os
+from app.services import eraser_service
 
 # Load environment variables from .env file
 load_dotenv()
@@ -104,6 +105,11 @@ async def switches_page(request: Request):
 @app.get("/topology", response_class=HTMLResponse)
 async def topology_page(request: Request):
     return templates.TemplateResponse("topology.html", {"request": request})
+
+# 🌐 Route for 3D Network Topology "/topology-3d"
+@app.get("/topology-3d", response_class=HTMLResponse)
+async def topology_3d_page(request: Request):
+    return templates.TemplateResponse("topology_3d.html", {"request": request})
 
 
 # 📡 API endpoint for topology data
@@ -267,3 +273,8 @@ async def api_topology_data():
         device_count += 1
     
     return topology_data
+@app.post("/api/eraser/export")
+async def eraser_export(payload: dict):
+    if not eraser_service.is_enabled():
+        raise HTTPException(status_code=501, detail="Eraser AI integration not enabled")
+    return eraser_service.export_topology(payload)

@@ -474,3 +474,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Built with ❤️ for network automation and security professionals**
 
 *Transform your FortiGate management experience with enterprise-grade visualization and intelligent automation.*
+## 🌐 Network Topology 3D (`/topology-3d`)
+- Three.js-based 3D force layout using 3d-force-graph via CDN
+- Type-based colors and risk halos consistent with the 2D view
+- Hover labels show device details; click to select
+- Camera orbit, pan, and zoom supported
+- Cross-links between 2D (`/topology`) and 3D (`/topology-3d`) views
+
+### Eraser AI (Preview)
+- This repository includes hooks for future Eraser AI integration.
+- Set `ERASER_ENABLED=true` in the dashboard environment to enable the export endpoint.
+- API: `POST /api/eraser/export` returns 501 unless `ERASER_ENABLED` is set to true.
+- The 3D view contains a disabled “Export to Eraser” button that becomes enabled when the endpoint is active.
+- Full Eraser AI integration will be added in a future update.
