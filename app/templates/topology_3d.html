@@ -25,7 +25,7 @@
           <i class="fas fa-upload me-1"></i>Export to Eraser
         </button>
       </div>
-    <div id="notif" class="position-fixed top-0 end-0 p-3" style="z-index:1080;"></div>
+    <div id="notif" class="position-fixed top-0 end-0 p-3" style="z-index:1080;" aria-live="polite" role="status" aria-atomic="true"></div>
 
     </div>
     <div class="topology-container">
@@ -40,7 +40,9 @@
           integrity="sha384-GNPicn8pBA2/PGSyPTpxIlPurgLUYcNYJ2zskIq782dE9+gp5E32WSyuxZqA7J+u"
           crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"
+          integrity="sha384-xJg9IXkLBF6DBCGIEmpH5d2Pzct5onYpW8EegteK+7n0rxjhN4PUzfPxGbpWVjQf"
+          crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
 
   <script>
     function showNotice(message, type = 'danger', timeoutMs = 5000) {
@@ -49,6 +51,9 @@
         container = document.createElement('div');
         container.id = 'notif';
         container.className = 'position-fixed top-0 end-0 p-3';
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('role', 'status');
+        container.setAttribute('aria-atomic', 'true');
         document.body.appendChild(container);
       }
       const el = document.createElement('div');
@@ -102,7 +107,8 @@
     async function loadData() {
       let res;
       try {
-        res = await fetch('/api/topology_data');
+        const abs = new URL('/api/topology_data', window.location.origin).toString();
+        res = await fetch(abs, { cache: 'no-store' });
       } catch (e) {
         showNotice('Network error loading topology data.', 'danger');
         throw e;
@@ -189,7 +195,7 @@
       `;
     }
 
-    (async function init() {
+    window.addEventListener('DOMContentLoaded', async () => {
       try {
         await ensureDeps();
       } catch {
@@ -224,7 +230,8 @@
         console.log('Selected:', n);
       });
 
-      fetch('/api/eraser/status')
+      const eraserStatusUrl = new URL('/api/eraser/status', window.location.origin).toString();
+      fetch(eraserStatusUrl)
         .then(r => r.ok ? r.json() : { enabled: false })
         .then(js => {
           if (js && js.enabled) {
@@ -235,7 +242,8 @@
 
       document.getElementById('eraserExportBtn').addEventListener('click', async () => {
         try {
-          const res = await fetch('/api/eraser/export', {
+          const exportUrl = new URL('/api/eraser/export', window.location.origin).toString();
+          const res = await fetch(exportUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ topology: raw })
@@ -250,7 +258,7 @@
           showNotice('Eraser export not available', 'warning');
         }
       });
-    })();
+    });
   </script>
 </body>
 </html>
