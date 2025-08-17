@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FortiGate Network Topology 3D</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+    .top-bar { margin-bottom: 1rem; }
+    .topology-container { background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); padding: 1rem; }
+    #graph-3d { width: 100%; height: 80vh; background: #ffffff; border-radius: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center top-bar">
+      <div>
+        <h2 class="mb-1"><i class="fas fa-cube me-2"></i>Network Topology 3D</h2>
+        <p class="mb-0 text-muted">Interactive 3D Security Fabric View</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary btn-sm" href="/topology"><i class="fas fa-layer-group me-1"></i>2D Topology View</a>
+        <button id="eraserExportBtn" class="btn btn-outline-primary btn-sm" disabled title="Enable ERASER_ENABLED to activate">
+          <i class="fas fa-upload me-1"></i>Export to Eraser
+        </button>
+      </div>
+    </div>
+    <div class="topology-container">
+      <div id="graph-3d"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" defer></script>
+  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"></script>
+  <script>
+    const TYPE_COLORS = {
+      fortigate: '#2563eb',
+      fortiswitch: '#059669',
+      endpoint: '#7c3aed',
+      server: '#dc2626'
+    };
+    const RISK_SIZE = { low: 6, medium: 8, high: 10, critical: 12 };
+
+    async function loadData() {
+      const res = await fetch('/api/topology_data');
+      return await res.json();
+    }
+
+    function toGraphData(topology) {
+      const nodes = (topology.devices || []).map(d => ({
+        id: d.id,
+        name: d.name,
+        type: d.type,
+        risk: d.risk || 'low',
+        ip: d.ip || 'N/A',
+        mac: d.mac || '',
+        details: d.details || {}
+      }));
+      const links = (topology.connections || []).map(c => ({ source: c.from, target: c.to }));
+      return { nodes, links };
+    }
+
+    function makeLabelSprite(text, fontSizePx) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const pad = 30;
+      ctx.font = `bold ${fontSizePx}px Segoe UI, Arial, sans-serif`;
+      const textWidth = ctx.measureText(text).width;
+      canvas.width = textWidth + pad;
+      canvas.height = fontSizePx + pad;
+      ctx.font = `bold ${fontSizePx}px Segoe UI, Arial, sans-serif`;
+      ctx.fillStyle = '#111827';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, pad / 2, canvas.height / 2);
+      const texture = new THREE.CanvasTexture(canvas);
+      const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      const sprite = new THREE.Sprite(material);
+      sprite.scale.set(canvas.width / 4, canvas.height / 4, 1);
+      sprite.position.set(0, -12, 0);
+      return sprite;
+    }
+
+    function makeNodeObject(node) {
+      const group = new THREE.Group();
+      const size = RISK_SIZE[node.risk] || 6;
+      const color = new THREE.Color(TYPE_COLORS[node.type] || '#6b7280');
+
+      const geom = new THREE.SphereGeometry(size * 0.5, 16, 16);
+      const mat = new THREE.MeshLambertMaterial({ color });
+      const sphere = new THREE.Mesh(geom, mat);
+      group.add(sphere);
+
+      if (node.risk && node.risk !== 'low') {
+        const haloGeom = new THREE.SphereGeometry(size * 0.7, 16, 16);
+        const riskColor = node.risk === 'critical' ? 0xdc2626 : node.risk === 'high' ? 0xef4444 : 0xf59e0b;
+        const haloMat = new THREE.MeshBasicMaterial({ color: riskColor, transparent: true, opacity: 0.25 });
+        const halo = new THREE.Mesh(haloGeom, haloMat);
+        group.add(halo);
+      }
+
+      const label = makeLabelSprite(node.name || node.id, 48);
+      group.add(label);
+
+      return group;
+    }
+
+    function nodeLabel(node) {
+      const status = node.details && node.details.status ? node.details.status : 'online';
+      const man = node.details && node.details.manufacturer ? node.details.manufacturer : '';
+      const host = node.details && node.details.hostname ? node.details.hostname : '';
+      return `
+        <div style="font-size:12px">
+          <div><strong>${node.name}</strong></div>
+          <div>IP: ${node.ip}</div>
+          <div>Status: ${status}</div>
+          <div>Risk: ${node.risk}</div>
+          ${node.mac ? `<div>MAC: ${node.mac}</div>` : ''}
+          ${man ? `<div>Manufacturer: ${man}</div>` : ''}
+          ${host ? `<div>Hostname: ${host}</div>` : ''}
+        </div>
+      `;
+    }
+
+    (async function init() {
+      const raw = await loadData();
+      const data = toGraphData(raw);
+
+      const Graph = ForceGraph3D()(document.getElementById('graph-3d'))
+        .graphData(data)
+        .nodeThreeObject(makeNodeObject)
+        .nodeLabel(nodeLabel)
+        .nodeColor(n => TYPE_COLORS[n.type] || '#6b7280')
+        .nodeRelSize(4)
+        .linkOpacity(0.6)
+        .linkWidth(1.5)
+        .backgroundColor('#ffffff')
+        .showNavInfo(false);
+
+      const scene = Graph.scene();
+      const ambient = new THREE.AmbientLight(0xffffff, 0.9);
+      const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+      dir.position.set(1, 1, 1);
+      scene.add(ambient);
+      scene.add(dir);
+
+      const controls = Graph.controls();
+      controls.enableZoom = true;
+      controls.autoRotate = false;
+
+      Graph.onNodeClick(n => {
+        console.log('Selected:', n);
+      });
+
+      fetch('/api/eraser/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ping: true }) })
+        .then(r => {
+          if (r.status !== 501) {
+            document.getElementById('eraserExportBtn').disabled = false;
+          }
+        })
+        .catch(() => {});
+
+      document.getElementById('eraserExportBtn').addEventListener('click', async () => {
+        try {
+          const res = await fetch('/api/eraser/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topology: raw })
+          });
+          const js = await res.json();
+          alert(js.message || 'Exported');
+        } catch (e) {
+          alert('Eraser export not available');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
