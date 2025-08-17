@@ -487,3 +487,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - API: `POST /api/eraser/export` returns 501 unless `ERASER_ENABLED` is set to true.
 - The 3D view contains a disabled “Export to Eraser” button that becomes enabled when the endpoint is active.
 - Full Eraser AI integration will be added in a future update.
+#### CDN with SRI and local fallback
+- The 3D view uses pinned CDN URLs with Subresource Integrity (SRI) for Three.js and 3d-force-graph.
+- If CDN loading fails (e.g., offline/air-gapped), the page attempts to load local copies from:
+  - /static/vendor/three.min.js
+  - /static/vendor/3d-force-graph.min.js
+- To use local-only loading, block access to unpkg in your environment or remove the CDN script tags in app/templates/topology_3d.html. The runtime will detect missing globals and load local vendor files.

@@ -25,15 +25,79 @@
           <i class="fas fa-upload me-1"></i>Export to Eraser
         </button>
       </div>
+    <div id="notif" class="position-fixed top-0 end-0 p-3" style="z-index:1080;"></div>
+
+    <div id="notif" class="position-fixed top-0 end-0 p-3" style="z-index:1080;"></div>
+
     </div>
     <div class="topology-container">
       <div id="graph-3d"></div>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" defer></script>
-  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"></script>
+  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"
+          integrity="sha384-5UGTcMIxVUKFeJH0zOS3lqMAZNBG+fCXJbi3UglUq6ABO4MQJu6rxNa+MPP+qtwq"
+          crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+  <script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"
+          integrity="sha384-GNPicn8pBA2/PGSyPTpxIlPurgLUYcNYJ2zskIq782dE9+gp5E32WSyuxZqA7J+u"
+          crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"
+          integrity="sha384-5UGTcMIxVUKFeJH0zOS3lqMAZNBG+fCXJbi3UglUq6ABO4MQJu6rxNa+MPP+qtwq"
+          crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+  <script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"
+          integrity="sha384-GNPicn8pBA2/PGSyPTpxIlPurgLUYcNYJ2zskIq782dE9+gp5E32WSyuxZqA7J+u"
+          crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+
+  <script>
+    function showNotice(message, type = 'danger', timeoutMs = 5000) {
+      let container = document.getElementById('notif');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'notif';
+        container.className = 'position-fixed top-0 end-0 p-3';
+        document.body.appendChild(container);
+      }
+      const el = document.createElement('div');
+      el.className = `alert alert-${type} shadow`;
+      el.role = 'alert';
+      el.innerText = message;
+      container.appendChild(el);
+      if (timeoutMs) setTimeout(() => el.remove(), timeoutMs);
+    }
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error(`Failed to load ${src}`));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function ensureDeps() {
+      if (typeof THREE === 'undefined') {
+        try {
+          await loadScript('/static/vendor/three.min.js');
+        } catch (e) {
+          showNotice('Could not load Three.js (CDN and local fallback failed).', 'danger', 8000);
+          throw e;
+        }
+      }
+      if (typeof ForceGraph3D === 'undefined') {
+        try {
+          await loadScript('/static/vendor/3d-force-graph.min.js');
+        } catch (e) {
+          showNotice('Could not load 3D Force Graph (CDN and local fallback failed).', 'danger', 8000);
+          throw e;
+        }
+      }
+    }
+  </script>
+
   <script>
     const TYPE_COLORS = {
       fortigate: '#2563eb',
@@ -44,7 +108,17 @@
     const RISK_SIZE = { low: 6, medium: 8, high: 10, critical: 12 };
 
     async function loadData() {
-      const res = await fetch('/api/topology_data');
+      let res;
+      try {
+        res = await fetch('/api/topology_data');
+      } catch (e) {
+        showNotice('Network error loading topology data.', 'danger');
+        throw e;
+      }
+      if (!res.ok) {
+        showNotice(`Failed to load topology data (${res.status})`, 'danger');
+        throw new Error('Failed to load topology');
+      }
       return await res.json();
     }
 
@@ -124,6 +198,11 @@
     }
 
     (async function init() {
+      try {
+        await ensureDeps();
+      } catch {
+        return;
+      }
       const raw = await loadData();
       const data = toGraphData(raw);
 
@@ -153,9 +232,10 @@
         console.log('Selected:', n);
       });
 
-      fetch('/api/eraser/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ping: true }) })
-        .then(r => {
-          if (r.status !== 501) {
+      fetch('/api/eraser/status')
+        .then(r => r.ok ? r.json() : { enabled: false })
+        .then(js => {
+          if (js && js.enabled) {
             document.getElementById('eraserExportBtn').disabled = false;
           }
         })
@@ -168,10 +248,14 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ topology: raw })
           });
+          if (!res.ok) {
+            showNotice(`Export failed (${res.status})`, 'danger');
+            return;
+          }
           const js = await res.json();
-          alert(js.message || 'Exported');
+          showNotice(js.message || 'Exported', 'success', 3000);
         } catch (e) {
-          alert('Eraser export not available');
+          showNotice('Eraser export not available', 'warning');
         }
       });
     })();
