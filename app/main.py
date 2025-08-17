@@ -278,3 +278,6 @@ async def eraser_export(payload: dict):
     if not eraser_service.is_enabled():
         raise HTTPException(status_code=501, detail="Eraser AI integration not enabled")
     return eraser_service.export_topology(payload)
+@app.get("/api/eraser/status")
+async def eraser_status():
+    return {"enabled": eraser_service.is_enabled()}

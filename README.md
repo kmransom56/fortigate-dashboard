@@ -486,4 +486,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Set `ERASER_ENABLED=true` in the dashboard environment to enable the export endpoint.
 - API: `POST /api/eraser/export` returns 501 unless `ERASER_ENABLED` is set to true.
 - The 3D view contains a disabled “Export to Eraser” button that becomes enabled when the endpoint is active.
+#### Eraser AI status endpoint
+- Capability check: `GET /api/eraser/status` returns `{ "enabled": true|false }`.
+- Export: `POST /api/eraser/export` returns 501 unless enabled.
+
+#### CDN usage and offline deployments
+- The 3D view loads Three.js and 3d-force-graph from CDN with runtime error handling.
+- For air-gapped/offline environments, vendor these assets and update the script URLs accordingly.
+
 - Full Eraser AI integration will be added in a future update.
