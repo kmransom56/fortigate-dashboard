@@ -104,7 +104,8 @@
     async function loadData() {
       let res;
       try {
-        res = await fetch('/api/topology_data');
+        const abs = new URL('/api/topology_data', window.location.origin).toString();
+        res = await fetch(abs, { cache: 'no-store' });
       } catch (e) {
         showNotice('Network error loading topology data.', 'danger');
         throw e;
@@ -191,7 +192,7 @@
       `;
     }
 
-    (async function init() {
+    window.addEventListener('DOMContentLoaded', async () => {
       try {
         await ensureDeps();
       } catch {
@@ -226,7 +227,8 @@
         console.log('Selected:', n);
       });
 
-      fetch('/api/eraser/status')
+      const eraserStatusUrl = new URL('/api/eraser/status', window.location.origin).toString();
+      fetch(eraserStatusUrl)
         .then(r => r.ok ? r.json() : { enabled: false })
         .then(js => {
           if (js && js.enabled) {
@@ -237,7 +239,8 @@
 
       document.getElementById('eraserExportBtn').addEventListener('click', async () => {
         try {
-          const res = await fetch('/api/eraser/export', {
+          const exportUrl = new URL('/api/eraser/export', window.location.origin).toString();
+          const res = await fetch(exportUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ topology: raw })
@@ -252,7 +255,7 @@
           showNotice('Eraser export not available', 'warning');
         }
       });
-    })();
+    });
   </script>
 </body>
 </html>
