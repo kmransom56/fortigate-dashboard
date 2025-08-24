@@ -21,6 +21,16 @@
       </div>
       <div class="d-flex gap-2">
         <a class="btn btn-outline-secondary btn-sm" href="/topology"><i class="fas fa-layer-group me-1"></i>2D Topology View</a>
+        <button id="autoRotateBtn" class="btn btn-outline-dark btn-sm" title="Toggle auto-rotate">
+          <i class="fas fa-sync-alt me-1"></i>Auto-rotate
+        </button>
+        <button id="fitBtn" class="btn btn-outline-dark btn-sm" title="Fit to graph">
+          <i class="fas fa-compress-arrows-alt me-1"></i>Fit
+        </button>
+        <div class="form-check form-switch d-inline-flex align-items-center ms-2" title="Performance mode">
+          <input class="form-check-input" type="checkbox" id="perfModeSwitch">
+          <label class="form-check-label ms-1" for="perfModeSwitch">Performance</label>
+        </div>
         <button id="eraserExportBtn" class="btn btn-outline-primary btn-sm" disabled title="Enable ERASER_ENABLED to activate">
           <i class="fas fa-upload me-1"></i>Export to Eraser
         </button>
@@ -164,6 +174,8 @@
       return { nodes, links };
     }
 
+    let performanceMode = false;
+
     function makeLabelSprite(text, fontSizePx) {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -177,9 +189,13 @@
       ctx.textBaseline = 'middle';
       ctx.fillText(text, pad / 2, canvas.height / 2);
       const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      texture.generateMipmaps = false;
       const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      material.depthWrite = false;
       const sprite = new THREE.Sprite(material);
-      sprite.scale.set(canvas.width / 4, canvas.height / 4, 1);
+      const scaleDivisor = performanceMode ? 5 : 4;
+      sprite.scale.set(canvas.width / scaleDivisor, canvas.height / scaleDivisor, 1);
       sprite.position.set(0, -12, 0);
       return sprite;
     }
@@ -188,13 +204,13 @@
       const group = new THREE.Group();
       const size = RISK_SIZE[node.risk] || 6;
       const color = new THREE.Color(TYPE_COLORS[node.type] || '#6b7280');
-
-      const geom = new THREE.SphereGeometry(size * 0.5, 16, 16);
+      const segments = performanceMode ? 10 : 16;
+      const geom = new THREE.SphereGeometry(size * 0.5, segments, segments);
       const mat = new THREE.MeshLambertMaterial({ color });
       const sphere = new THREE.Mesh(geom, mat);
       group.add(sphere);
 
-      if (node.risk && node.risk !== 'low') {
+      if (!performanceMode && node.risk && node.risk !== 'low') {
         const haloGeom = new THREE.SphereGeometry(size * 0.7, 16, 16);
         const riskColor = node.risk === 'critical' ? 0xdc2626 : node.risk === 'high' ? 0xef4444 : 0xf59e0b;
         const haloMat = new THREE.MeshBasicMaterial({ color: riskColor, transparent: true, opacity: 0.25 });
@@ -202,7 +218,8 @@
         group.add(halo);
       }
 
-      const label = makeLabelSprite(node.name || node.id, 48);
+      const labelFont = performanceMode ? 36 : 48;
+      const label = makeLabelSprite(node.name || node.id, labelFont);
       group.add(label);
 
       return group;
@@ -234,16 +251,27 @@
       const raw = await loadData();
       const data = toGraphData(raw);
 
-      const Graph = ForceGraph3D()(document.getElementById('graph-3d'))
+      const containerEl = document.getElementById('graph-3d');
+      const Graph = ForceGraph3D()(containerEl)
         .graphData(data)
         .nodeThreeObject(makeNodeObject)
         .nodeLabel(nodeLabel)
         .nodeColor(n => TYPE_COLORS[n.type] || '#6b7280')
         .nodeRelSize(4)
-        .linkOpacity(0.6)
-        .linkWidth(1.5)
+        .linkOpacity(0.55)
+        .linkWidth(1.25)
         .backgroundColor('#ffffff')
         .showNavInfo(false);
+
+      // Ensure correct initial sizing and handle window resize
+      function resizeGraph() {
+        const width = containerEl.clientWidth || containerEl.offsetWidth || 800;
+        const height = containerEl.clientHeight || containerEl.offsetHeight || Math.round(window.innerHeight * 0.8);
+        Graph.width(width);
+        Graph.height(height);
+      }
+      resizeGraph();
+      window.addEventListener('resize', resizeGraph);
 
       const scene = Graph.scene();
       const ambient = new THREE.AmbientLight(0xffffff, 0.9);
@@ -255,6 +283,13 @@
       const controls = Graph.controls();
       controls.enableZoom = true;
       controls.autoRotate = false;
+      controls.autoRotateSpeed = 1.0;
+
+      // Lower device pixel ratio in performance mode
+      const renderer = Graph.renderer();
+      if (renderer && renderer.setPixelRatio) {
+        renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+      }
 
       Graph.onNodeClick(n => {
         console.log('Selected:', n);
@@ -288,6 +323,89 @@
           showNotice('Eraser export not available', 'warning');
         }
       });
+
+      // Auto-rotate toggle
+      const autoRotateBtn = document.getElementById('autoRotateBtn');
+      let autoRotating = false;
+      function setAutoRotate(on) {
+        autoRotating = on;
+        controls.autoRotate = on;
+        if (controls.update) controls.update();
+        autoRotateBtn.classList.toggle('btn-primary', on);
+        autoRotateBtn.classList.toggle('btn-outline-dark', !on);
+      }
+      autoRotateBtn.addEventListener('click', () => setAutoRotate(!autoRotating));
+
+      // Fit-to-graph
+      const fitBtn = document.getElementById('fitBtn');
+      function fitToGraph() {
+        // Prefer built-in zoomToFit if available
+        try {
+          if (typeof Graph.zoomToFit === 'function') {
+            Graph.zoomToFit(1000, 100);
+            return;
+          }
+        } catch (e) {}
+        const nodes = (Graph.graphData() && Graph.graphData().nodes) || [];
+        if (!nodes.length) return;
+        const withPos = nodes.filter(n => Number.isFinite(n.x) && Number.isFinite(n.y) && Number.isFinite(n.z));
+        const pts = withPos.length ? withPos : nodes.map(n => ({ x: 0, y: 0, z: 0 }));
+        let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+        let cx = 0, cy = 0, cz = 0;
+        pts.forEach(p => {
+          minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+          minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+          minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z);
+          cx += p.x; cy += p.y; cz += p.z;
+        });
+        cx /= pts.length; cy /= pts.length; cz /= pts.length;
+        const dx = maxX - minX, dy = maxY - minY, dz = maxZ - minZ;
+        const radius = Math.max(dx, dy, dz) / 2 || 100;
+        const camera = Graph.camera();
+        const fov = (camera && camera.fov) ? camera.fov : 60;
+        const fovRad = fov * Math.PI / 180;
+        const distance = (radius / Math.tan(fovRad / 2)) * 1.2;
+        Graph.cameraPosition({ x: cx, y: cy, z: cz + distance }, { x: cx, y: cy, z: cz }, 1000);
+      }
+      fitBtn.addEventListener('click', fitToGraph);
+
+      // Fit once after simulation settles
+      let fittedOnce = false;
+      if (typeof Graph.onEngineStop === 'function') {
+        Graph.onEngineStop(() => {
+          if (!fittedOnce) {
+            fitToGraph();
+            fittedOnce = true;
+          }
+        });
+      }
+
+      // Performance mode toggle
+      const perfSwitch = document.getElementById('perfModeSwitch');
+      function applyPerformanceMode(on) {
+        performanceMode = on;
+        // Renderer DPR
+        if (renderer && renderer.setPixelRatio) {
+          renderer.setPixelRatio(on ? 1 : Math.min(2, window.devicePixelRatio));
+        }
+        // Simulation tuning
+        const charge = Graph.d3Force && Graph.d3Force('charge');
+        if (charge && typeof charge.strength === 'function') {
+          charge.strength(on ? -40 : -120);
+        }
+        if (typeof Graph.cooldownTicks === 'function') {
+          Graph.cooldownTicks(on ? 80 : 200);
+        }
+        if (typeof Graph.enableNodeDrag === 'function') {
+          Graph.enableNodeDrag(!on);
+        }
+        Graph.linkOpacity(on ? 0.45 : 0.55);
+        Graph.linkWidth(on ? 1 : 1.25);
+        // Rebuild node objects to apply perf-mode label/halo changes
+        Graph.nodeThreeObject(makeNodeObject);
+        Graph.graphData(Graph.graphData());
+      }
+      perfSwitch.addEventListener('change', (e) => applyPerformanceMode(e.target.checked));
     });
   </script>
 </body>
