@@ -49,18 +49,30 @@
     </div>
   </div>
 
-  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"
-          integrity="sha384-5UGTcMIxVUKFeJH0zOS3lqMAZNBG+fCXJbi3UglUq6ABO4MQJu6rxNa+MPP+qtwq"
-          crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
-  <script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"
-          integrity="sha384-GNPicn8pBA2/PGSyPTpxIlPurgLUYcNYJ2zskIq782dE9+gp5E32WSyuxZqA7J+u"
-          crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"
-          integrity="sha384-xJg9IXkLBF6DBCGIEmpH5d2Pzct5onYpW8EegteK+7n0rxjhN4PUzfPxGbpWVjQf"
-          crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        rel="stylesheet"
+        integrity="sha384-+T0n3cI8a9kW8x4S1YVnZl2Z5oX5eWw7k2y7p8yq1fS9uQ2wF9yG7DkF5sO1f3p6"
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer">
+  <script src="/static/vendor/three.min.js" defer></script>
+  <script src="/static/vendor/3d-force-graph.min.js" defer></script>
 
   <script>
+    // Global error handlers to avoid stuck loading overlay
+    function hideLoadingOverlay() {
+      const l = document.getElementById('loading');
+      if (l) l.style.display = 'none';
+    }
+    window.addEventListener('error', (e) => {
+      hideLoadingOverlay();
+      try { showNotice(`Runtime error: ${e.message}`, 'danger', 10000); } catch {}
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      hideLoadingOverlay();
+      const msg = (e && e.reason && e.reason.message) ? e.reason.message : 'Unhandled promise rejection';
+      try { showNotice(`Runtime error: ${msg}`, 'danger', 10000); } catch {}
+    });
+
     function showNotice(message, type = 'danger', timeoutMs = 5000) {
       let container = document.getElementById('notif');
       if (!container) {
@@ -253,7 +265,15 @@
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
-      const hideLoading = () => { const l = document.getElementById('loading'); if (l) l.style.display = 'none'; };
+      const hideLoading = hideLoadingOverlay;
+      // Safety timer to ensure overlay never hangs forever
+      setTimeout(() => {
+        const stillVisible = document.getElementById('loading') && document.getElementById('loading').style.display !== 'none';
+        if (stillVisible) {
+          hideLoading();
+          showNotice('Took too long to load. Showing what we have.', 'warning', 6000);
+        }
+      }, 12000);
       try {
         await ensureDeps();
       } catch (e) {
