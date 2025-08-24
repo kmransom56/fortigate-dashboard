@@ -8,8 +8,9 @@
   <style>
     body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
     .top-bar { margin-bottom: 1rem; }
-    .topology-container { background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); padding: 1rem; }
+    .topology-container { background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); padding: 1rem; position: relative; }
     #graph-3d { width: 100%; height: 80vh; background: #ffffff; border-radius: 16px; }
+    .loading-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); border-radius: 16px; }
   </style>
 </head>
 <body>
@@ -38,7 +39,13 @@
     </div>
     <div id="notif" class="position-fixed top-0 end-0 p-3" style="z-index:1080;" aria-live="polite" role="status" aria-atomic="true"></div>
     <div class="topology-container">
-      <div id="graph-3d"></div>
+      <div id="graph-3d" style="position: relative;"></div>
+      <div id="loading" class="loading-overlay">
+        <div class="text-center">
+          <div class="spinner-border text-primary" role="status" aria-live="polite" aria-label="Loading topology"></div>
+          <div class="mt-2 text-muted small">Loading topology…</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -117,7 +124,10 @@
       let res;
       try {
         const abs = new URL('/api/topology_data', window.location.origin).toString();
-        res = await fetch(abs, { cache: 'no-store' });
+        const controller = new AbortController();
+        const t = setTimeout(() => controller.abort(), 8000);
+        res = await fetch(abs, { cache: 'no-store', signal: controller.signal });
+        clearTimeout(t);
       } catch (e) {
         showNotice('Network error loading topology data. Using fallback.', 'warning');
         return {
@@ -243,12 +253,23 @@
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
+      const hideLoading = () => { const l = document.getElementById('loading'); if (l) l.style.display = 'none'; };
       try {
         await ensureDeps();
-      } catch {
+      } catch (e) {
+        hideLoading();
+        showNotice('3D libraries failed to load. Check network or local vendor files.', 'danger', 8000);
+        console.error(e);
         return;
       }
-      const raw = await loadData();
+      let raw;
+      try {
+        raw = await loadData();
+      } catch (e) {
+        console.warn('Falling back to sample topology after load error:', e);
+        showNotice('Using sample topology (API error).', 'warning', 5000);
+        raw = { devices: [ { id: 'fortigate_main', type: 'fortigate', name: 'FortiGate-Main', ip: '192.168.0.254', risk: 'low', details: { status: 'Degraded' } } ], connections: [] };
+      }
       const data = toGraphData(raw);
 
       const containerEl = document.getElementById('graph-3d');
@@ -295,6 +316,14 @@
         console.log('Selected:', n);
       });
 
+      // Initial simulation tuning for faster first paint
+      try {
+        if (typeof Graph.cooldownTicks === 'function') Graph.cooldownTicks(100);
+        if (typeof Graph.enableNodeDrag === 'function') Graph.enableNodeDrag(true);
+        const charge = Graph.d3Force && Graph.d3Force('charge');
+        if (charge && typeof charge.strength === 'function') charge.strength(-90);
+      } catch {}
+
       const eraserStatusUrl = new URL('/api/eraser/status', window.location.origin).toString();
       fetch(eraserStatusUrl)
         .then(r => r.ok ? r.json() : { enabled: false })
@@ -323,6 +352,9 @@
           showNotice('Eraser export not available', 'warning');
         }
       });
+
+      // Hide loading overlay once initial frame is likely rendered
+      setTimeout(hideLoading, 300);
 
       // Auto-rotate toggle
       const autoRotateBtn = document.getElementById('autoRotateBtn');
