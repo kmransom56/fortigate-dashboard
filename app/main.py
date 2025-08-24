@@ -273,6 +273,10 @@ async def api_topology_data():
         device_count += 1
     
     return topology_data
+
+@app.get("/api/eraser/status")
+async def eraser_status():
+    return {"enabled": eraser_service.is_enabled()}
 @app.post("/api/eraser/export")
 async def eraser_export(payload: dict):
     if not eraser_service.is_enabled():
