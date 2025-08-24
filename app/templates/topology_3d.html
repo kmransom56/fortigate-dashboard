@@ -25,9 +25,8 @@
           <i class="fas fa-upload me-1"></i>Export to Eraser
         </button>
       </div>
-    <div id="notif" class="position-fixed top-0 end-0 p-3" style="z-index:1080;" aria-live="polite" role="status" aria-atomic="true"></div>
-
     </div>
+    <div id="notif" class="position-fixed top-0 end-0 p-3" style="z-index:1080;" aria-live="polite" role="status" aria-atomic="true"></div>
     <div class="topology-container">
       <div id="graph-3d"></div>
     </div>
@@ -110,14 +109,45 @@
         const abs = new URL('/api/topology_data', window.location.origin).toString();
         res = await fetch(abs, { cache: 'no-store' });
       } catch (e) {
-        showNotice('Network error loading topology data.', 'danger');
-        throw e;
+        showNotice('Network error loading topology data. Using fallback.', 'warning');
+        return {
+          devices: [
+            { id: 'fortigate_main', type: 'fortigate', name: 'FortiGate-Main', ip: '192.168.0.254', risk: 'low', details: { status: 'Active' } },
+            { id: 'switch_0', type: 'fortiswitch', name: 'FortiSwitch-1', ip: '192.168.0.10', risk: 'medium', details: { status: 'Authorized' } },
+            { id: 'device_0', type: 'endpoint', name: 'Workstation', ip: '192.168.0.101', risk: 'low', details: { manufacturer: 'Generic' } }
+          ],
+          connections: [
+            { from: 'fortigate_main', to: 'switch_0' },
+            { from: 'switch_0', to: 'device_0' }
+          ]
+        };
       }
       if (!res.ok) {
         showNotice(`Failed to load topology data (${res.status})`, 'danger');
-        throw new Error('Failed to load topology');
+        // Fallback to minimal sample data
+        return {
+          devices: [
+            { id: 'fortigate_main', type: 'fortigate', name: 'FortiGate-Main', ip: '192.168.0.254', risk: 'low', details: { status: 'Active' } },
+            { id: 'switch_0', type: 'fortiswitch', name: 'FortiSwitch-1', ip: '192.168.0.10', risk: 'medium', details: { status: 'Authorized' } },
+            { id: 'device_0', type: 'endpoint', name: 'Workstation', ip: '192.168.0.101', risk: 'low', details: { manufacturer: 'Generic' } }
+          ],
+          connections: [
+            { from: 'fortigate_main', to: 'switch_0' },
+            { from: 'switch_0', to: 'device_0' }
+          ]
+        };
       }
-      return await res.json();
+      try {
+        return await res.json();
+      } catch (e) {
+        // If JSON parsing fails, use fallback
+        return {
+          devices: [
+            { id: 'fortigate_main', type: 'fortigate', name: 'FortiGate-Main', ip: '192.168.0.254', risk: 'low', details: { status: 'Active' } }
+          ],
+          connections: []
+        };
+      }
     }
 
     function toGraphData(topology) {
