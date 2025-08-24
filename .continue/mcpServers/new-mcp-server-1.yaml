@@ -1,0 +1,21 @@
+# MCP Servers Configuration
+mcpServers:
+  - name: "fortigate-server"  # Give it a unique name
+    version: "1.0.0"
+    # Add other MCP server configuration here
+
+# If you have agents, they need proper structure too
+agents:
+  - name: "fortigate-agent"
+    version: "1.0.0"
+    models:
+      - provider: "openai"  # or your preferred provider
+        model: "gpt-4"
+        # Add your API configuration here
+
+# Models configuration (if separate)
+models:
+  - title: "GPT-4"
+    provider: "openai"
+    model: "gpt-4"
+    # Add required fields like apiKey if needed
