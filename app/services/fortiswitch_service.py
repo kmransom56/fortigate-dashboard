@@ -163,12 +163,17 @@ def fgt_api(endpoint, params=None):
     try:
         verify_ssl_str = os.environ.get("FORTIGATE_VERIFY_SSL", "false").lower()
         verify_ssl = verify_ssl_str == "true"
- 
-        def do_req(hdrs, prms):
-            r = requests.get(url, headers=hdrs, params=prms, verify=verify_ssl, timeout=8)
+
+        prms = dict(params or {})
+        vdom_env = os.environ.get("FORTIGATE_VDOM", "root")
+        if vdom_env and "vdom" not in prms:
+            prms["vdom"] = vdom_env
+
+        def do_req(hdrs, prms_local):
+            r = requests.get(url, headers=hdrs, params=prms_local, verify=verify_ssl, timeout=8)
             return r
- 
-        res = do_req(headers, params)
+
+        res = do_req(headers, prms)
         last_api_call_time = time.time()
         logger.debug(f"FGT API {endpoint} response status: {res.status_code}")
  
@@ -180,12 +185,12 @@ def fgt_api(endpoint, params=None):
  
         if res.status_code in (401, 403) or (isinstance(maybe_json(res), dict) and maybe_json(res).get("error") in ("authentication_failed", "invalid_apikey")):
             alt_headers = {"Accept": "application/json", "X-API-KEY": token}
-            res2 = do_req(alt_headers, params)
+            res2 = do_req(alt_headers, prms)
             last_api_call_time = time.time()
             if res2.status_code == 200:
                 result2 = maybe_json(res2)
                 return result2
-            prms2 = dict(params or {})
+            prms2 = dict(prms or {})
             prms2["access_token"] = token
             res3 = do_req({"Accept": "application/json"}, prms2)
             last_api_call_time = time.time()
@@ -205,7 +210,7 @@ def fgt_api(endpoint, params=None):
             logger.warning(f"FortiGate API rate limit exceeded (429) for {endpoint}. Waiting 30s before retry.")
             time.sleep(30)
             try:
-                res_retry = do_req(headers, params)
+                res_retry = do_req(headers, prms)
                 last_api_call_time = time.time()
                 if res_retry.status_code == 200:
                     return maybe_json(res_retry)
