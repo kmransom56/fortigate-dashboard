@@ -305,18 +305,25 @@
           const loader = new THREE.TextureLoader();
           loader.load(iconUrl, (texture) => {
             const planeMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
-            const sprite = new THREE.Sprite(planeMat);
-            const iconScale = 10;
-            sprite.scale.set(iconScale, iconScale, 1);
-            sprite.position.set(0, size * 0.9, 0);
-            group.add(sprite);
+            if (!group.userData.iconAdded) {
+              const sprite = new THREE.Sprite(planeMat);
+              const iconScale = Math.max(12, size * 2.2);
+              sprite.scale.set(iconScale, iconScale, 1);
+              sprite.position.set(0, size * 0.95, 0);
+              group.add(sprite);
+              group.userData.iconAdded = true;
+            }
           }, undefined, () => {
             const tex = makeCanvasIcon(node.type, size);
             const mat2 = new THREE.SpriteMaterial({ map: tex, transparent: true });
-            const spr2 = new THREE.Sprite(mat2);
-            spr2.scale.set(10, 10, 1);
-            spr2.position.set(0, size * 0.9, 0);
-            group.add(spr2);
+            if (!group.userData.iconAdded) {
+              const spr2 = new THREE.Sprite(mat2);
+              const iconScale2 = Math.max(12, size * 2.2);
+              spr2.scale.set(iconScale2, iconScale2, 1);
+              spr2.position.set(0, size * 0.95, 0);
+              group.add(spr2);
+              group.userData.iconAdded = true;
+            }
           });
         } catch (e) {
           // ignore texture load failures, we will still show label
