@@ -41,28 +41,20 @@ FORTISWITCH_PASSWORD = os.environ.get("FORTISWITCH_PASSWORD", "")
 # Initialize session manager
 session_manager = FortiGateSessionManager()
 
-# Legacy token support for fallback
-API_TOKEN_FILE = os.environ.get("FORTIGATE_API_TOKEN_FILE")
-API_TOKEN = ""  # Initialize API_TOKEN
+try:
+    from app.services.fortigate_service import load_api_token as _load_api_token
+except Exception:
+    _load_api_token = None
 
-if API_TOKEN_FILE and os.path.exists(API_TOKEN_FILE):
-    try:
-        with open(API_TOKEN_FILE, "r") as f:
-            API_TOKEN = f.read().strip()
-        if not API_TOKEN:
-            logger.warning(f"API token file {API_TOKEN_FILE} is empty.")
-    except Exception as e:
-        logger.error(f"Error reading API token file {API_TOKEN_FILE}: {e}")
-        # Fallback to environment variable if file read fails or is empty
-        API_TOKEN = os.environ.get("FORTIGATE_API_TOKEN", "")
+API_TOKEN = ""
+if _load_api_token:
+    API_TOKEN = _load_api_token()
 else:
-    # If no file path, directly use environment variable
     API_TOKEN = os.environ.get("FORTIGATE_API_TOKEN", "")
 
 if not API_TOKEN and not session_manager.password:
-    logger.critical(
-        "CRITICAL: Neither FortiGate session credentials nor API Token are available. "
-        "Configure session authentication or set FORTIGATE_API_TOKEN."
+    logger.warning(
+        "No API token found yet for FortiGate; will attempt session auth first and then try token fallback per request."
     )
 
 # Rate limiting globals - Disabled for session authentication (sessions have higher limits)
@@ -149,7 +141,16 @@ def fgt_api(endpoint, params=None):
             logger.info("Falling back to token authentication")
 
     # Fallback to token authentication
-    if not API_TOKEN:
+    token = API_TOKEN
+    if not token and _load_api_token:
+        try:
+            token = _load_api_token()
+            if token:
+                logger.info("Loaded FortiGate API token via fallback loader for FortiSwitch service")
+        except Exception:
+            token = ""
+
+    if not token:
         logger.error("Neither session authentication nor API token is available.")
         return {}
 
@@ -158,7 +159,7 @@ def fgt_api(endpoint, params=None):
     if not endpoint.startswith("/"):
         endpoint = "/" + endpoint
     url = f"{FORTIGATE_HOST}{endpoint}"
-    headers = {"Accept": "application/json", "Authorization": f"Bearer {API_TOKEN}"}
+    headers = {"Accept": "application/json", "Authorization": f"Bearer {token}"}
 
     try:
         # Make SSL verification configurable
@@ -166,7 +167,7 @@ def fgt_api(endpoint, params=None):
         verify_ssl = verify_ssl_str == "true"
 
         res = requests.get(
-            url, headers=headers, params=params, verify=verify_ssl, timeout=20
+            url, headers=headers, params=params, verify=verify_ssl, timeout=8
         )
         last_api_call_time = time.time()
 
@@ -196,7 +197,7 @@ def fgt_api(endpoint, params=None):
             # Retry once after waiting
             try:
                 res = requests.get(
-                    url, headers=headers, params=params, verify=verify_ssl, timeout=30
+                    url, headers=headers, params=params, verify=verify_ssl, timeout=8
                 )
                 last_api_call_time = time.time()
                 if res.status_code == 200:
