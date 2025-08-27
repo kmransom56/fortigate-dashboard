@@ -57,11 +57,14 @@
     try {
       const ForceGraph3D = (await import('https://esm.sh/3d-force-graph@1.73.4?deps=three@0.158.0')).default;
       const THREE = (await import('https://esm.sh/three@0.158.0')).default || (await import('https://esm.sh/three@0.158.0'));
+      if (!ForceGraph3D || !THREE) {
+        throw new Error('ESM loaded incompletely (missing THREE or ForceGraph3D)');
+      }
       window.ForceGraph3D = ForceGraph3D;
       window.THREE = THREE;
       window.dispatchEvent(new Event('libs-ready'));
     } catch (e) {
-      console.warn('ESM imports failed, will try local UMD fallback:', e);
+      console.warn('ESM imports failed or incomplete; will try local UMD fallback:', e);
     }
   </script>
   <script>
