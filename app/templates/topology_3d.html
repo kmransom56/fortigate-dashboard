@@ -71,21 +71,27 @@
     (function(){
       function ensureFallback() {
         if (window.ForceGraph3D && window.THREE) return;
+        try { console.log('[3D] UMD fallback starting...'); } catch(e) {}
         var sThree = document.createElement('script');
         sThree.src = '/static/vendor/three.min.js';
         sThree.defer = true;
         sThree.onload = function() {
+          try { console.log('[3D] three.min.js loaded. window.THREE:', typeof window.THREE); } catch(e){}
           var sFG = document.createElement('script');
           sFG.src = '/static/vendor/3d-force-graph.min.js';
           sFG.defer = true;
           sFG.onload = function() {
+            try { console.log('[3D] 3d-force-graph.min.js loaded. window.ForceGraph3D:', typeof window.ForceGraph3D); } catch(e){}
             if (!window.THREE && window.ForceGraph3D && window.ForceGraph3D.THREE) {
               window.THREE = window.ForceGraph3D.THREE;
+              try { console.log('[3D] Set window.THREE from ForceGraph3D.THREE'); } catch(e){}
             }
             window.dispatchEvent(new Event('libs-ready'));
           };
+          sFG.onerror = function() { try { console.error('[3D] Failed to load 3d-force-graph.min.js'); } catch(e){} };
           document.head.appendChild(sFG);
         };
+        sThree.onerror = function() { try { console.error('[3D] Failed to load three.min.js'); } catch(e){} };
         document.head.appendChild(sThree);
       }
       // If ESM succeeded, libs-ready event already fired; otherwise fallback after a short delay
