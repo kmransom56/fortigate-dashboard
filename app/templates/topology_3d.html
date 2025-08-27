@@ -59,7 +59,6 @@
       window.THREE = THREE;
     } catch (e) {
       const s = document.createElement('script');
-      s.type = 'module';
       s.src = '/static/vendor/three.min.js';
       document.head.appendChild(s);
     }
@@ -70,7 +69,6 @@
       window.ForceGraph3D = ForceGraph3D;
     } catch (e) {
       const s = document.createElement('script');
-      s.type = 'module';
       s.src = '/static/vendor/3d-force-graph.min.js';
       document.head.appendChild(s);
     }
