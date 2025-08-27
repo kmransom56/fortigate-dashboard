@@ -16,12 +16,12 @@ services:
     environment:
       - FORTIGATE_API_TOKEN_FILE=/run/secrets/fortigate_api_token
       - FORTIGATE_CERT_PATH=/app/certs/fortigate.pem
-      - FORTIGATE_HOST=https://192.168.0.254
+      - FORTIGATE_HOST=https://192.168.0.254:8443
       - FORTIGATE_USERNAME=admin
       - FORTIGATE_PASSWORD_FILE=/run/secrets/fortigate_password
       - FORTIGATE_VERIFY_SSL=false
+      - FORTIGATE_ALLOW_TOKEN_FALLBACK=false
       - LOG_LEVEL=DEBUG
-      - FORTISWITCH_HOST=192.168.0.253
       - FORTISWITCH_USERNAME=admin
       - FORTISWITCH_PASSWORD_FILE=/run/secrets/fortiswitch_password
 
@@ -33,7 +33,7 @@ services:
     networks:
       - fortinet_net
     environment:
-      - FORTIGATE_HOST=https://192.168.0.254
+      - FORTIGATE_HOST=https://192.168.0.254:8443
       - FORTIGATE_API_TOKEN_FILE=/run/secrets/fortigate_api_token
 
 secrets:

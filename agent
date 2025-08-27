@@ -1,0 +1,23 @@
+config system global
+    set admintimeout 60
+end
+
+config system api-user
+    edit "api_key_access"
+        set accprofile "super_admin"     
+        set vdom "root"                 
+        set trusthost1 192.168.0.1 
+        set trusthost2 192.168.0.2
+        set trusthost3 192.168.0.253
+        set comments "Optimized API account for script-based automation"
+    next
+end
+
+
+config system global
+    set auth-timeout 900                 
+
+
+config system global
+    set gui-lines-per-page 500            
+end

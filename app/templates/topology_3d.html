@@ -51,10 +51,12 @@
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         rel="stylesheet"
-        integrity="sha384-+T0n3cI8a9kW8x4S1YVnZl2Z5oX5eWw7k2y7p8yq1fS9uQ2wF9yG7DkF5sO1f3p6"
         crossorigin="anonymous"
         referrerpolicy="no-referrer">
-  <script src="/static/vendor/three.min.js" defer></script>
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.150.0/build/three.module.js';
+    window.THREE = THREE;
+  </script>
   <script src="/static/vendor/3d-force-graph.min.js" defer></script>
 
   <script>
@@ -104,14 +106,7 @@
     }
 
     async function ensureDeps() {
-      if (typeof THREE === 'undefined') {
-        try {
-          await loadScript('/static/vendor/three.min.js');
-        } catch (e) {
-          showNotice('Could not load Three.js (CDN and local fallback failed).', 'danger', 8000);
-          throw e;
-        }
-      }
+      // Three.js is now loaded as ES module above
       if (typeof ForceGraph3D === 'undefined') {
         try {
           await loadScript('/static/vendor/3d-force-graph.min.js');
@@ -201,13 +196,25 @@
     function makeLabelSprite(text, fontSizePx) {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      const pad = 30;
+      const pad = 36;
       ctx.font = `bold ${fontSizePx}px Segoe UI, Arial, sans-serif`;
       const textWidth = ctx.measureText(text).width;
       canvas.width = textWidth + pad;
       canvas.height = fontSizePx + pad;
       ctx.font = `bold ${fontSizePx}px Segoe UI, Arial, sans-serif`;
-      ctx.fillStyle = '#111827';
+      // semi-transparent rounded rect background for contrast
+      const radius = 10;
+      ctx.fillStyle = 'rgba(17,24,39,0.8)';
+      ctx.beginPath();
+      ctx.moveTo(radius, 0);
+      ctx.arcTo(canvas.width, 0, canvas.width, canvas.height, radius);
+      ctx.arcTo(canvas.width, canvas.height, 0, canvas.height, radius);
+      ctx.arcTo(0, canvas.height, 0, 0, radius);
+      ctx.arcTo(0, 0, canvas.width, 0, radius);
+      ctx.closePath();
+      ctx.fill();
+      // text
+      ctx.fillStyle = '#F9FAFB';
       ctx.textBaseline = 'middle';
       ctx.fillText(text, pad / 2, canvas.height / 2);
       const texture = new THREE.CanvasTexture(canvas);
@@ -216,7 +223,7 @@
       const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
       material.depthWrite = false;
       const sprite = new THREE.Sprite(material);
-      const scaleDivisor = performanceMode ? 5 : 4;
+      const scaleDivisor = performanceMode ? 5.5 : 4.5;
       sprite.scale.set(canvas.width / scaleDivisor, canvas.height / scaleDivisor, 1);
       sprite.position.set(0, -12, 0);
       return sprite;
@@ -231,6 +238,23 @@
       const mat = new THREE.MeshLambertMaterial({ color });
       const sphere = new THREE.Mesh(geom, mat);
       group.add(sphere);
+
+      // Manufacturer/device icon billboard if available
+      if (node.details && node.details.iconPath && !performanceMode) {
+        try {
+          const texLoader = new THREE.TextureLoader();
+          const src = node.details.iconPath.startsWith('/') ? node.details.iconPath : `/static/${node.details.iconPath.replace(/^\\\/?/, '')}`;
+          const texture = texLoader.load(node.details.textureUrl || src);
+          const planeMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+          const sprite = new THREE.Sprite(planeMat);
+          const iconScale = 10;
+          sprite.scale.set(iconScale, iconScale, 1);
+          sprite.position.set(0, size * 0.9, 0);
+          group.add(sprite);
+        } catch (e) {
+          // ignore texture load failures, we will still show label
+        }
+      }
 
       if (!performanceMode && node.risk && node.risk !== 'low') {
         const haloGeom = new THREE.SphereGeometry(size * 0.7, 16, 16);
@@ -332,16 +356,50 @@
         renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
       }
 
-      Graph.onNodeClick(n => {
+      Graph.onNodeClick(async n => {
+        try {
+          const statusRes = await fetch(new URL('/api/eraser/status', window.location.origin));
+          const status = statusRes.ok ? await statusRes.json() : { enabled: false };
+          if (status && status.enabled && n && n.details && n.details.iconPath) {
+            const abs = n.details.iconPath.startsWith('/') ? n.details.iconPath : `/static/${n.details.iconPath}`;
+            const res = await fetch(new URL('/api/eraser/export', window.location.origin), {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ imageUrl: abs })
+            });
+            if (res.ok) {
+              const js = await res.json();
+              // If Eraser returns a textureUrl/modelUrl, we can attach it live
+              if (js && (js.textureUrl || js.modelUrl)) {
+                // Simple path: replace node icon sprite texture if provided
+                if (js.textureUrl) {
+                  n.details.textureUrl = js.textureUrl;
+                  // Rebuild the node object to apply the new texture
+                  Graph.nodeThreeObject(makeNodeObject);
+                  Graph.graphData(Graph.graphData());
+                  showNotice('Applied Eraser texture to node', 'success', 2500);
+                } else {
+                  showNotice('Eraser returned a 3D model (not auto-applied)', 'info', 3500);
+                }
+              } else {
+                showNotice('Sent to Eraser for 3D generation', 'success', 2500);
+              }
+            }
+          }
+        } catch {}
         console.log('Selected:', n);
       });
 
       // Initial simulation tuning for faster first paint
       try {
-        if (typeof Graph.cooldownTicks === 'function') Graph.cooldownTicks(100);
+        if (typeof Graph.cooldownTicks === 'function') Graph.cooldownTicks(140);
         if (typeof Graph.enableNodeDrag === 'function') Graph.enableNodeDrag(true);
         const charge = Graph.d3Force && Graph.d3Force('charge');
-        if (charge && typeof charge.strength === 'function') charge.strength(-90);
+        if (charge && typeof charge.strength === 'function') charge.strength(-70);
+        // Link distance tuned for hierarchical layers
+        if (typeof Graph.d3Force === 'function') {
+          const link = Graph.d3Force('link');
+          if (link && typeof link.distance === 'function') link.distance(l => (l.source?.type === 'fortigate' ? 180 : 110));
+        }
       } catch {}
 
       const eraserStatusUrl = new URL('/api/eraser/status', window.location.origin).toString();

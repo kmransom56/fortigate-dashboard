@@ -55,6 +55,13 @@
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
       z-index: 10;
     }
+
+    .device-icon img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+    }
     
     .device-icon:hover {
       transform: scale(1.1);
@@ -116,16 +123,21 @@
     /* Tooltips */
     .device-tooltip {
       position: absolute;
-      background: rgba(0,0,0,0.9);
-      color: white;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      min-width: 200px;
+      background: rgba(17,24,39,0.95);
+      color: #F9FAFB;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.25rem;
+      min-width: 220px;
+      max-width: 320px;
       z-index: 30;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(2px);
+      transition: opacity 0.2s ease;
     }
     
     .device-tooltip.show { opacity: 1; }
@@ -413,9 +425,19 @@
         element.style.left = `${device.position.x}px`;
         element.style.top = `${device.position.y}px`;
         
-        // Device icon
-        const icon = this.getDeviceIcon(device.type);
-        element.innerHTML = `<i class="${icon}"></i>`;
+        // Device icon: prefer manufacturer icon if available
+        const iconPath = device.details && device.details.iconPath ? device.details.iconPath : '';
+        if (iconPath) {
+          const img = document.createElement('img');
+          img.alt = device.details.iconTitle || device.name || device.type;
+          // Ensure the icon path is absolute to /static
+          img.src = iconPath.startsWith('/') ? iconPath : `/static/${iconPath.replace(/^\/?/, '')}`;
+          element.appendChild(img);
+        } else {
+          // Fallback to font-awesome
+          const icon = this.getDeviceIcon(device.type);
+          element.innerHTML = `<i class="${icon}"></i>`;
+        }
         
         // Status badge
         if (device.status !== 'online') {

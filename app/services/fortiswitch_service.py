@@ -65,9 +65,9 @@ if not API_TOKEN and not session_manager.password:
         "Configure session authentication or set FORTIGATE_API_TOKEN."
     )
 
-# Rate limiting globals - Increased to handle FortiGate rate limiting
+# Rate limiting globals - Disabled for session authentication (sessions have higher limits)
 last_api_call_time = 0
-min_api_interval = 2.0  # Minimum 2 seconds between API calls
+min_api_interval = 0.1  # Minimum 0.1 seconds between API calls (session auth has much higher limits)
 
 # --- Utility Functions ---
 
@@ -488,7 +488,10 @@ def get_fortiswitches_enhanced():
             continue
 
         switch_serial = switch_data.get("serial", "Unknown")
-        switch_name = switch_data.get("switch-id", switch_serial)
+        # FortiGate detected-device API uses 'switch_id' which corresponds to 'switch-id' in managed-switch
+        # Use this identifier when correlating detected devices to ports
+        switch_id_for_detected_map = switch_data.get("switch-id", switch_serial)
+        switch_name = switch_id_for_detected_map
 
         logger.info(f"Processing switch: {switch_name} (Serial: {switch_serial})")
 
@@ -503,8 +506,10 @@ def get_fortiswitches_enhanced():
             port_name = port_data.get("interface", "Unknown")
 
             # Aggregate devices for this port
+            # IMPORTANT: detected-device map keys are built as f"{switch_id}:{port_name}"
+            # so we must use 'switch-id' here (not serial) to find matches
             connected_devices = aggregate_port_devices(
-                switch_serial, port_name, detected_map, dhcp_map, arp_map
+                switch_id_for_detected_map, port_name, detected_map, dhcp_map, arp_map
             )
 
             port_info = {

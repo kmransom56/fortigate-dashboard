@@ -5,6 +5,8 @@ from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 import os
 from app.services import eraser_service
+from app.utils.icon_db import seed_default_icons
+from fastapi.middleware.cors import CORSMiddleware
 
 # Load environment variables from .env file
 load_dotenv()
@@ -54,6 +56,15 @@ def get_all_device_details():
 
 app = FastAPI()
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
@@ -63,6 +74,9 @@ templates = Jinja2Templates(directory="app/templates")
 # Include Fortigate router
 app.include_router(fortigate.router)
 
+
+# Seed icons at startup
+seed_default_icons()
 
 # 🏠 Route for Home "/"
 @app.get("/", response_class=HTMLResponse)
@@ -118,13 +132,57 @@ async def api_topology_data():
     """
     Returns real network topology data for the Security Fabric-style visualization
     """
+    import logging
+    logger = logging.getLogger("api_topology_data")
+    logger.info("START /api/topology_data endpoint")
     from app.services.fortigate_service import get_interfaces
-    
-    # Get real data from your existing services
-    interfaces = get_interfaces()
-    switches_data = get_fortiswitches()
-    device_details = get_all_device_details()  # This has enriched manufacturer data!
-    
+
+    # Fetch data with aggressive timeouts to avoid UI hanging
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
+
+    interfaces = {}
+    switches_data = []
+    device_details = []
+
+    try:
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            fut_if = executor.submit(get_interfaces)
+            fut_sw = executor.submit(get_fortiswitches)
+            fut_dev = executor.submit(get_all_device_details)
+
+            try:
+                interfaces = fut_if.result(timeout=4)
+            except FuturesTimeout:
+                logger.warning("get_interfaces() timed out; continuing with 0 interfaces")
+            except Exception as e:
+                logger.warning(f"get_interfaces() failed: {e}")
+
+            try:
+                switches_data = fut_sw.result(timeout=5)
+            except FuturesTimeout:
+                logger.warning("get_fortiswitches() timed out; continuing with no switches")
+            except Exception as e:
+                logger.warning(f"get_fortiswitches() failed: {e}")
+
+            try:
+                device_details = fut_dev.result(timeout=5)
+            except FuturesTimeout:
+                logger.warning("get_all_device_details() timed out; continuing with 0 devices")
+            except Exception as e:
+                logger.warning(f"get_all_device_details() failed: {e}")
+
+        logger.info(
+            f"Fetched for topology -> interfaces: {len(interfaces) if interfaces else 0}, "
+            f"switches: {len(switches_data['switches']) if isinstance(switches_data, dict) and 'switches' in switches_data else len(switches_data) if switches_data else 0}, "
+            f"devices: {len(device_details) if device_details else 0}"
+        )
+    except Exception as e:
+        logger.warning(f"Concurrent fetch failed unexpectedly: {e}")
+        # Fall back to sequential but non-blocking defaults
+        interfaces = interfaces or {}
+        switches_data = switches_data or []
+        device_details = device_details or []
+
     # Transform data into topology format
     topology_data = {
         "devices": [],
@@ -132,10 +190,11 @@ async def api_topology_data():
     }
     
     # Add FortiGate device
+    fortigate_name = os.getenv("FORTIGATE_NAME", "FortiGate-Main")
     topology_data["devices"].append({
         "id": "fortigate_main",
         "type": "fortigate",
-        "name": "FortiGate-Main",
+        "name": fortigate_name,
         "ip": "192.168.0.254",
         "status": "online",
         "risk": "low",
@@ -143,7 +202,9 @@ async def api_topology_data():
         "details": {
             "model": "FortiGate",
             "interfaces": len(interfaces) if interfaces else 0,
-            "status": "Active"
+            "status": "Active",
+            "iconPath": "icons/nd/firewall.svg",
+            "iconTitle": "Firewall"
         }
     })
     
@@ -153,7 +214,10 @@ async def api_topology_data():
     else:
         switches = switches_data if switches_data else []
     
-    switch_y = 300
+    # Lay out switches horizontally under FortiGate, and endpoints below their switch
+    switch_y = 280
+    switch_x_start = 120
+    switch_spacing = 220
     for i, switch in enumerate(switches):
         if isinstance(switch, dict):
             switch_id = f"switch_{i}"
@@ -169,13 +233,15 @@ async def api_topology_data():
                 "ip": switch.get("mgmt_ip", "N/A"),
                 "status": switch_status,
                 "risk": switch_risk,
-                "position": {"x": 400, "y": switch_y},
+                "position": {"x": switch_x_start + i * switch_spacing, "y": switch_y},
                 "details": {
                     "serial": switch.get("serial", "Unknown"),
                     "model": switch.get("model", "FortiSwitch"),
                     "ports": len(switch.get("ports", [])),
                     "status": switch.get("status", "Unknown"),
-                    "connectedDevices": len([d for d in device_details if d.get("switch_serial") == switch.get("serial")])
+                    "connectedDevices": len([d for d in device_details if d.get("switch_serial") == switch.get("serial")]),
+                    "iconPath": "icons/nd/switch.svg",
+                    "iconTitle": "Switch"
                 }
             })
             
@@ -188,9 +254,8 @@ async def api_topology_data():
             switch_y += 200
     
     # Now use the enriched device_details for connected devices
-    device_x_start = 150
-    device_y = 450
-    device_spacing = 120
+    device_row_y = 420
+    device_spacing = 110
     device_count = 0
     
     for device in device_details:
@@ -201,7 +266,12 @@ async def api_topology_data():
         
         # Get enriched device information
         manufacturer = device.get("manufacturer", "Unknown Manufacturer")
-        device_name = device.get("hostname") or manufacturer or "Unknown Device"
+        device_name = (
+            device.get("hostname")
+            or device.get("device_name")
+            or manufacturer
+            or "Unknown Device"
+        )
         
         # Determine device type based on manufacturer or other clues
         device_type = "endpoint"
@@ -233,27 +303,52 @@ async def api_topology_data():
         if len(display_name) > 15:
             display_name = display_name[:12] + "..."
         
+        # Priority for icon resolution: binding by serial/mac/manufacturer -> manufacturer icon -> device_type icon
+        icon_path = device.get("icon_path") or ""
+        icon_title = device.get("icon_title") or ""
+        if not icon_path:
+            try:
+                from app.utils.icon_db import get_icon as _get_icon, get_icon_binding as _get_binding
+                binding = _get_binding(
+                    manufacturer=manufacturer,
+                    serial=device.get("switch_serial"),
+                    mac=device.get("mac") or device.get("device_mac"),
+                    device_type=device_type,
+                )
+                if binding and binding.get("icon_path"):
+                    icon_path = binding.get("icon_path")
+                    icon_title = binding.get("title") or icon_title
+                elif manufacturer:
+                    icon_info = _get_icon(manufacturer=manufacturer)
+                    if icon_info:
+                        icon_path = icon_info.get("icon_path") or icon_path
+                        icon_title = icon_info.get("title") or icon_title
+                if not icon_path:
+                    icon_info = _get_icon(device_type=device_type)
+                    if icon_info:
+                        icon_path = icon_info.get("icon_path") or icon_path
+                        icon_title = icon_info.get("title") or icon_title
+            except Exception:
+                pass
+
         topology_data["devices"].append({
             "id": device_id,
             "type": device_type,
             "name": display_name,
-            "ip": device.get("ip", "N/A"),
-            "mac": device.get("mac", "N/A"),
+            "ip": device.get("ip") or device.get("device_ip", "N/A"),
+            "mac": device.get("mac") or device.get("device_mac", "N/A"),
             "status": "online",
             "risk": risk_level,
-            "position": {
-                "x": device_x_start + (device_count * device_spacing),
-                "y": device_y
-            },
+            "position": {"x": 0, "y": 0},  # temp; we compute below
             "details": {
                 "manufacturer": manufacturer,
                 "port": device.get("port_name", "Unknown"),
                 "switch": device.get("switch_name", "Unknown"),
                 "lastSeen": "Active",
-                "mac": device.get("mac", "N/A"),
-                "hostname": device.get("hostname", "N/A"),
-                "iconPath": device.get("icon_path", ""),
-                "iconTitle": device.get("icon_title", "")
+                "mac": device.get("mac") or device.get("device_mac", "N/A"),
+                "hostname": device.get("hostname") or device.get("device_name", "N/A"),
+                "iconPath": icon_path,
+                "iconTitle": icon_title
             }
         })
         
@@ -264,6 +359,13 @@ async def api_topology_data():
             for j, switch in enumerate(switches):
                 if isinstance(switch, dict) and switch.get("serial") == switch_serial:
                     switch_id = f"switch_{j}"
+                    # place endpoint under its switch horizontally
+                    sx = switch_x_start + j * switch_spacing
+                    # Count how many devices already placed under this switch to offset horizontally
+                    under = [d for d in topology_data["devices"] if d["id"].startswith("device_") and any(c for c in topology_data["connections"] if c["to"] == d["id"] and c["from"] == switch_id)]
+                    dx = sx - (len(under) * (device_spacing/2)) + (len(under) * device_spacing)
+                    # Update device position (last appended)
+                    topology_data["devices"][-1]["position"] = {"x": dx, "y": device_row_y}
                     topology_data["connections"].append({
                         "from": switch_id,
                         "to": device_id
@@ -272,6 +374,7 @@ async def api_topology_data():
         
         device_count += 1
     
+        logger.info("END /api/topology_data endpoint - returning topology data")
     return topology_data
 
 @app.get("/api/eraser/status")

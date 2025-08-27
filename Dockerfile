@@ -3,7 +3,7 @@ FROM python:3.12-slim
 ENV UV_VERSION=0.1.19
 
 # Install dependencies and uv
-RUN apt-get update && apt-get install -y curl ca-certificates \
+RUN apt-get update && apt-get install -y curl ca-certificates iputils-ping net-tools \
     && curl -Ls https://astral.sh/uv/install.sh | sh \
     && mv ~/.local/bin/uv /usr/local/bin/uv \
     && chmod +x /usr/local/bin/uv \

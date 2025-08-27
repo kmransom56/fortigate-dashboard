@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 
 # Rate limiting - track last API call time
 _last_api_call = 0
-_min_interval = 10  # Minimum 10 seconds between API calls
+_min_interval = 0.1  # Minimum 0.1 second between API calls (session auth has much higher limits)
 
-# Authentication mode: 'session' (preferred) or 'token'
+# Authentication mode: 'session' (preferred) or 'token' 
 _auth_mode = "session"
 
 
@@ -113,23 +113,31 @@ def fgt_api(
             result = session_manager.make_api_request(endpoint)
             logger.info(f"Session API response for {endpoint}: {result}")  # Added log
 
-            # If session auth failed, fall back to token auth
+            # Check environment variable for fallback behavior
+            use_token_fallback = os.getenv("FORTIGATE_ALLOW_TOKEN_FALLBACK", "false").lower() == "true"
+            
+            # If session auth failed, optionally fall back to token auth
             if "error" in result and result.get("error") == "authentication_failed":
-                logger.warning(
-                    "Session authentication failed, falling back to token authentication"
-                )
-                if api_token:
-                    return _fgt_api_with_token(endpoint, api_token, fortigate_ip)
+                if use_token_fallback:
+                    logger.warning(
+                        "Session authentication failed, falling back to token authentication"
+                    )
+                    if api_token:
+                        return _fgt_api_with_token(endpoint, api_token, fortigate_ip)
+                    else:
+                        # Try to load token as fallback
+                        fallback_token = load_api_token()
+                        logger.info(
+                            f"Fallback API token loaded: {'<present>' if fallback_token else '<not present>'}"
+                        )  # Added log
+                        if fallback_token:
+                            return _fgt_api_with_token(
+                                endpoint, fallback_token, fortigate_ip
+                            )
                 else:
-                    # Try to load token as fallback
-                    fallback_token = load_api_token()
-                    logger.info(
-                        f"Fallback API token loaded: {'<present>' if fallback_token else '<not present>'}"
-                    )  # Added log
-                    if fallback_token:
-                        return _fgt_api_with_token(
-                            endpoint, fallback_token, fortigate_ip
-                        )
+                    logger.warning(
+                        "Session authentication failed and token fallback is disabled. Set FORTIGATE_ALLOW_TOKEN_FALLBACK=true to enable fallback."
+                    )
 
             return result
         else:
