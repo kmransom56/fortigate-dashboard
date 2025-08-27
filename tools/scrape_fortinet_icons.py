@@ -3,6 +3,7 @@ import sys
 import subprocess
 import shutil
 import urllib.request
+import time
 
 SVG_DIR = os.path.join(os.path.dirname(__file__), "..", "app", "static", "icons", "fortinet", "svg")
 PNG_DIR = os.path.join(os.path.dirname(__file__), "..", "app", "static", "icons", "fortinet", "png")
@@ -23,45 +24,62 @@ def ensure_dirs():
 def download_svgs():
     for name, url in ICON_SVGS.items():
         dst = os.path.join(SVG_DIR, f"{name}.svg")
-        with urllib.request.urlopen(url) as resp, open(dst, "wb") as f:
-            f.write(resp.read())
-        print(f"saved {dst}")
+        try:
+            with urllib.request.urlopen(url) as resp, open(dst, "wb") as f:
+                f.write(resp.read())
+            print(f"saved {dst}")
+        except Exception as e:
+            print(f"download failed {url}: {e}", file=sys.stderr)
 
 def has_rsvg():
     return shutil.which("rsvg-convert") is not None
 
-def convert_with_rsvg():
-    for name in ICON_SVGS.keys():
-        svg = os.path.join(SVG_DIR, f"{name}.svg")
-        png = os.path.join(PNG_DIR, f"{name}.png")
-        subprocess.check_call(["rsvg-convert", "-w", "256", "-h", "256", svg, "-o", png])
-        print(f"converted {png}")
+def convert_file_rsvg(svg_path, png_path, size=256):
+    subprocess.check_call(["rsvg-convert", "-w", str(size), "-h", str(size), svg_path, "-o", png_path])
 
-def convert_with_pillow():
+def convert_file_pillow(svg_path, png_path, size=256):
     from PIL import Image  # noqa
     try:
         import cairosvg  # type: ignore
     except Exception:
         print("cairosvg not available; cannot convert SVGs without rsvg-convert", file=sys.stderr)
-        sys.exit(2)
-    for name in ICON_SVGS.keys():
-        svg = os.path.join(SVG_DIR, f"{name}.svg")
-        png = os.path.join(PNG_DIR, f"{name}.png")
-        cairosvg.svg2png(url=svg, write_to=png, output_width=256, output_height=256)  # type: ignore
-        print(f"converted {png}")
+        raise
+    cairosvg.svg2png(url=svg_path, write_to=png_path, output_width=size, output_height=size)  # type: ignore
+
+def needs_convert(svg_path, png_path):
+    if not os.path.exists(png_path):
+        return True
+    try:
+        return os.path.getmtime(svg_path) > os.path.getmtime(png_path)
+    except Exception:
+        return True
+
+def convert_directory():
+    svgs = [f for f in os.listdir(SVG_DIR) if f.lower().endswith(".svg")]
+    if not svgs:
+        print("no svg files found to convert")
+        return
+    use_rsvg = has_rsvg()
+    for name in svgs:
+        svg = os.path.join(SVG_DIR, name)
+        base = os.path.splitext(os.path.basename(name))[0]
+        png = os.path.join(PNG_DIR, f"{base}.png")
+        if not needs_convert(svg, png):
+            continue
+        try:
+            if use_rsvg:
+                convert_file_rsvg(svg, png, 256)
+            else:
+                convert_file_pillow(svg, png, 256)
+            print(f"converted {png}")
+            time.sleep(0.02)
+        except Exception as e:
+            print(f"convert failed {svg}: {e}", file=sys.stderr)
 
 def main():
     ensure_dirs()
     download_svgs()
-    if has_rsvg():
-        convert_with_rsvg()
-    else:
-        try:
-            convert_with_pillow()
-        except Exception as e:
-            print(f"conversion failed: {e}", file=sys.stderr)
-            print("Install librsvg2-bin (rsvg-convert) or pip install cairosvg pillow", file=sys.stderr)
-            sys.exit(1)
+    convert_directory()
 
 if __name__ == "__main__":
     main()
