@@ -163,7 +163,13 @@
     }
 
     async function ensureDeps() {
-      return;
+      if (window.ForceGraph3D && window.THREE) return;
+      await new Promise((resolve) => {
+        let done = false;
+        const finish = () => { if (!done) { done = true; resolve(); } };
+        const t = setTimeout(finish, 3000);
+        window.addEventListener('libs-ready', () => { clearTimeout(t); finish(); }, { once: true });
+      });
     }
   </script>
 
