@@ -523,6 +523,53 @@ VSS stencil note:
 - Full Eraser AI integration will be added in a future update.
 
 #### CDN with SRI and local fallback
+## ES module loading and local fallback
+- The 3D view loads Three.js and 3d-force-graph using ES modules for a single instance of Three.js to avoid the "Multiple instances of Three.js being imported" warning.
+- If module loading fails (e.g., CSP, offline), a local UMD fallback is attempted automatically from `app/static/vendor/3d-force-graph.min.js` which exposes a compatible `window.ForceGraph3D` and `window.THREE`.
+- Font Awesome is loaded with SRI and `crossorigin="anonymous"`.
+
+Verification
+- Hard reload the page and open DevTools Console: there should be no Three.js duplicate warning.
+- Block CDN access (optional) and reload; the local fallback should kick in and the page should render.
+
+## VSS → SVG → PNG icon pipeline
+1) Place or extract Fortinet SVGs into:
+   - `app/static/icons/fortinet/svg`
+2) Convert SVGs to PNGs:
+   - `python tools/scrape_fortinet_icons.py`
+3) Verify outputs exist:
+   - `app/static/icons/fortinet/png/fortigate.png`
+   - `app/static/icons/fortinet/png/fortiswitch.png`
+   - `app/static/icons/fortinet/png/fortiap.png`
+   - `app/static/icons/fortinet/png/endpoint_desktop.png`
+   - `app/static/icons/fortinet/png/endpoint_laptop.png`
+   - `app/static/icons/fortinet/png/server_cloud.png`
+
+Optional: Extract SVGs from Visio stencils
+- Install conversion tools:
+  - `sudo apt-get update && sudo apt-get install -y libreoffice unoconv` (or `libvisio-utils` / `visio2svg` if available)
+- Run:
+  - `python tools/extract_vss_icons.py /path/to/*.vss --out app/static/icons/fortinet/svg`
+
+## Connectivity for live topology
+The backend must reach your FortiGate (e.g., 192.168.0.254). If running the dashboard on a remote VM:
+- Option A: Temporarily expose FortiGate HTTPS publicly and IP-allowlist the VM.
+- Option B: Run the dashboard inside your LAN and share via Cloudflared tunnel.
+- Option C: Provide a VPN peer (ZeroTier/WireGuard) that the VM can join to reach 192.168.0.0/24.
+
+Quick reachability check (inside the dashboard container)
+```bash
+docker compose exec dashboard bash -lc '
+  set -e
+  echo "Pinging FortiGate..."
+  ping -c 2 192.168.0.254 || true
+  echo "Curl FortiGate (ignore certs)..."
+  curl -sk --max-time 8 https://192.168.0.254/ | head -c 200 || true
+'
+```
+
+If `/api/topology_data` times out (504), verify routes/NAT/VPN configuration until the backend can establish HTTPS to the FortiGate.
+
 - The 3D view uses pinned CDN URLs with Subresource Integrity (SRI) for Three.js and 3d-force-graph.
 - If CDN loading fails (e.g., offline/air-gapped), the page attempts to load local copies from:
   - /static/vendor/three.min.js
