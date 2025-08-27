@@ -1,3 +1,16 @@
+Live connectivity over Tailscale
+===============================
+
+To test live FortiGate data over a private network using Tailscale:
+
+1. Join the tailnet on the machine running the dashboard.
+2. Ensure a node on your LAN advertises 192.168.0.0/24 and the route is approved.
+3. Set runtime env:
+   - MOCK_TOPOLOGY=false
+   - FORTIGATE_HOST=https://192.168.0.254:8443
+   - FORTIGATE_VERIFY_SSL=false
+   - FORTIGATE_TIMEOUT=20
+4. Optional: run tools/check_reachability.py with the same env to validate reachability and API auth before loading the UI.
 # 🛡️ FortiGate Enterprise Dashboard
 
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -481,12 +494,34 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Camera orbit, pan, and zoom supported
 - Cross-links between 2D (`/topology`) and 3D (`/topology-3d`) views
 
+### Device-type icons (Fortinet)
+- Curated Fortinet SVG icons are vendored and converted to PNG textures for 3D nodes.
+- Paths:
+  - SVG: `app/static/icons/fortinet/svg`
+  - PNG: `app/static/icons/fortinet/png`
+- Mapping is handled in `app/templates/topology_3d.html` via `ICON_MAP` and `node.details.iconPath` hints from `/api/topology_data`.
+- Fallbacks:
+  - If a PNG icon fails to load, nodes fall back to a canvas-drawn glyph and then to a colorized sphere.
+
+Update or regenerate icons:
+1) Install conversion tools
+   - Preferred: `apt-get install -y librsvg2-bin` (provides `rsvg-convert`)
+   - Optional: `pip install pillow cairosvg`
+2) Fetch and convert official SVGs
+   - `python tools/scrape_fortinet_icons.py`
+3) Verify assets
+   - PNGs appear under `app/static/icons/fortinet/png` (e.g., `fortigate.png`, `fortiswitch.png`, `fortiap.png`)
+
+VSS stencil note:
+- If you need to convert Fortinet Visio (.vss/.vsdx) stencils to SVG, install `libvisio-utils`/`visio2svg` if available on your distro, or export SVGs from Visio and place them under `app/static/icons/fortinet/svg` for conversion.
+
 ### Eraser AI (Preview)
 - This repository includes hooks for future Eraser AI integration.
 - Set `ERASER_ENABLED=true` in the dashboard environment to enable the export endpoint.
 - API: `POST /api/eraser/export` returns 501 unless `ERASER_ENABLED` is set to true.
 - The 3D view contains a disabled “Export to Eraser” button that becomes enabled when the endpoint is active.
 - Full Eraser AI integration will be added in a future update.
+
 #### CDN with SRI and local fallback
 - The 3D view uses pinned CDN URLs with Subresource Integrity (SRI) for Three.js and 3d-force-graph.
 - If CDN loading fails (e.g., offline/air-gapped), the page attempts to load local copies from:

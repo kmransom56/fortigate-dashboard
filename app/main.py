@@ -127,6 +127,7 @@ async def topology_3d_page(request: Request):
 
 
 # 📡 API endpoint for topology data
+
 @app.get("/api/topology_data")
 async def api_topology_data():
     """
@@ -135,6 +136,22 @@ async def api_topology_data():
     import logging
     logger = logging.getLogger("api_topology_data")
     logger.info("START /api/topology_data endpoint")
+
+    if os.getenv("MOCK_TOPOLOGY", "false").lower() == "true":
+        return {
+            "devices": [
+                {"id": "fortigate_main", "type": "fortigate", "name": "FortiGate-Main", "ip": "192.168.0.254", "status": "online", "risk": "low", "position": {"x": 0, "y": 0, "z": 0}},
+                {"id": "switch_1", "type": "fortiswitch", "name": "FSW-1", "ip": "192.168.0.253", "status": "online", "risk": "low", "position": {"x": 60, "y": 10, "z": -20}},
+                {"id": "device_1", "type": "endpoint", "name": "Office-PC", "ip": "192.168.0.10", "status": "online", "risk": "medium", "position": {"x": 120, "y": -20, "z": 40}},
+                {"id": "server_1", "type": "server", "name": "App-Server", "ip": "192.168.0.20", "status": "online", "risk": "low", "position": {"x": -80, "y": 30, "z": 50}}
+            ],
+            "connections": [
+                {"from": "fortigate_main", "to": "switch_1"},
+                {"from": "switch_1", "to": "device_1"},
+                {"from": "fortigate_main", "to": "server_1"}
+            ]
+        }
+
     from app.services.fortigate_service import get_interfaces
 
     # Fetch data with aggressive timeouts to avoid UI hanging
@@ -203,8 +220,7 @@ async def api_topology_data():
             "model": "FortiGate",
             "interfaces": len(interfaces) if interfaces else 0,
             "status": "Active",
-            "iconPath": "icons/nd/firewall.svg",
-            "iconTitle": "Firewall"
+            "iconPath": "/static/icons/fortinet/png/fortigate.png"
         }
     })
     
@@ -229,7 +245,7 @@ async def api_topology_data():
             topology_data["devices"].append({
                 "id": switch_id,
                 "type": "fortiswitch",
-                "name": switch.get("serial", f"FortiSwitch-{i}"),  # Use serial as name for clarity
+                "name": switch.get("serial", f"FortiSwitch-{i}"),
                 "ip": switch.get("mgmt_ip", "N/A"),
                 "status": switch_status,
                 "risk": switch_risk,
@@ -240,8 +256,7 @@ async def api_topology_data():
                     "ports": len(switch.get("ports", [])),
                     "status": switch.get("status", "Unknown"),
                     "connectedDevices": len([d for d in device_details if d.get("switch_serial") == switch.get("serial")]),
-                    "iconPath": "icons/nd/switch.svg",
-                    "iconTitle": "Switch"
+                    "iconPath": "/static/icons/fortinet/png/fortiswitch.png"
                 }
             })
             
@@ -347,7 +362,7 @@ async def api_topology_data():
                 "lastSeen": "Active",
                 "mac": device.get("mac") or device.get("device_mac", "N/A"),
                 "hostname": device.get("hostname") or device.get("device_name", "N/A"),
-                "iconPath": icon_path,
+                "iconPath": icon_path or ("/static/icons/fortinet/png/server_cloud.png" if device_type == "server" else "/static/icons/fortinet/png/endpoint_laptop.png"),
                 "iconTitle": icon_title
             }
         })
@@ -377,16 +392,12 @@ async def api_topology_data():
         logger.info("END /api/topology_data endpoint - returning topology data")
     return topology_data
 
-@app.get("/api/eraser/status")
-async def eraser_status():
-    return {"enabled": eraser_service.is_enabled()}
 @app.post("/api/eraser/export")
 async def eraser_export(payload: dict):
     if not eraser_service.is_enabled():
         raise HTTPException(status_code=501, detail="Eraser AI integration not enabled")
     return eraser_service.export_topology(payload)
 
-# Simple status probe for Eraser integration toggle
 @app.get("/api/eraser/status")
 async def eraser_status():
     return {"enabled": eraser_service.is_enabled()}
