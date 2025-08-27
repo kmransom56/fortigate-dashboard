@@ -68,16 +68,22 @@
     (function(){
       function ensureFallback() {
         if (window.ForceGraph3D && window.THREE) return;
-        var s1 = document.createElement('script');
-        s1.src = '/static/vendor/3d-force-graph.min.js';
-        s1.defer = true;
-        s1.onload = function() {
-          if (!window.THREE && window.ForceGraph3D && window.ForceGraph3D.THREE) {
-            window.THREE = window.ForceGraph3D.THREE;
-          }
-          window.dispatchEvent(new Event('libs-ready'));
+        var sThree = document.createElement('script');
+        sThree.src = '/static/vendor/three.min.js';
+        sThree.defer = true;
+        sThree.onload = function() {
+          var sFG = document.createElement('script');
+          sFG.src = '/static/vendor/3d-force-graph.min.js';
+          sFG.defer = true;
+          sFG.onload = function() {
+            if (!window.THREE && window.ForceGraph3D && window.ForceGraph3D.THREE) {
+              window.THREE = window.ForceGraph3D.THREE;
+            }
+            window.dispatchEvent(new Event('libs-ready'));
+          };
+          document.head.appendChild(sFG);
         };
-        document.head.appendChild(s1);
+        document.head.appendChild(sThree);
       }
       // If ESM succeeded, libs-ready event already fired; otherwise fallback after a short delay
       setTimeout(ensureFallback, 1000);
