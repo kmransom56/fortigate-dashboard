@@ -391,7 +391,10 @@ async def api_topology_data():
         
         device_count += 1
     
-        logger.info("END /api/topology_data endpoint - returning topology data")
+        logger.info(
+            f"END /api/topology_data - returning topology data: devices={len(topology_data.get('devices', []))}, "
+            f"connections={len(topology_data.get('connections', []))}"
+        )
     return topology_data
 
 @app.post("/api/eraser/export")
