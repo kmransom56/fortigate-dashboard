@@ -53,25 +53,27 @@
         rel="stylesheet"
         crossorigin="anonymous"
         referrerpolicy="no-referrer">
-  <script type="module">
-    try {
-      const THREE = await import('https://cdn.skypack.dev/three@0.158.0?min');
-      window.THREE = THREE;
-    } catch (e) {
-      const s = document.createElement('script');
-      s.src = '/static/vendor/three.min.js';
-      document.head.appendChild(s);
-    }
-  </script>
-  <script type="module">
-    try {
-      const { default: ForceGraph3D } = await import('https://cdn.skypack.dev/3d-force-graph@1.73.4?min');
-      window.ForceGraph3D = ForceGraph3D;
-    } catch (e) {
-      const s = document.createElement('script');
-      s.src = '/static/vendor/3d-force-graph.min.js';
-      document.head.appendChild(s);
-    }
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/three.min.js"
+          integrity="sha512-1dQ8QxJ0Yw8bq6E5m1m7hYwq4d7q6c5zYH0tQ3bF9kq9jvJrXb3z3s8m4c8Zz7nZp6zv7aS0JmQy9S5lQ8E5Nw=="
+          crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"
+          integrity="sha256-v2r5S9qJ2E5Wc8y3b3uO9b8o0c3Q2yq0jv4Q0o0y4rE="
+          crossorigin="anonymous" defer></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      function inject(src) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.defer = true;
+        document.head.appendChild(s);
+      }
+      if (!window.THREE) {
+        inject('/static/vendor/three.min.js');
+      }
+      if (!window.ForceGraph3D) {
+        inject('/static/vendor/3d-force-graph.min.js');
+      }
+    });
   </script>
 
   <script>
