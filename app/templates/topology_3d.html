@@ -156,7 +156,10 @@
       fortiswitch: '/static/icons/fortinet/png/fortiswitch.png',
       fortiap: '/static/icons/fortinet/png/fortiap.png',
       server: '/static/icons/fortinet/png/server_cloud.png',
-      endpoint: '/static/icons/fortinet/png/endpoint_laptop.png'
+      server_cloud: '/static/icons/fortinet/png/server_cloud.png',
+      endpoint: '/static/icons/fortinet/png/endpoint_laptop.png',
+      endpoint_laptop: '/static/icons/fortinet/png/endpoint_laptop.png',
+      endpoint_desktop: '/static/icons/fortinet/png/endpoint_desktop.png'
     };
 
     async function loadData() {
@@ -381,15 +384,18 @@
       const data = toGraphData(raw);
 
       const containerEl = document.getElementById('graph-3d');
+      if (!data.links || data.links.length === 0) {
+        try { showNotice('No links provided in topology data; rendering nodes only.', 'warning', 6000); } catch {}
+      }
       const Graph = ForceGraph3D()(containerEl)
         .graphData(data)
         .nodeThreeObject(makeNodeObject)
         .nodeLabel(nodeLabel)
         .nodeColor(n => TYPE_COLORS[n.type] || '#6b7280')
         .nodeRelSize(4)
-        .linkColor(() => '#4b5563')
-        .linkOpacity(0.6)
-        .linkWidth(1.5)
+        .linkColor(() => '#1d4ed8')
+        .linkOpacity(0.8)
+        .linkWidth(2)
         .backgroundColor('#ffffff')
         .showNavInfo(false);
       if (!data.links || data.links.length === 0) {
