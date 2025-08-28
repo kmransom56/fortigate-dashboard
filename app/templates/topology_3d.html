@@ -69,6 +69,40 @@
   </script>
   <script>
     (function(){
+      function loadFGThenDispatch() {
+        var sFG = document.createElement('script');
+        sFG.src = '/static/vendor/3d-force-graph.min.js';
+        sFG.defer = true;
+        sFG.onload = function() {
+          try { console.log('[3D] 3d-force-graph.min.js loaded. ForceGraph3D:', typeof window.ForceGraph3D); } catch(e){}
+          if (!window.THREE && window.ForceGraph3D && window.ForceGraph3D.THREE) {
+            window.THREE = window.ForceGraph3D.THREE;
+            try { console.log('[3D] Set window.THREE from ForceGraph3D.THREE'); } catch(e){}
+          }
+          if (window.ForceGraph3D && window.THREE) {
+            window.dispatchEvent(new Event('libs-ready'));
+          } else {
+            try { console.error('[3D] Post-FG load, THREE still missing; attempting module fallback'); } catch(e){}
+            loadThreeModuleFallback();
+          }
+        };
+        sFG.onerror = function() { try { console.error('[3D] Failed to load 3d-force-graph.min.js'); } catch(e){} };
+        document.head.appendChild(sFG);
+      }
+      async function loadThreeModuleFallback() {
+        try {
+          console.warn('[3D] three.min.js failed; trying module fallback /static/vendor/three.module.js');
+          // Dynamically import local module and expose as global
+          const mod = await import('/static/vendor/three.module.js');
+          window.THREE = mod.default || mod;
+          console.log('[3D] three.module.js imported; window.THREE set:', typeof window.THREE);
+          loadFGThenDispatch();
+        } catch (e) {
+          console.error('[3D] Failed to import three.module.js', e);
+          try { showNotice('3D libraries failed to load (THREE). Check network or local vendor files.', 'danger', 8000); } catch {}
+          // Do NOT dispatch libs-ready here; we only dispatch after both ForceGraph3D and THREE are available
+        }
+      }
       function ensureFallback() {
         if (window.ForceGraph3D && window.THREE) return;
         try { console.log('[3D] UMD fallback starting...'); } catch(e) {}
@@ -77,25 +111,20 @@
         sThree.defer = true;
         sThree.onload = function() {
           try { console.log('[3D] three.min.js loaded. window.THREE:', typeof window.THREE); } catch(e){}
-          var sFG = document.createElement('script');
-          sFG.src = '/static/vendor/3d-force-graph.min.js';
-          sFG.defer = true;
-          sFG.onload = function() {
-            try { console.log('[3D] 3d-force-graph.min.js loaded. window.ForceGraph3D:', typeof window.ForceGraph3D); } catch(e){}
-            if (!window.THREE && window.ForceGraph3D && window.ForceGraph3D.THREE) {
-              window.THREE = window.ForceGraph3D.THREE;
-              try { console.log('[3D] Set window.THREE from ForceGraph3D.THREE'); } catch(e){}
-            }
-            window.dispatchEvent(new Event('libs-ready'));
-          };
-          sFG.onerror = function() { try { console.error('[3D] Failed to load 3d-force-graph.min.js'); } catch(e){} };
-          document.head.appendChild(sFG);
+          if (!window.THREE) {
+            loadThreeModuleFallback();
+          } else {
+            loadFGThenDispatch();
+          }
         };
-        sThree.onerror = function() { try { console.error('[3D] Failed to load three.min.js'); } catch(e){} };
+        sThree.onerror = function() {
+          try { console.error('[3D] Failed to load three.min.js'); } catch(e){}
+          loadThreeModuleFallback();
+        };
         document.head.appendChild(sThree);
       }
       // If ESM succeeded, libs-ready event already fired; otherwise fallback after a short delay
-      setTimeout(ensureFallback, 1000);
+      setTimeout(ensureFallback, 800);
     })();
   </script>
 
@@ -170,11 +199,21 @@
 
     async function ensureDeps() {
       if (window.ForceGraph3D && window.THREE) return;
-      await new Promise((resolve) => {
+      await new Promise((resolve, reject) => {
         let done = false;
         const finish = () => { if (!done) { done = true; resolve(); } };
-        const t = setTimeout(finish, 3000);
-        window.addEventListener('libs-ready', () => { clearTimeout(t); finish(); }, { once: true });
+        const fail = () => { if (!done) { done = true; reject(new Error('3D libs not ready')); } };
+        const deadline = Date.now() + 6000;
+        const poll = () => {
+          if (window.ForceGraph3D && window.THREE) return finish();
+          if (Date.now() > deadline) return fail();
+          setTimeout(poll, 150);
+        };
+        window.addEventListener('libs-ready', () => {
+          if (window.ForceGraph3D && window.THREE) finish();
+          else poll();
+        }, { once: true });
+        poll();
       });
     }
   </script>
