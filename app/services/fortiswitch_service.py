@@ -41,28 +41,20 @@ FORTISWITCH_PASSWORD = os.environ.get("FORTISWITCH_PASSWORD", "")
 # Initialize session manager
 session_manager = FortiGateSessionManager()
 
-# Legacy token support for fallback
-API_TOKEN_FILE = os.environ.get("FORTIGATE_API_TOKEN_FILE")
-API_TOKEN = ""  # Initialize API_TOKEN
+try:
+    from app.services.fortigate_service import load_api_token as _load_api_token
+except Exception:
+    _load_api_token = None
 
-if API_TOKEN_FILE and os.path.exists(API_TOKEN_FILE):
-    try:
-        with open(API_TOKEN_FILE, "r") as f:
-            API_TOKEN = f.read().strip()
-        if not API_TOKEN:
-            logger.warning(f"API token file {API_TOKEN_FILE} is empty.")
-    except Exception as e:
-        logger.error(f"Error reading API token file {API_TOKEN_FILE}: {e}")
-        # Fallback to environment variable if file read fails or is empty
-        API_TOKEN = os.environ.get("FORTIGATE_API_TOKEN", "")
+API_TOKEN = ""
+if _load_api_token:
+    API_TOKEN = _load_api_token()
 else:
-    # If no file path, directly use environment variable
     API_TOKEN = os.environ.get("FORTIGATE_API_TOKEN", "")
 
 if not API_TOKEN and not session_manager.password:
-    logger.critical(
-        "CRITICAL: Neither FortiGate session credentials nor API Token are available. "
-        "Configure session authentication or set FORTIGATE_API_TOKEN."
+    logger.warning(
+        "No API token found yet for FortiGate; will attempt session auth first and then try token fallback per request."
     )
 
 # Rate limiting globals - Disabled for session authentication (sessions have higher limits)
@@ -149,7 +141,16 @@ def fgt_api(endpoint, params=None):
             logger.info("Falling back to token authentication")
 
     # Fallback to token authentication
-    if not API_TOKEN:
+    token = API_TOKEN
+    if not token and _load_api_token:
+        try:
+            token = _load_api_token()
+            if token:
+                logger.info("Loaded FortiGate API token via fallback loader for FortiSwitch service")
+        except Exception:
+            token = ""
+
+    if not token:
         logger.error("Neither session authentication nor API token is available.")
         return {}
 
@@ -158,73 +159,75 @@ def fgt_api(endpoint, params=None):
     if not endpoint.startswith("/"):
         endpoint = "/" + endpoint
     url = f"{FORTIGATE_HOST}{endpoint}"
-    headers = {"Accept": "application/json", "Authorization": f"Bearer {API_TOKEN}"}
-
+    headers = {"Accept": "application/json", "Authorization": f"Bearer {token}"}
     try:
-        # Make SSL verification configurable
         verify_ssl_str = os.environ.get("FORTIGATE_VERIFY_SSL", "false").lower()
         verify_ssl = verify_ssl_str == "true"
 
-        res = requests.get(
-            url, headers=headers, params=params, verify=verify_ssl, timeout=20
-        )
+        prms = dict(params or {})
+        vdom_env = os.environ.get("FORTIGATE_VDOM", "root")
+        if vdom_env and "vdom" not in prms:
+            prms["vdom"] = vdom_env
+
+        def do_req(hdrs, prms_local):
+            r = requests.get(url, headers=hdrs, params=prms_local, verify=verify_ssl, timeout=8)
+            return r
+
+        res = do_req(headers, prms)
         last_api_call_time = time.time()
-
         logger.debug(f"FGT API {endpoint} response status: {res.status_code}")
-
-        # Handle specific HTTP errors
-        if res.status_code == 401:
-            logger.error(
-                "FortiGate API Error 401: Unauthorized. Check API Token and trusthost settings."
-            )
-            return {}
-        elif res.status_code == 403:
-            logger.error(
-                "FortiGate API Error 403: Forbidden. Check API user permissions."
-            )
-            return {}
-        elif res.status_code == 404:
-            logger.error(
-                f"FortiGate API Error 404: Not Found. Endpoint {endpoint} may be incorrect for this FortiOS version."
-            )
+ 
+        def maybe_json(r):
+            try:
+                return r.json()
+            except Exception:
+                return {}
+ 
+        if res.status_code in (401, 403) or (isinstance(maybe_json(res), dict) and maybe_json(res).get("error") in ("authentication_failed", "invalid_apikey")):
+            alt_headers = {"Accept": "application/json", "X-API-KEY": token}
+            res2 = do_req(alt_headers, prms)
+            last_api_call_time = time.time()
+            if res2.status_code == 200:
+                result2 = maybe_json(res2)
+                return result2
+            prms2 = dict(prms or {})
+            prms2["access_token"] = token
+            res3 = do_req({"Accept": "application/json"}, prms2)
+            last_api_call_time = time.time()
+            if res3.status_code == 200:
+                return maybe_json(res3)
+            if res.status_code == 401:
+                logger.error("FortiGate API Error 401: Unauthorized. Check API Token and trusthost settings.")
+                return {}
+            if res.status_code == 403:
+                logger.error("FortiGate API Error 403: Forbidden. Check API user permissions.")
+                return {}
+ 
+        if res.status_code == 404:
+            logger.error(f"FortiGate API Error 404: Not Found. Endpoint {endpoint} may be incorrect for this FortiOS version.")
             return {}
         elif res.status_code == 429:
-            logger.warning(
-                f"FortiGate API rate limit exceeded (429) for {endpoint}. Waiting 30s before retry."
-            )
-            time.sleep(30)  # Wait for rate limit to reset
-            # Retry once after waiting
+            logger.warning(f"FortiGate API rate limit exceeded (429) for {endpoint}. Waiting 30s before retry.")
+            time.sleep(30)
             try:
-                res = requests.get(
-                    url, headers=headers, params=params, verify=verify_ssl, timeout=30
-                )
+                res_retry = do_req(headers, prms)
                 last_api_call_time = time.time()
-                if res.status_code == 200:
-                    return res.json()
+                if res_retry.status_code == 200:
+                    return maybe_json(res_retry)
                 else:
-                    logger.error(
-                        f"FortiGate API retry failed with status {res.status_code} for {endpoint}"
-                    )
+                    logger.error(f"FortiGate API retry failed with status {res_retry.status_code} for {endpoint}")
                     return {}
             except Exception as retry_e:
                 logger.error(f"FortiGate API retry exception for {endpoint}: {retry_e}")
                 return {}
         elif res.status_code >= 400:
-            # General client/server error
-            logger.error(
-                f"FortiGate API error {res.status_code} for {endpoint}: {res.text[:512]}"
-            )
+            logger.error(f"FortiGate API error {res.status_code} for {endpoint}: {res.text[:512]}")
             return {}
 
-        # Success case
-        result = res.json()
-        logger.debug(
-            f"FortiGate API {endpoint} successful - returned {len(str(result))} characters of data"
-        )
+        result = maybe_json(res)
+        logger.debug(f"FortiGate API {endpoint} successful - returned {len(str(result))} characters of data")
         if isinstance(result, dict) and "results" in result:
-            logger.debug(
-                f"FortiGate API {endpoint} - found {len(result['results'])} items in results array"
-            )
+            logger.debug(f"FortiGate API {endpoint} - found {len(result['results'])} items in results array")
         return result
 
     except requests.exceptions.RequestException as e:

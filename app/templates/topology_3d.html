@@ -54,10 +54,69 @@
         crossorigin="anonymous"
         referrerpolicy="no-referrer">
   <script type="module">
-    import * as THREE from 'https://unpkg.com/three@0.150.0/build/three.module.js';
-    window.THREE = THREE;
+    try {
+      const ForceGraph3D = (await import('https://esm.sh/3d-force-graph@1.73.4?deps=three@0.158.0')).default;
+      const THREE = (await import('https://esm.sh/three@0.158.0')).default || (await import('https://esm.sh/three@0.158.0'));
+      if (!ForceGraph3D || !THREE) {
+        throw new Error('ESM loaded incompletely (missing THREE or ForceGraph3D)');
+      }
+      window.ForceGraph3D = ForceGraph3D;
+      window.THREE = THREE;
+      window.dispatchEvent(new Event('libs-ready'));
+    } catch (e) {
+      console.warn('ESM imports failed or incomplete; will try local UMD fallback:', e);
+    }
   </script>
-  <script src="/static/vendor/3d-force-graph.min.js" defer></script>
+  <script>
+    (function(){
+      function loadFGThenDispatch() {
+        var sFG = document.createElement('script');
+        sFG.src = '/static/vendor/3d-force-graph.min.js';
+        sFG.defer = true;
+        sFG.onload = function() {
+          try { console.log('[3D] 3d-force-graph.min.js loaded. ForceGraph3D:', typeof window.ForceGraph3D); } catch(e){}
+          if (!window.THREE && window.ForceGraph3D && window.ForceGraph3D.THREE) {
+            window.THREE = window.ForceGraph3D.THREE;
+            try { console.log('[3D] Set window.THREE from ForceGraph3D.THREE'); } catch(e){}
+          }
+          if (window.ForceGraph3D && window.THREE) {
+            window.dispatchEvent(new Event('libs-ready'));
+          } else {
+            try { console.error('[3D] Post-FG load, THREE still missing after UMD load.'); } catch(e){}
+            try { showNotice('3D libraries incomplete (THREE missing). Check /static/vendor/three.min.js', 'danger', 8000); } catch {}
+          }
+        };
+        sFG.onerror = function() { try { console.error('[3D] Failed to load 3d-force-graph.min.js'); } catch(e){} };
+        document.head.appendChild(sFG);
+      }
+      async function loadThreeModuleFallback() {
+        console.error('[3D] Module fallback disabled; prefer local UMD three.min.js');
+        try { showNotice('3D libraries failed to load via modules. Using local UMD vendor scripts.', 'warning', 6000); } catch {}
+      }
+      function ensureFallback() {
+        if (window.ForceGraph3D && window.THREE) return;
+        try { console.log('[3D] UMD fallback starting...'); } catch(e) {}
+        var sThree = document.createElement('script');
+        sThree.src = '/static/vendor/three.min.js';
+        sThree.defer = true;
+        sThree.onload = function() {
+          try { console.log('[3D] three.min.js loaded. window.THREE:', typeof window.THREE); } catch(e){}
+          if (!window.THREE) {
+            try { showNotice('three.min.js loaded but window.THREE missing', 'danger', 8000); } catch {}
+          } else {
+            loadFGThenDispatch();
+          }
+        };
+        sThree.onerror = function() {
+          try { console.error('[3D] Failed to load three.min.js'); } catch(e){}
+          try { showNotice('Failed to load local three.min.js', 'danger', 8000); } catch {}
+        };
+        document.head.appendChild(sThree);
+      }
+      // Trigger UMD fallback immediately if globals are missing
+      ensureFallback();
+    })();
+  </script>
 
   <script>
     // Global error handlers to avoid stuck loading overlay
@@ -76,6 +135,29 @@
     });
 
     function showNotice(message, type = 'danger', timeoutMs = 5000) {
+      const now = Date.now();
+      const windowMs = 2000;
+      if (!window.__notifState) {
+        window.__notifState = { lastMsg: '', lastType: '', lastTs: 0, windowStart: now, count: 0 };
+      }
+      const st = window.__notifState;
+
+      if (now - st.windowStart > windowMs) {
+        st.windowStart = now;
+        st.count = 0;
+      }
+      st.count += 1;
+      if (st.count > 5) {
+        return;
+      }
+
+      if (message === st.lastMsg && type === st.lastType && (now - st.lastTs) < windowMs) {
+        return;
+      }
+      st.lastMsg = message;
+      st.lastType = type;
+      st.lastTs = now;
+
       let container = document.getElementById('notif');
       if (!container) {
         container = document.createElement('div');
@@ -106,15 +188,21 @@
     }
 
     async function ensureDeps() {
-      // Three.js is now loaded as ES module above
-      if (typeof ForceGraph3D === 'undefined') {
-        try {
-          await loadScript('/static/vendor/3d-force-graph.min.js');
-        } catch (e) {
-          showNotice('Could not load 3D Force Graph (CDN and local fallback failed).', 'danger', 8000);
-          throw e;
-        }
-      }
+      if (window.ForceGraph3D && window.THREE) return;
+      // Proactively start UMD fallback
+      try { ensureFallback(); } catch {}
+      await new Promise((resolve, reject) => {
+        let done = false;
+        const finish = () => { if (!done) { done = true; resolve(); } };
+        const fail = () => { if (!done) { done = true; reject(new Error('3D libs not ready')); } };
+        const deadline = Date.now() + 8000;
+        const poll = () => {
+          if (window.ForceGraph3D && window.THREE) return finish();
+          if (Date.now() > deadline) return fail();
+          setTimeout(poll, 150);
+        };
+        poll();
+      });
     }
   </script>
 
@@ -123,9 +211,24 @@
       fortigate: '#2563eb',
       fortiswitch: '#059669',
       endpoint: '#7c3aed',
-      server: '#dc2626'
+      server: '#dc2626',
+      fortiap: '#10b981'
     };
     const RISK_SIZE = { low: 6, medium: 8, high: 10, critical: 12 };
+
+    const ICON_MAP = {
+      fortigate: '/static/icons/fortinet/png/fortigate.png',
+      fortiswitch: '/static/icons/fortinet/png/fortiswitch.png',
+      fortiap: '/static/icons/fortinet/png/fortiap.png',
+      server: '/static/icons/fortinet/png/server_cloud.png',
+      server_cloud: '/static/icons/fortinet/png/server_cloud.png',
+      cloud: '/static/icons/fortinet/png/server_cloud.png',
+      endpoint: '/static/icons/fortinet/png/endpoint_laptop.png',
+      endpoint_laptop: '/static/icons/fortinet/png/endpoint_laptop.png',
+      laptop: '/static/icons/fortinet/png/endpoint_laptop.png',
+      endpoint_desktop: '/static/icons/fortinet/png/endpoint_desktop.png',
+      desktop: '/static/icons/fortinet/png/endpoint_desktop.png'
+    };
 
     async function loadData() {
       let res;
@@ -193,28 +296,52 @@
 
     let performanceMode = false;
 
+    function makeCanvasIcon(nodeType, size) {
+      const c = document.createElement('canvas');
+      const s = Math.max(64, Math.floor(size * 12));
+      c.width = s; c.height = s;
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0,0,s,s);
+      const base = TYPE_COLORS[nodeType] || '#6b7280';
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(s/2, s/2, s*0.48, 0, Math.PI*2);
+      ctx.fill();
+      ctx.lineWidth = Math.max(2, s*0.04);
+      ctx.strokeStyle = base;
+      ctx.stroke();
+      ctx.fillStyle = base;
+      if (nodeType === 'fortigate') {
+        ctx.fillRect(s*0.25, s*0.35, s*0.5, s*0.3);
+      } else if (nodeType === 'fortiswitch') {
+        ctx.fillRect(s*0.2, s*0.3, s*0.6, s*0.16);
+        ctx.fillRect(s*0.2, s*0.54, s*0.6, s*0.16);
+      } else if (nodeType === 'fortiap') {
+        ctx.beginPath();
+        ctx.moveTo(s*0.5, s*0.2); ctx.lineTo(s*0.75, s*0.6); ctx.lineTo(s*0.25, s*0.6); ctx.closePath(); ctx.fill();
+      } else if (nodeType === 'server') {
+        ctx.fillRect(s*0.32, s*0.22, s*0.36, s*0.56);
+      } else {
+        ctx.beginPath();
+        ctx.arc(s/2, s/2, s*0.22, 0, Math.PI*2); ctx.fill();
+      }
+      return new THREE.CanvasTexture(c);
+    }
     function makeLabelSprite(text, fontSizePx) {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const pad = 36;
       ctx.font = `bold ${fontSizePx}px Segoe UI, Arial, sans-serif`;
       const textWidth = ctx.measureText(text).width;
-      canvas.width = textWidth + pad;
-      canvas.height = fontSizePx + pad;
+      canvas.width = Math.ceil(textWidth + pad);
+      canvas.height = Math.ceil(fontSizePx + pad);
       ctx.font = `bold ${fontSizePx}px Segoe UI, Arial, sans-serif`;
-      // semi-transparent rounded rect background for contrast
-      const radius = 10;
-      ctx.fillStyle = 'rgba(17,24,39,0.8)';
-      ctx.beginPath();
-      ctx.moveTo(radius, 0);
-      ctx.arcTo(canvas.width, 0, canvas.width, canvas.height, radius);
-      ctx.arcTo(canvas.width, canvas.height, 0, canvas.height, radius);
-      ctx.arcTo(0, canvas.height, 0, 0, radius);
-      ctx.arcTo(0, 0, canvas.width, 0, radius);
-      ctx.closePath();
-      ctx.fill();
-      // text
-      ctx.fillStyle = '#F9FAFB';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+      ctx.fillStyle = '#111827';
       ctx.textBaseline = 'middle';
       ctx.fillText(text, pad / 2, canvas.height / 2);
       const texture = new THREE.CanvasTexture(canvas);
@@ -239,24 +366,39 @@
       const sphere = new THREE.Mesh(geom, mat);
       group.add(sphere);
 
-      // Manufacturer/device icon billboard if available
-      if (node.details && node.details.iconPath && !performanceMode) {
+      // try icon sprite on top
+      const iconUrl = (node.details && node.details.iconPath) || ICON_MAP[node.type] || null;
+      if (iconUrl && !performanceMode) {
         try {
-          const texLoader = new THREE.TextureLoader();
-          const src = node.details.iconPath.startsWith('/') ? node.details.iconPath : `/static/${node.details.iconPath.replace(/^\\\/?/, '')}`;
-          const texture = texLoader.load(node.details.textureUrl || src);
-          const planeMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
-          const sprite = new THREE.Sprite(planeMat);
-          const iconScale = 10;
-          sprite.scale.set(iconScale, iconScale, 1);
-          sprite.position.set(0, size * 0.9, 0);
-          group.add(sprite);
+          const loader = new THREE.TextureLoader();
+          loader.load(iconUrl, (texture) => {
+            const planeMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+            if (!group.userData.iconAdded) {
+              const sprite = new THREE.Sprite(planeMat);
+              const iconScale = Math.max(12, size * 2.2);
+              sprite.scale.set(iconScale, iconScale, 1);
+              sprite.position.set(0, size * 0.95, 0);
+              group.add(sprite);
+              group.userData.iconAdded = true;
+            }
+          }, undefined, () => {
+            const tex = makeCanvasIcon(node.type, size);
+            const mat2 = new THREE.SpriteMaterial({ map: tex, transparent: true });
+            if (!group.userData.iconAdded) {
+              const spr2 = new THREE.Sprite(mat2);
+              const iconScale2 = Math.max(12, size * 2.2);
+              spr2.scale.set(iconScale2, iconScale2, 1);
+              spr2.position.set(0, size * 0.95, 0);
+              group.add(spr2);
+              group.userData.iconAdded = true;
+            }
+          });
         } catch (e) {
           // ignore texture load failures, we will still show label
         }
       }
 
-      if (!performanceMode && node.risk && node.risk !== 'low') {
+      if (node.risk && node.risk !== 'low') {
         const haloGeom = new THREE.SphereGeometry(size * 0.7, 16, 16);
         const riskColor = node.risk === 'critical' ? 0xdc2626 : node.risk === 'high' ? 0xef4444 : 0xf59e0b;
         const haloMat = new THREE.MeshBasicMaterial({ color: riskColor, transparent: true, opacity: 0.25 });
@@ -276,14 +418,14 @@
       const man = node.details && node.details.manufacturer ? node.details.manufacturer : '';
       const host = node.details && node.details.hostname ? node.details.hostname : '';
       return `
-        <div style="font-size:12px">
-          <div><strong>${node.name}</strong></div>
-          <div>IP: ${node.ip}</div>
-          <div>Status: ${status}</div>
-          <div>Risk: ${node.risk}</div>
-          ${node.mac ? `<div>MAC: ${node.mac}</div>` : ''}
-          ${man ? `<div>Manufacturer: ${man}</div>` : ''}
-          ${host ? `<div>Hostname: ${host}</div>` : ''}
+        <div style="font-size:12px; color:#111; background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:6px 8px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+          <div style="font-weight:600; color:#111;">${node.name}</div>
+          <div><span style="color:#374151;">IP:</span> ${node.ip}</div>
+          <div><span style="color:#374151;">Status:</span> ${status}</div>
+          <div><span style="color:#374151;">Risk:</span> ${node.risk}</div>
+          ${node.mac ? `<div><span style="color:#374151;">MAC:</span> ${node.mac}</div>` : ''}
+          ${man ? `<div><span style="color:#374151;">Manufacturer:</span> ${man}</div>` : ''}
+          ${host ? `<div><span style="color:#374151;">Hostname:</span> ${host}</div>` : ''}
         </div>
       `;
     }
@@ -317,16 +459,23 @@
       const data = toGraphData(raw);
 
       const containerEl = document.getElementById('graph-3d');
+      if (!data.links || data.links.length === 0) {
+        try { showNotice('No links provided in topology data; rendering nodes only.', 'warning', 6000); } catch {}
+      }
       const Graph = ForceGraph3D()(containerEl)
         .graphData(data)
         .nodeThreeObject(makeNodeObject)
         .nodeLabel(nodeLabel)
         .nodeColor(n => TYPE_COLORS[n.type] || '#6b7280')
         .nodeRelSize(4)
-        .linkOpacity(0.55)
-        .linkWidth(1.25)
+        .linkColor(() => '#1d4ed8')
+        .linkOpacity(0.8)
+        .linkWidth(2)
         .backgroundColor('#ffffff')
         .showNavInfo(false);
+      if (!data.links || data.links.length === 0) {
+        showNotice('No connections found; showing devices only', 'warning', 3000);
+      }
 
       // Ensure correct initial sizing and handle window resize
       function resizeGraph() {
