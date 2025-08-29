@@ -19,7 +19,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: production
     ports:
       - "10000:10000"
     restart: unless-stopped
