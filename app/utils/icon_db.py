@@ -370,3 +370,108 @@ def seed_default_icons():
                     ),
                 )
         conn.commit()
+
+def browse_icons(manufacturer=None, device_type=None, limit=50, offset=0):
+    """Browse icons with optional filtering"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    # Build WHERE clause based on filters
+    where_conditions = []
+    params = []
+    
+    if manufacturer:
+        where_conditions.append("manufacturer = ?")
+        params.append(manufacturer)
+    
+    if device_type:
+        where_conditions.append("device_type = ?") 
+        params.append(device_type)
+    
+    where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
+    
+    # Get total count
+    count_query = f"SELECT COUNT(*) FROM icons {where_clause}"
+    cursor.execute(count_query, params)
+    total = cursor.fetchone()[0]
+    
+    # Get icons with pagination
+    query = f"""
+        SELECT manufacturer, device_type, slug, title, icon_path, source_url, tags
+        FROM icons
+        {where_clause}
+        ORDER BY manufacturer, device_type, title
+        LIMIT ? OFFSET ?
+    """
+    params.extend([limit, offset])
+    
+    cursor.execute(query, params)
+    results = cursor.fetchall()
+    
+    icons = []
+    for row in results:
+        manufacturer, device_type, slug, title, icon_path, source_url, tags = row
+        icons.append({
+            "manufacturer": manufacturer,
+            "device_type": device_type, 
+            "slug": slug,
+            "title": title,
+            "icon_path": icon_path,
+            "source_url": source_url,
+            "tags": tags.split(",") if tags else []
+        })
+    
+    conn.close()
+    
+    return {
+        "icons": icons,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "has_more": offset + limit < total
+    }
+
+def search_icons(query, limit=20):
+    """Search icons by title or tags"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    search_term = f"%{query}%"
+    
+    cursor.execute("""
+        SELECT manufacturer, device_type, slug, title, icon_path, source_url, tags
+        FROM icons
+        WHERE title LIKE ? OR tags LIKE ? OR manufacturer LIKE ?
+        ORDER BY 
+            CASE 
+                WHEN title LIKE ? THEN 1
+                WHEN manufacturer LIKE ? THEN 2  
+                WHEN tags LIKE ? THEN 3
+                ELSE 4
+            END,
+            title
+        LIMIT ?
+    """, (search_term, search_term, search_term, search_term, search_term, search_term, limit))
+    
+    results = cursor.fetchall()
+    
+    icons = []
+    for row in results:
+        manufacturer, device_type, slug, title, icon_path, source_url, tags = row
+        icons.append({
+            "manufacturer": manufacturer,
+            "device_type": device_type,
+            "slug": slug,
+            "title": title,
+            "icon_path": icon_path,
+            "source_url": source_url,
+            "tags": tags.split(",") if tags else []
+        })
+    
+    conn.close()
+    
+    return {
+        "icons": icons,
+        "query": query,
+        "count": len(icons)
+    }

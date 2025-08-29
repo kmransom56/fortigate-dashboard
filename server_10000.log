@@ -1,0 +1,13 @@
+INFO:app.utils.oui_lookup:Loaded 2 cached OUI entries
+INFO:app.services.fortigate_session:Loaded credential from ./secrets/fortigate_password.txt
+INFO:app.services.fortigate_session:FortiGate credentials loaded: IP=192.168.0.254:8443, Username=admin, Password=***
+INFO:app.services.fortiswitch_session:Loaded credential from ./secrets/fortiswitch_password.txt
+WARNING:app.services.fortiswitch_session:FORTISWITCH_HOST not set. FortiSwitch API calls will be skipped.
+WARNING:app.services.fortiswitch_session:No FortiSwitch username or password found. FortiSwitch API calls will be skipped.
+INFO:app.services.fortiswitch_session:FortiSwitch credentials loaded: Host=, Username=, Password=***
+INFO:     Started server process [45778]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 98] error while attempting to bind on address ('0.0.0.0', 10000): address already in use
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.

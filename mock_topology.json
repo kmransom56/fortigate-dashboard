@@ -1,0 +1,154 @@
+{
+  "devices": [
+    {
+      "id": "fortigate_main",
+      "type": "fortigate",
+      "name": "NetIntegrate-FW",
+      "ip": "192.168.0.254",
+      "status": "online",
+      "risk": "low",
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "details": {
+        "model": "FortiGate 61F",
+        "interfaces": 5,
+        "status": "Active",
+        "iconPath": "icons/FortiGate.svg",
+        "iconTitle": "FortiGate Firewall"
+      }
+    },
+    {
+      "id": "switch_0",
+      "type": "fortiswitch",
+      "name": "NetIntegrate-SW",
+      "ip": "192.168.0.253",
+      "status": "online",
+      "risk": "low",
+      "position": {
+        "x": 400,
+        "y": 280
+      },
+      "details": {
+        "serial": "S124EPTQ22000276",
+        "model": "FortiSwitch S124EP",
+        "ports": 28,
+        "status": "Authorized",
+        "connectedDevices": 7,
+        "iconPath": "icons/FortiSwitch.svg",
+        "iconTitle": "FortiSwitch"
+      }
+    },
+    {
+      "id": "device_0",
+      "type": "server",
+      "name": "AI-Code-Server",
+      "ip": "192.168.0.1",
+      "mac": "d8:43:ae:9f:41:26",
+      "status": "online",
+      "risk": "low",
+      "position": {
+        "x": 200,
+        "y": 400
+      },
+      "details": {
+        "manufacturer": "Dell Inc.",
+        "port": "port13",
+        "switch": "NetIntegrate-SW",
+        "lastSeen": "Active",
+        "hostname": "ubuntuaicodeserver",
+        "iconPath": "icons/FortiClient.svg",
+        "iconTitle": "Server"
+      }
+    },
+    {
+      "id": "device_1",
+      "type": "server",
+      "name": "AI-Code-Studio",
+      "ip": "192.168.0.2",
+      "mac": "dc:a6:32:eb:46:f7",
+      "status": "online",
+      "risk": "low",
+      "position": {
+        "x": 400,
+        "y": 400
+      },
+      "details": {
+        "manufacturer": "Raspberry Pi",
+        "port": "port15",
+        "switch": "NetIntegrate-SW",
+        "lastSeen": "Active",
+        "hostname": "aicodestudio",
+        "iconPath": "icons/FortiClient.svg",
+        "iconTitle": "Server"
+      }
+    },
+    {
+      "id": "device_2",
+      "type": "server",
+      "name": "DNS-Server",
+      "ip": "192.168.0.3",
+      "mac": "3c:18:a0:d4:cf:68",
+      "status": "online",
+      "risk": "low",
+      "position": {
+        "x": 600,
+        "y": 400
+      },
+      "details": {
+        "manufacturer": "Raspberry Pi",
+        "port": "port16",
+        "switch": "NetIntegrate-SW",
+        "lastSeen": "Active",
+        "hostname": "unbound.netintegrate.net",
+        "iconPath": "icons/FortiClient.svg",
+        "iconTitle": "DNS Server"
+      }
+    },
+    {
+      "id": "device_3",
+      "type": "endpoint",
+      "name": "Client-Workstation",
+      "ip": "192.168.0.253",
+      "mac": "e0:23:ff:6f:4a:88",
+      "status": "online",
+      "risk": "medium",
+      "position": {
+        "x": 120,
+        "y": 400
+      },
+      "details": {
+        "manufacturer": "Microsoft Corporation",
+        "port": "port18",
+        "switch": "NetIntegrate-SW",
+        "lastSeen": "Active",
+        "hostname": "aicodeclient",
+        "iconPath": "icons/FortiClient.svg",
+        "iconTitle": "Client Device"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "fortigate_main",
+      "to": "switch_0"
+    },
+    {
+      "from": "switch_0",
+      "to": "device_0"
+    },
+    {
+      "from": "switch_0",
+      "to": "device_1"
+    },
+    {
+      "from": "switch_0",
+      "to": "device_2"
+    },
+    {
+      "from": "switch_0",
+      "to": "device_3"
+    }
+  ]
+}

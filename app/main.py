@@ -120,6 +120,11 @@ async def topology_page(request: Request):
 async def topology_3d_page(request: Request):
     return templates.TemplateResponse("topology_3d.html", {"request": request})
 
+# 🎨 Route for Icon Management "/icons"
+@app.get("/icons", response_class=HTMLResponse)
+async def icons_page(request: Request):
+    return templates.TemplateResponse("icons.html", {"request": request})
+
 
 # 📡 API endpoint for topology data
 @app.get("/api/topology_data")
@@ -433,6 +438,24 @@ async def debug_monitor():
 @app.get("/api/eraser/status")
 async def eraser_status():
     return {"enabled": eraser_service.is_enabled()}
+
+# Icon Management API Endpoints
+@app.get("/api/icons/browse")
+async def browse_icons(
+    manufacturer: str = None,
+    device_type: str = None, 
+    limit: int = 50,
+    offset: int = 0
+):
+    """Browse available icons with filtering"""
+    from app.utils.icon_db import browse_icons as db_browse_icons
+    return db_browse_icons(manufacturer, device_type, limit, offset)
+
+@app.get("/api/icons/search")  
+async def search_icons(q: str, limit: int = 20):
+    """Search icons by title or tags"""
+    from app.utils.icon_db import search_icons as db_search_icons
+    return db_search_icons(q, limit)
 
 @app.post("/api/eraser/export")
 async def eraser_export(payload: dict):

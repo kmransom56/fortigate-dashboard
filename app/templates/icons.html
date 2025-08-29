@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Management - FortiGate Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .icon-card:hover {
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+        .icon-preview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-900 via-purple-900 to-gray-900 min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass-morphism p-4 mb-6">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-shield-alt text-blue-400 text-2xl"></i>
+                <h1 class="text-white text-xl font-bold">FortiGate Dashboard</h1>
+                <span class="text-gray-300">/ Icon Management</span>
+            </div>
+            <div class="flex space-x-4">
+                <a href="/" class="text-gray-300 hover:text-white transition-colors">
+                    <i class="fas fa-home mr-2"></i>Dashboard
+                </a>
+                <a href="/topology" class="text-gray-300 hover:text-white transition-colors">
+                    <i class="fas fa-project-diagram mr-2"></i>Topology
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4">
+        <!-- Search and Filters -->
+        <div class="glass-morphism rounded-lg p-6 mb-6">
+            <div class="flex flex-col lg:flex-row gap-4">
+                <!-- Search Bar -->
+                <div class="flex-1">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="search-input"
+                            class="w-full bg-white bg-opacity-10 text-white placeholder-gray-300 rounded-lg p-3 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            placeholder="Search icons by name, manufacturer, or tags..."
+                        >
+                        <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="flex gap-4">
+                    <select id="manufacturer-filter" class="bg-white bg-opacity-10 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <option value="">All Manufacturers</option>
+                        <option value="Fortinet">Fortinet</option>
+                        <option value="Generic">Generic</option>
+                    </select>
+                    
+                    <select id="device-type-filter" class="bg-white bg-opacity-10 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <option value="">All Device Types</option>
+                        <option value="fortigate">FortiGate</option>
+                        <option value="fortiswitch">FortiSwitch</option>
+                        <option value="fortiap">FortiAP</option>
+                        <option value="endpoint">Endpoint</option>
+                        <option value="server">Server</option>
+                    </select>
+                    
+                    <button id="clear-filters" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-times mr-2"></i>Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="glass-morphism rounded-lg p-6 text-center">
+                <i class="fas fa-images text-3xl text-blue-400 mb-2"></i>
+                <div class="text-2xl font-bold text-white" id="total-icons">-</div>
+                <div class="text-gray-300">Total Icons</div>
+            </div>
+            <div class="glass-morphism rounded-lg p-6 text-center">
+                <i class="fas fa-shield-alt text-3xl text-green-400 mb-2"></i>
+                <div class="text-2xl font-bold text-white" id="fortinet-icons">-</div>
+                <div class="text-gray-300">Fortinet Devices</div>
+            </div>
+            <div class="glass-morphism rounded-lg p-6 text-center">
+                <i class="fas fa-fire text-3xl text-orange-400 mb-2"></i>
+                <div class="text-2xl font-bold text-white" id="fortigate-icons">-</div>
+                <div class="text-gray-300">FortiGate Models</div>
+            </div>
+            <div class="glass-morphism rounded-lg p-6 text-center">
+                <i class="fas fa-network-wired text-3xl text-purple-400 mb-2"></i>
+                <div class="text-2xl font-bold text-white" id="fortiswitch-icons">-</div>
+                <div class="text-gray-300">FortiSwitch Models</div>
+            </div>
+        </div>
+
+        <!-- Icon Grid -->
+        <div class="glass-morphism rounded-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-white text-xl font-bold">
+                    <i class="fas fa-th-large mr-2"></i>Icon Library
+                </h2>
+                <div class="text-gray-300" id="results-count">
+                    Loading icons...
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading" class="flex justify-center items-center py-12">
+                <div class="text-white">
+                    <i class="fas fa-spinner fa-spin text-2xl mr-3"></i>
+                    Loading icons...
+                </div>
+            </div>
+
+            <!-- Icon Grid -->
+            <div id="icons-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4" style="display: none;">
+                <!-- Icons will be loaded here dynamically -->
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="flex justify-center mt-8" style="display: none;">
+                <div class="flex space-x-2">
+                    <button id="prev-page" class="glass-morphism px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="page-info" class="glass-morphism px-4 py-2 rounded-lg text-white">
+                        Page 1
+                    </span>
+                    <button id="next-page" class="glass-morphism px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Icon Preview Modal -->
+    <div id="icon-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-morphism rounded-lg p-8 max-w-2xl w-full max-h-96 overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-white text-xl font-bold" id="modal-title">Icon Details</h3>
+                <button id="close-modal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="flex flex-col md:flex-row gap-6">
+                <div class="flex-shrink-0">
+                    <div class="icon-preview w-32 h-32 rounded-lg flex items-center justify-center">
+                        <img id="modal-icon" src="" alt="" class="w-24 h-24 object-contain">
+                    </div>
+                </div>
+                
+                <div class="flex-1 text-white">
+                    <div class="space-y-3">
+                        <div>
+                            <span class="text-gray-300">Manufacturer:</span>
+                            <span id="modal-manufacturer" class="ml-2 font-semibold">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-300">Device Type:</span>
+                            <span id="modal-device-type" class="ml-2 font-semibold">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-300">Path:</span>
+                            <span id="modal-path" class="ml-2 font-mono text-sm">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-300">Tags:</span>
+                            <div id="modal-tags" class="mt-1">
+                                <!-- Tags will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentPage = 0;
+        let currentFilters = {
+            manufacturer: '',
+            device_type: '',
+            search: ''
+        };
+        let totalIcons = 0;
+
+        // DOM elements
+        const searchInput = document.getElementById('search-input');
+        const manufacturerFilter = document.getElementById('manufacturer-filter');
+        const deviceTypeFilter = document.getElementById('device-type-filter');
+        const clearFiltersBtn = document.getElementById('clear-filters');
+        const iconsGrid = document.getElementById('icons-grid');
+        const loading = document.getElementById('loading');
+        const pagination = document.getElementById('pagination');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+        const pageInfo = document.getElementById('page-info');
+        const resultsCount = document.getElementById('results-count');
+        
+        // Modal elements
+        const iconModal = document.getElementById('icon-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalIcon = document.getElementById('modal-icon');
+        const modalManufacturer = document.getElementById('modal-manufacturer');
+        const modalDeviceType = document.getElementById('modal-device-type');
+        const modalPath = document.getElementById('modal-path');
+        const modalTags = document.getElementById('modal-tags');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatistics();
+            loadIcons();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Search and filter events
+            searchInput.addEventListener('input', debounce(handleSearch, 300));
+            manufacturerFilter.addEventListener('change', handleFilterChange);
+            deviceTypeFilter.addEventListener('change', handleFilterChange);
+            clearFiltersBtn.addEventListener('click', clearFilters);
+            
+            // Pagination events
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 0) {
+                    currentPage--;
+                    loadIcons();
+                }
+            });
+            
+            nextPageBtn.addEventListener('click', () => {
+                currentPage++;
+                loadIcons();
+            });
+            
+            // Modal events
+            closeModalBtn.addEventListener('click', closeModal);
+            iconModal.addEventListener('click', (e) => {
+                if (e.target === iconModal) closeModal();
+            });
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function handleSearch() {
+            currentFilters.search = searchInput.value;
+            currentPage = 0;
+            if (currentFilters.search) {
+                searchIcons();
+            } else {
+                loadIcons();
+            }
+        }
+
+        function handleFilterChange() {
+            currentFilters.manufacturer = manufacturerFilter.value;
+            currentFilters.device_type = deviceTypeFilter.value;
+            currentPage = 0;
+            loadIcons();
+        }
+
+        function clearFilters() {
+            searchInput.value = '';
+            manufacturerFilter.value = '';
+            deviceTypeFilter.value = '';
+            currentFilters = { manufacturer: '', device_type: '', search: '' };
+            currentPage = 0;
+            loadIcons();
+        }
+
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/icons/browse?limit=0');
+                const data = await response.json();
+                
+                document.getElementById('total-icons').textContent = data.total;
+                
+                // Load Fortinet specific stats
+                const fortinetResponse = await fetch('/api/icons/browse?manufacturer=Fortinet&limit=0');
+                const fortinetData = await fortinetResponse.json();
+                document.getElementById('fortinet-icons').textContent = fortinetData.total;
+                
+                // Load FortiGate stats
+                const fortigateResponse = await fetch('/api/icons/browse?device_type=fortigate&limit=0');
+                const fortigateData = await fortigateResponse.json();
+                document.getElementById('fortigate-icons').textContent = fortigateData.total;
+                
+                // Load FortiSwitch stats  
+                const fortiswitchResponse = await fetch('/api/icons/browse?device_type=fortiswitch&limit=0');
+                const fortiswitchData = await fortiswitchResponse.json();
+                document.getElementById('fortiswitch-icons').textContent = fortiswitchData.total;
+                
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        async function loadIcons() {
+            showLoading(true);
+            
+            try {
+                const params = new URLSearchParams({
+                    limit: 48,
+                    offset: currentPage * 48
+                });
+                
+                if (currentFilters.manufacturer) {
+                    params.append('manufacturer', currentFilters.manufacturer);
+                }
+                if (currentFilters.device_type) {
+                    params.append('device_type', currentFilters.device_type);
+                }
+                
+                const response = await fetch(`/api/icons/browse?${params}`);
+                const data = await response.json();
+                
+                displayIcons(data.icons);
+                updatePagination(data);
+                
+            } catch (error) {
+                console.error('Error loading icons:', error);
+                iconsGrid.innerHTML = '<div class="col-span-full text-center text-red-400">Error loading icons</div>';
+            }
+            
+            showLoading(false);
+        }
+
+        async function searchIcons() {
+            showLoading(true);
+            
+            try {
+                const params = new URLSearchParams({
+                    q: currentFilters.search,
+                    limit: 48
+                });
+                
+                const response = await fetch(`/api/icons/search?${params}`);
+                const data = await response.json();
+                
+                displayIcons(data.icons);
+                updateSearchResults(data);
+                
+            } catch (error) {
+                console.error('Error searching icons:', error);
+                iconsGrid.innerHTML = '<div class="col-span-full text-center text-red-400">Error searching icons</div>';
+            }
+            
+            showLoading(false);
+        }
+
+        function displayIcons(icons) {
+            if (icons.length === 0) {
+                iconsGrid.innerHTML = '<div class="col-span-full text-center text-gray-400">No icons found</div>';
+                return;
+            }
+            
+            iconsGrid.innerHTML = icons.map(icon => `
+                <div class="icon-card glass-morphism rounded-lg p-4 text-center cursor-pointer hover:bg-white hover:bg-opacity-10 transition-all"
+                     onclick="showIconDetails(${JSON.stringify(icon).replace(/"/g, '&quot;')})">
+                    <div class="icon-preview w-16 h-16 mx-auto rounded-lg mb-3 flex items-center justify-center">
+                        <img src="/${icon.icon_path}" alt="${icon.title}" class="w-12 h-12 object-contain" 
+                             onerror="this.src='/static/icons/nd/device.svg'">
+                    </div>
+                    <div class="text-white text-sm font-medium truncate" title="${icon.title}">
+                        ${icon.title}
+                    </div>
+                    <div class="text-gray-400 text-xs truncate" title="${icon.manufacturer || 'Unknown'}">
+                        ${icon.manufacturer || 'Unknown'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showLoading(show) {
+            if (show) {
+                loading.style.display = 'block';
+                iconsGrid.style.display = 'none';
+                pagination.style.display = 'none';
+            } else {
+                loading.style.display = 'none';
+                iconsGrid.style.display = 'grid';
+                pagination.style.display = 'flex';
+            }
+        }
+
+        function updatePagination(data) {
+            totalIcons = data.total;
+            const totalPages = Math.ceil(data.total / 48);
+            
+            prevPageBtn.disabled = currentPage === 0;
+            nextPageBtn.disabled = !data.has_more;
+            
+            pageInfo.textContent = `Page ${currentPage + 1} of ${totalPages}`;
+            
+            const start = currentPage * 48 + 1;
+            const end = Math.min((currentPage + 1) * 48, data.total);
+            resultsCount.textContent = `Showing ${start}-${end} of ${data.total} icons`;
+        }
+
+        function updateSearchResults(data) {
+            pagination.style.display = 'none';
+            resultsCount.textContent = `Found ${data.count} icons matching "${data.query}"`;
+        }
+
+        function showIconDetails(icon) {
+            modalTitle.textContent = icon.title;
+            modalIcon.src = '/' + icon.icon_path;
+            modalIcon.alt = icon.title;
+            modalManufacturer.textContent = icon.manufacturer || 'Unknown';
+            modalDeviceType.textContent = icon.device_type || 'Unknown';
+            modalPath.textContent = icon.icon_path;
+            
+            // Display tags
+            if (icon.tags && icon.tags.length > 0) {
+                modalTags.innerHTML = icon.tags.map(tag => 
+                    `<span class="inline-block bg-blue-500 bg-opacity-20 text-blue-200 px-2 py-1 rounded text-xs mr-1 mb-1">${tag}</span>`
+                ).join('');
+            } else {
+                modalTags.innerHTML = '<span class="text-gray-400 text-sm">No tags</span>';
+            }
+            
+            iconModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            iconModal.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
