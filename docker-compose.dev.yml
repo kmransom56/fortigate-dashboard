@@ -1,0 +1,49 @@
+# Development Docker Compose Configuration
+# Usage: docker-compose -f compose.yml -f docker-compose.dev.yml up
+
+services:
+  redis:
+    ports:
+      - "6379:6379"  # Expose Redis for development debugging
+    command: >
+      redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  dashboard:
+    build:
+      target: development
+    volumes:
+      - ./app:/app/app:delegated  # Live code reloading
+      - ./tools:/app/tools:delegated
+      - ./scripts:/app/scripts:delegated
+      - ./app/static/icons:/app/static/icons:ro
+      - ./app/data:/app/data
+      - ./app/certs:/app/certs:ro
+    environment:
+      - LOG_LEVEL=DEBUG
+      - REDIS_DB=0
+      - FORTIGATE_SESSION_TTL=60  # Longer sessions for development
+    command: >
+      uvicorn app.main:app 
+      --host 0.0.0.0 
+      --port 10000 
+      --reload 
+      --reload-dir /app/app
+      --log-level debug
+    ports:
+      - "10000:10000"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # Development database browser (optional)
+  adminer:
+    image: adminer:4.8.1
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - fortinet_net
+    environment:
+      ADMINER_DEFAULT_SERVER: dashboard
+    profiles:
+      - tools

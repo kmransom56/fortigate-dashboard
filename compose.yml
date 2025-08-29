@@ -1,36 +1,39 @@
 services:
   redis:
     image: redis:7-alpine
-    # ports:
-    #   - "6380:6379"  # Remove external port mapping - only need internal communication
-    restart: always
+    restart: unless-stopped
     networks:
       - fortinet_net
     volumes:
       - redis_data:/data
     command: >
-      redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+      redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 5s
 
   dashboard:
     build:
       context: .
       dockerfile: Dockerfile
+      target: production
     ports:
       - "10000:10000"
-    restart: always
+    restart: unless-stopped
     networks:
       - fortinet_net
     secrets:
       - fortigate_api_token
       - fortigate_password
+      - fortiswitch_password
     volumes:
-      - ./app/certs:/app/certs
+      - ./app/certs:/app/certs:ro
       - ./app/data:/app/data
+      - ./app/static/icons:/app/static/icons:ro
+      - dashboard_logs:/app/logs
     environment:
       - FORTIGATE_API_TOKEN_FILE=/run/secrets/fortigate_api_token
       - FORTIGATE_CERT_PATH=/app/certs/fortigate.pem
@@ -43,9 +46,13 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DB=0
-      - LOG_LEVEL=DEBUG
+      - LOG_LEVEL=INFO
+      - PYTHONPATH=/app
+      - ICON_DB_PATH=/app/static/icons.db
       - FORTISWITCH_USERNAME=admin
       - FORTISWITCH_PASSWORD_FILE=/run/secrets/fortiswitch_password
+      - SVGO_ENABLED=true
+      - MAX_WORKERS=1
     depends_on:
       redis:
         condition: service_healthy
@@ -54,12 +61,24 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.wan_monitor
-    restart: always
+    restart: unless-stopped
     networks:
       - fortinet_net
+    secrets:
+      - fortigate_api_token
+    volumes:
+      - wan_logs:/app/logs
     environment:
       - FORTIGATE_HOST=https://192.168.0.254:8443
       - FORTIGATE_API_TOKEN_FILE=/run/secrets/fortigate_api_token
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=1
+      - LOG_LEVEL=INFO
+      - PYTHONPATH=/app
+    depends_on:
+      redis:
+        condition: service_healthy
 
 secrets:
   fortigate_api_token:
@@ -71,6 +90,10 @@ secrets:
 
 volumes:
   redis_data:
+    driver: local
+  dashboard_logs:
+    driver: local
+  wan_logs:
     driver: local
 
 networks:
