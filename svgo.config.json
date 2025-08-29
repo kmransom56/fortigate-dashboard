@@ -1,0 +1,56 @@
+{
+  "plugins": [
+    "preset-default",
+    {
+      "name": "removeComments",
+      "active": true
+    },
+    {
+      "name": "removeMetadata",
+      "active": true
+    },
+    {
+      "name": "removeEditorsNSData",
+      "active": true
+    },
+    {
+      "name": "cleanupAttrs",
+      "active": true
+    },
+    {
+      "name": "removeEmptyText",
+      "active": true
+    },
+    {
+      "name": "cleanupNumericValues",
+      "params": {
+        "floatPrecision": 2
+      }
+    },
+    {
+      "name": "convertPathData",
+      "params": {
+        "floatPrecision": 2,
+        "transformPrecision": 2
+      }
+    },
+    {
+      "name": "removeUnknownsAndDefaults",
+      "active": true
+    },
+    {
+      "name": "convertTransform",
+      "params": {
+        "floatPrecision": 2
+      }
+    },
+    {
+      "name": "removeViewBox",
+      "active": false
+    },
+    {
+      "name": "removeDimensions",
+      "active": false
+    }
+  ]
+}
