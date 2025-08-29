@@ -185,27 +185,66 @@ class SNMPNetworkDiscovery:
     def get_network_devices(self) -> List[Dict[str, Any]]:
         """
         Get network device information for topology display.
-        Returns enriched device data with switch context.
+        Returns enriched device data with switch context, OUI lookup, and icon matching.
         """
         try:
+            from app.utils.oui_lookup import get_manufacturer_from_mac
+            from app.utils.icon_db import get_icon, get_icon_binding
+            
             devices = []
             for device in self.known_devices:
+                # Use OUI lookup if manufacturer is not already known
+                manufacturer = device.manufacturer
+                if not manufacturer or manufacturer == "Unknown":
+                    try:
+                        manufacturer = get_manufacturer_from_mac(device.mac)
+                        logger.debug(f"OUI lookup for {device.mac}: {manufacturer}")
+                    except Exception as e:
+                        logger.warning(f"OUI lookup failed for {device.mac}: {e}")
+                        manufacturer = "Unknown Manufacturer"
+                
+                # Find appropriate icon
+                icon_path = None
+                icon_title = None
+                try:
+                    # Try manufacturer-specific icon first
+                    icon_info = get_icon(manufacturer=manufacturer)
+                    if not icon_info:
+                        # Try icon binding
+                        binding = get_icon_binding(manufacturer=manufacturer)
+                        if binding:
+                            icon_info = {'icon_path': binding['icon_path'], 'title': binding['title']}
+                    
+                    if icon_info:
+                        icon_path = icon_info['icon_path']
+                        icon_title = icon_info['title']
+                    else:
+                        # Fall back to device type icon
+                        type_icon = get_icon(device_type=device.device_type)
+                        if type_icon:
+                            icon_path = type_icon['icon_path']
+                            icon_title = type_icon['title']
+                except Exception as e:
+                    logger.warning(f"Icon lookup failed for {device.mac}: {e}")
+                
                 device_info = {
                     "ip": device.ip,
                     "mac": device.mac,
                     "hostname": device.hostname,
                     "device_name": device.hostname,
-                    "manufacturer": device.manufacturer,
+                    "manufacturer": manufacturer,
                     "device_type": device.device_type,
                     "device_ip": device.ip,
                     "device_mac": device.mac,
                     "switch_serial": device.switch_serial,
                     "switch_name": device.switch_name,
-                    "port_name": device.port
+                    "port_name": device.port,
+                    "icon_path": icon_path,
+                    "icon_title": icon_title
                 }
                 devices.append(device_info)
             
-            logger.info(f"SNMP device discovery: {len(devices)} network devices")
+            logger.info(f"SNMP device discovery: {len(devices)} network devices with OUI lookup and icon matching")
             return devices
             
         except Exception as e:

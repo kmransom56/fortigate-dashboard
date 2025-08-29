@@ -77,8 +77,44 @@ class FortiGateMonitorService:
                     if is_active:
                         active_devices += 1
                     
+                    # Get manufacturer from OUI lookup
+                    mac = device_data.get("mac", "")
+                    manufacturer = "Unknown Manufacturer"
+                    try:
+                        from app.utils.oui_lookup import get_manufacturer_from_mac
+                        manufacturer = get_manufacturer_from_mac(mac)
+                        logger.debug(f"OUI lookup for {mac}: {manufacturer}")
+                    except Exception as e:
+                        logger.warning(f"OUI lookup failed for {mac}: {e}")
+                    
+                    # Get appropriate icon
+                    icon_path = None
+                    icon_title = None
+                    try:
+                        from app.utils.icon_db import get_icon, get_icon_binding
+                        
+                        # Try manufacturer-specific icon first
+                        icon_info = get_icon(manufacturer=manufacturer)
+                        if not icon_info:
+                            # Try icon binding
+                            binding = get_icon_binding(manufacturer=manufacturer)
+                            if binding:
+                                icon_info = {'icon_path': binding['icon_path'], 'title': binding['title']}
+                        
+                        if icon_info:
+                            icon_path = icon_info['icon_path']
+                            icon_title = icon_info['title']
+                        else:
+                            # Fall back to device type icon
+                            type_icon = get_icon(device_type="endpoint")
+                            if type_icon:
+                                icon_path = type_icon['icon_path']
+                                icon_title = type_icon['title']
+                    except Exception as e:
+                        logger.warning(f"Icon lookup failed for {mac}: {e}")
+                    
                     device = {
-                        "mac": device_data.get("mac", ""),
+                        "mac": mac,
                         "switch_id": device_data.get("switch_id", ""),
                         "port_name": device_data.get("port_name", ""),
                         "port_id": device_data.get("port_id", 0),
@@ -88,7 +124,10 @@ class FortiGateMonitorService:
                         "vdom": device_data.get("vdom", "root"),
                         "is_active": is_active,
                         "activity_status": "active" if is_active else "inactive",
-                        "device_type": "endpoint",  # Default, could be enhanced with OUI lookup
+                        "device_type": "endpoint",
+                        "manufacturer": manufacturer,
+                        "icon_path": icon_path,
+                        "icon_title": icon_title,
                         "source": "fortigate_monitor"
                     }
                     devices.append(device)
