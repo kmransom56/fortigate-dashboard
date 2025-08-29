@@ -18,7 +18,7 @@ import logging
 import time
 from typing import Dict, Any, Optional
 
-from .fortigate_session import get_session_manager
+from .fortigate_redis_session import get_fortigate_redis_session_manager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -104,14 +104,14 @@ def fgt_api(
 
         _last_api_call = time.time()
 
-        # Try session-based authentication first
+        # Try Redis session-based authentication first
         if _auth_mode == "session":
             logger.info(
-                f"Making API request to: {endpoint} (FortiGate: {fortigate_ip}) using session authentication"
+                f"Making API request to: {endpoint} (FortiGate: {fortigate_ip}) using Redis session authentication"
             )
-            session_manager = get_session_manager()
+            session_manager = get_fortigate_redis_session_manager()
             result = session_manager.make_api_request(endpoint)
-            logger.info(f"Session API response for {endpoint}: {result}")  # Added log
+            logger.info(f"Redis session API response for {endpoint}: {result}")  # Added log
 
             # Check environment variable for fallback behavior
             use_token_fallback = os.getenv("FORTIGATE_ALLOW_TOKEN_FALLBACK", "false").lower() == "true"
@@ -165,6 +165,7 @@ def _fgt_api_with_token(
     Internal function used by fgt_api.
     """
     try:
+        # FortiGate API requires Authorization Bearer header
         url = f"https://{fortigate_ip}/api/v2/{endpoint}"
         headers = {
             "Authorization": f"Bearer {api_token}",

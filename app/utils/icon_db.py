@@ -41,13 +41,25 @@ def init_db():
 
 
 def insert_icon(manufacturer, device_type, slug, title, icon_path, source_url, tags):
+    filename = (
+        os.path.basename(icon_path) if icon_path else slug or title or "unknown.svg"
+    )
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             """
-            INSERT INTO icons (manufacturer, device_type, slug, title, icon_path, source_url, tags)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO icons (filename, path, full_path, size, hash, width, height, modified, manufacturer, device_type, slug, title, icon_path, source_url, tags)
+            VALUES (?, '', '', NULL, NULL, '', '', NULL, ?, ?, ?, ?, ?, ?, ?)
         """,
-            (manufacturer, device_type, slug, title, icon_path, source_url, tags),
+            (
+                filename,
+                manufacturer,
+                device_type,
+                slug,
+                title,
+                icon_path,
+                source_url,
+                tags,
+            ),
         )
         conn.commit()
 
@@ -115,7 +127,17 @@ def update_icon(icon_id, **kwargs):
         conn.commit()
 
 
-def add_icon_binding(key_type: str, key_value: str, icon_path: str, title: str = None, device_type: str = None, priority: int = 100):
+from typing import Optional
+
+
+def add_icon_binding(
+    key_type: str,
+    key_value: str,
+    icon_path: str,
+    title: Optional[str] = None,
+    device_type: Optional[str] = None,
+    priority: int = 100,
+):
     """Create or update a binding of a serial/manufacturer/mac/device_type to an icon path."""
     init_db()
     with sqlite3.connect(DB_PATH) as conn:
@@ -135,7 +157,12 @@ def add_icon_binding(key_type: str, key_value: str, icon_path: str, title: str =
         conn.commit()
 
 
-def get_icon_binding(manufacturer: str = None, serial: str = None, mac: str = None, device_type: str = None):
+def get_icon_binding(
+    manufacturer: Optional[str] = None,
+    serial: Optional[str] = None,
+    mac: Optional[str] = None,
+    device_type: Optional[str] = None,
+):
     """Return the highest-priority icon binding for given identifiers."""
     init_db()
     clauses = []
@@ -292,12 +319,18 @@ def seed_default_icons():
         for v in vendors:
             for alias in v["aliases"]:
                 if not _icon_exists(conn, alias):
+                    filename = (
+                        os.path.basename(v["icon_path"])
+                        if v["icon_path"]
+                        else alias.lower().replace(" ", "-") + ".svg"
+                    )
                     conn.execute(
                         """
-                        INSERT INTO icons (manufacturer, device_type, slug, title, icon_path, source_url, tags)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO icons (filename, path, full_path, size, hash, width, height, modified, manufacturer, device_type, slug, title, icon_path, source_url, tags)
+                        VALUES (?, '', '', NULL, NULL, '', '', NULL, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
+                            filename,
                             alias,
                             None,
                             alias.lower().replace(" ", "-"),
@@ -315,12 +348,18 @@ def seed_default_icons():
                 (dt["device_type"],),
             )
             if cur.fetchone() is None:
+                filename = (
+                    os.path.basename(dt["icon_path"])
+                    if dt["icon_path"]
+                    else dt["device_type"] + ".svg"
+                )
                 conn.execute(
                     """
-                    INSERT INTO icons (manufacturer, device_type, slug, title, icon_path, source_url, tags)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO icons (filename, path, full_path, size, hash, width, height, modified, manufacturer, device_type, slug, title, icon_path, source_url, tags)
+                    VALUES (?, '', '', NULL, NULL, '', '', NULL, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
+                        filename,
                         None,
                         dt["device_type"],
                         dt["device_type"],

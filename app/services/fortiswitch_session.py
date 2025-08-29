@@ -71,21 +71,39 @@ class FortiSwitchSessionManager:
             logger.debug(f"Could not load from {filepath}: {e}")
         return None
 
-    def make_api_request(self, endpoint: str) -> Dict[str, Any]:
+    def make_api_request(
+        self,
+        endpoint: str,
+        session_token: Optional[str] = None,
+        api_token: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Make an authenticated API request using basic authentication.
         Returns dictionary with response data or error information.
         """
-        if not self.fortiswitch_host or not self.username or not self.password:
-            logger.debug("FortiSwitch credentials/host missing, skipping direct FSW API call to %s.", endpoint)
-            return {"error": "credentials_missing", "message": "FortiSwitch credentials not configured."}
+
+        if not self.fortiswitch_host:
+            logger.debug(
+                "FortiSwitch host missing, skipping direct FSW API call to %s.",
+                endpoint,
+            )
+            return {
+                "error": "host_missing",
+                "message": "FortiSwitch host not configured.",
+            }
 
         if not endpoint.startswith("/"):
             endpoint = "/" + endpoint
         url = f"{self.fortiswitch_host}{endpoint}"
 
+        headers = {"Accept": "application/json"}
+        # Prefer session_token or api_token if provided
+        if session_token:
+            headers["Authorization"] = f"Bearer {session_token}"
+        elif api_token:
+            headers["Authorization"] = f"Bearer {api_token}"
+
         try:
-            auth = (self.username, self.password)
             verify_ssl_str = os.environ.get("FORTISWITCH_VERIFY_SSL", "false").lower()
             verify_ssl = verify_ssl_str == "true"
             if not verify_ssl:
@@ -94,11 +112,30 @@ class FortiSwitchSessionManager:
                 )
 
             logger.info(f"Making FortiSwitch API request to: {url}")
-            res = self.session.get(url, auth=auth, verify=verify_ssl, timeout=20)
+            if "Authorization" in headers:
+                res = self.session.get(
+                    url, headers=headers, verify=verify_ssl, timeout=20
+                )
+            elif self.username and self.password:
+                res = self.session.get(
+                    url,
+                    auth=(self.username, self.password),
+                    verify=verify_ssl,
+                    timeout=20,
+                )
+            else:
+                logger.error("No authentication method available for FortiSwitch API.")
+                return {
+                    "error": "auth_missing",
+                    "message": "No authentication method available.",
+                }
+
             logger.info(f"FSW API {endpoint} response status: {res.status_code}")
 
             if res.status_code == 401:
-                logger.error("FortiSwitch API Error 401: Unauthorized. Check FSW username/password.")
+                logger.error(
+                    "FortiSwitch API Error 401: Unauthorized. Check credentials or token."
+                )
                 return {"error": "unauthorized", "message": "Authentication failed."}
             elif res.status_code == 404:
                 logger.error(f"FortiSwitch API Error 404: Not Found. Endpoint {endpoint} may be incorrect for this FortiSwitchOS version.")
@@ -124,6 +161,7 @@ class FortiSwitchSessionManager:
         except Exception as e:
             logger.error(f"Unexpected error during FSW API call for {endpoint}: {e}", exc_info=True)
             return {"error": "unexpected_error", "message": str(e)}
+
 
 # Global session manager instance
 _fortiswitch_session_manager = None

@@ -21,6 +21,9 @@ import requests
 import time
 from urllib3.exceptions import InsecureRequestWarning
 import urllib3
+from typing import Dict, Any, List, Optional
+
+# Assuming these utilities exist in your project structure
 from app.utils import oui_lookup
 from app.utils.restaurant_device_classifier import enhance_device_info
 
@@ -31,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 # Import session management
 from app.services.fortigate_session import FortiGateSessionManager
+from app.services.fortiswitch_session import FortiSwitchSessionManager
 
 # Environment/defaults
 FORTIGATE_HOST = os.environ.get("FORTIGATE_HOST", "https://192.168.0.254")
@@ -38,8 +42,68 @@ FORTISWITCH_HOST = os.environ.get("FORTISWITCH_HOST", "")
 FORTISWITCH_USERNAME = os.environ.get("FORTISWITCH_USERNAME", "")
 FORTISWITCH_PASSWORD = os.environ.get("FORTISWITCH_PASSWORD", "")
 
-# Initialize session manager
 session_manager = FortiGateSessionManager()
+fortiswitch_session_manager = FortiSwitchSessionManager()
+
+
+def get_fortiswitches() -> List[Dict[str, Any]]:
+    """
+    Get a list of FortiSwitch devices managed by the FortiGate or FortiSwitch API.
+
+    This function attempts to retrieve information about connected FortiSwitches
+    using either the FortiGate's FortiLink API or directly from a specified
+    FortiSwitch via its API.
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries, each representing a FortiSwitch.
+                              Returns an empty list on failure or if not configured.
+    """
+    # Check if a FortiSwitch host is configured for direct API access
+    if FORTISWITCH_HOST and FORTISWITCH_USERNAME and FORTISWITCH_PASSWORD:
+        logger.info("Attempting to get FortiSwitches via FortiSwitch API...")
+        try:
+            # The actual API endpoint will depend on the FortiSwitch firmware.
+            # You may need to replace this with the correct endpoint for your version.
+            endpoint = "/api/v2/monitor/system/status"
+            switches_data = fortiswitch_session_manager.make_api_request(endpoint)
+            # You will need to process the switches_data based on the actual API response
+            if switches_data and switches_data.get("http_status") == 200:
+                logger.info("Successfully fetched FortiSwitches from FortiSwitch API.")
+                return switches_data.get("results", [])
+            else:
+                logger.warning(
+                    f"Failed to get switches via FortiSwitch API. Response: {switches_data}"
+                )
+        except Exception as e:
+            logger.error(f"Error calling FortiSwitch API: {e}")
+
+    # Fallback to FortiGate's FortiLink API if not using direct FortiSwitch access
+    # Assumes 'app.services.fortigate_service.fgt_api' is available
+    from app.services.fortigate_service import fgt_api
+
+    logger.info("Falling back to get FortiSwitches via FortiGate FortiLink API...")
+    try:
+        # The FortiLink API on the FortiGate returns information about managed switches
+        data = fgt_api("/api/v2/monitor/fortilink/switch")
+        if data and data.get("http_status") == 200 and "results" in data:
+            logger.info(
+                f"Successfully fetched {len(data['results'])} switches from FortiGate FortiLink."
+            )
+            return data["results"]
+        else:
+            logger.error(
+                f"Failed to get FortiSwitches via FortiGate API or malformed response. Data: {data}"
+            )
+            return []
+    except ImportError:
+        logger.warning(
+            "fortigate_service is not available. Cannot fetch switches from FortiGate."
+        )
+        return []
+    except Exception as e:
+        logger.error(f"Error getting FortiSwitches via FortiGate API: {e}")
+        return []
+
 
 # Legacy token support for fallback
 API_TOKEN_FILE = os.environ.get("FORTIGATE_API_TOKEN_FILE")
@@ -72,7 +136,7 @@ min_api_interval = 0.1  # Minimum 0.1 seconds between API calls (session auth ha
 # --- Utility Functions ---
 
 
-def normalize_mac(mac):
+def normalize_mac(mac: Optional[str]) -> Optional[str]:
     """Normalize MAC to AA:BB:CC:DD:EE:FF uppercase with improved error handling."""
     if not mac or not isinstance(mac, str):
         return None
@@ -115,7 +179,7 @@ def normalize_mac(mac):
 # --- API Helpers ---
 
 
-def fgt_api(endpoint, params=None):
+def fgt_api(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Helper to make FortiGate API calls with session authentication (preferred) or token fallback."""
     global last_api_call_time
 
@@ -141,6 +205,8 @@ def fgt_api(endpoint, params=None):
             logger.debug(
                 f"Making API request to: {endpoint} using session authentication"
             )
+            # Pass session token and API token if available
+            session_token = getattr(session_manager, "session_key", None)
             result = session_manager.make_api_request(api_endpoint)
             last_api_call_time = time.time()
             return result
@@ -160,6 +226,7 @@ def fgt_api(endpoint, params=None):
     url = f"{FORTIGATE_HOST}{endpoint}"
     headers = {"Accept": "application/json", "Authorization": f"Bearer {API_TOKEN}"}
 
+    res = None  # Ensure res is always defined
     try:
         # Make SSL verification configurable
         verify_ssl_str = os.environ.get("FORTIGATE_VERIFY_SSL", "false").lower()
@@ -209,384 +276,112 @@ def fgt_api(endpoint, params=None):
             except Exception as retry_e:
                 logger.error(f"FortiGate API retry exception for {endpoint}: {retry_e}")
                 return {}
-        elif res.status_code >= 400:
-            # General client/server error
+
+        # Handle other non-successful status codes
+        if res.status_code != 200:
             logger.error(
-                f"FortiGate API error {res.status_code} for {endpoint}: {res.text[:512]}"
+                f"FortiGate API Error: Status {res.status_code} for {endpoint}. Response: {res.text[:200]}"
             )
             return {}
 
         # Success case
-        result = res.json()
-        logger.debug(
-            f"FortiGate API {endpoint} successful - returned {len(str(result))} characters of data"
-        )
-        if isinstance(result, dict) and "results" in result:
-            logger.debug(
-                f"FortiGate API {endpoint} - found {len(result['results'])} items in results array"
-            )
-        return result
+        return res.json()
 
+    except requests.exceptions.JSONDecodeError:
+        response_text = (
+            res.text[:200]
+            if res is not None and hasattr(res, "text")
+            else "<no response>"
+        )
+        logger.error(
+            f"Failed to decode JSON from FortiGate API response for {endpoint}. Response text: {response_text}"
+        )
+        return {}
     except requests.exceptions.RequestException as e:
-        logger.error(f"FortiGate API request exception for {endpoint}: {e}")
+        logger.error(f"FortiGate API request failed for {endpoint}: {e}")
         return {}
     except Exception as e:
-        logger.error(f"FortiGate API unexpected error for {endpoint}: {e}")
+        logger.error(f"An unexpected error occurred in fgt_api for {endpoint}: {e}")
         return {}
 
 
-# --- Data Source Functions ---
+# --- NEW FUNCTIONS ---
 
 
-def get_managed_switches():
-    """Fetch managed switch status from FortiGate."""
-    logger.info("Fetching managed switch status...")
-    data = fgt_api("/api/v2/monitor/switch-controller/managed-switch/status")
-    logger.info("Finished fetching managed switch status.")
-    return data
+def get_interfaces() -> Dict[str, Any]:
+    """
+    Retrieves all system interfaces from the FortiGate.
+
+    Returns:
+        Dict[str, Any]: A dictionary of interface objects, with the interface name as the key.
+                        Returns an empty dictionary on failure.
+    """
+    logger.info("Fetching system interfaces from FortiGate...")
+    data = fgt_api("/api/v2/cmdb/system/interface")
+
+    if data and data.get("http_status") == 200 and "results" in data:
+        interfaces = {iface["name"]: iface for iface in data["results"]}
+        logger.info(f"Successfully fetched {len(interfaces)} interfaces.")
+        return interfaces
+    else:
+        logger.error(f"Failed to get interfaces or malformed response. Data: {data}")
+        return {}
 
 
-def get_detected_devices():
-    """Fetch detected devices from FortiGate switch controller."""
-    logger.info("Fetching detected devices...")
-    data = fgt_api("/api/v2/monitor/switch-controller/detected-device")
+def get_device_inventory() -> List[Dict[str, Any]]:
+    """
+    Retrieves and processes the device inventory from the FortiGate monitor.
 
-    if data and "results" in data:
-        logger.info(f"Found {len(data['results'])} detected devices")
-        for device in data["results"]:
-            if "mac" in device:
-                manufacturer = oui_lookup.get_manufacturer_from_mac(device["mac"])
-                device["manufacturer"] = manufacturer
+    This function fetches all detected devices, normalizes their MAC addresses,
+    looks up vendor information, and enriches the data with custom classifications.
 
-    logger.info("Finished fetching detected devices.")
-    return data
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries, each representing a device.
+                              Returns an empty list on failure.
+    """
+    logger.info("Fetching device inventory from FortiGate...")
+    data = fgt_api("/api/v2/monitor/user/device/select")
 
+    if not data or data.get("http_status") != 200 or "results" not in data:
+        logger.error(
+            f"Failed to get device inventory or malformed response. Data: {data}"
+        )
+        return []
 
-def get_fgt_dhcp():
-    """Fetch DHCP lease info from FortiGate."""
-    logger.info("Fetching FortiGate DHCP leases...")
-    data = fgt_api("/api/v2/monitor/system/dhcp")
-    logger.info("Finished fetching FortiGate DHCP leases.")
-    return data
-
-
-def get_system_arp():
-    """Fetch ARP table from FortiGate for additional device discovery."""
-    logger.info("Fetching FortiGate ARP table...")
-    data = fgt_api("/api/v2/monitor/system/arp")
-    logger.info("Finished fetching FortiGate ARP table.")
-    return data
-
-
-# --- Enhanced Mapping Functions ---
-
-
-def build_dhcp_map(dhcp_data):
-    """Build a comprehensive MAC to device info map from DHCP data."""
-    dhcp_map = {}
-    if not isinstance(dhcp_data, dict) or "results" not in dhcp_data:
-        logger.warning("Invalid DHCP data format")
-        return dhcp_map
-
-    results = dhcp_data.get("results", [])
-    logger.info(f"Processing {len(results)} DHCP entries")
-
-    for entry in results:
-        if not isinstance(entry, dict):
-            continue
-
-        mac = normalize_mac(entry.get("mac"))
-        if mac:
-            dhcp_map[mac] = {
-                "ip": entry.get("ip", "Unknown"),
-                "hostname": entry.get("hostname", ""),
-                "interface": entry.get("interface", ""),
-                "expire_time": entry.get("expire_time", 0),
-                "status": entry.get("status", "unknown"),
-                "vci": entry.get("vci", ""),
-                "type": entry.get("type", "ipv4"),
-            }
-
-    logger.info(f"Built DHCP map for {len(dhcp_map)} devices")
-    return dhcp_map
-
-
-def build_arp_map(arp_data):
-    """Build MAC to IP mapping from ARP table."""
-    arp_map = {}
-    if not isinstance(arp_data, dict) or "results" not in arp_data:
-        logger.warning("Invalid ARP data format")
-        return arp_map
-
-    results = arp_data.get("results", [])
-    logger.info(f"Processing {len(results)} ARP entries")
-
-    for entry in results:
-        if not isinstance(entry, dict):
-            continue
-
-        mac = normalize_mac(entry.get("mac"))
-        if mac:
-            arp_map[mac] = {
-                "ip": entry.get("ip", "Unknown"),
-                "interface": entry.get("interface", ""),
-                "age": entry.get("age", 0),
-            }
-
-    logger.info(f"Built ARP map for {len(arp_map)} devices")
-    return arp_map
-
-
-def build_detected_device_map(detected_data):
-    """Build a map of switch_serial:port_name to detected devices."""
-    detected_map = {}
-    if not isinstance(detected_data, dict) or "results" not in detected_data:
-        logger.warning("Invalid detected device data format")
-        return detected_map
-
-    results = detected_data.get("results", [])
-    logger.info(f"Processing {len(results)} detected device entries")
-
-    for device in results:
-        if not isinstance(device, dict):
-            continue
-
-        switch_id = device.get("switch_id")
-        port_name = device.get("port_name")
-
-        if switch_id and port_name:
-            key = f"{switch_id}:{port_name}"
-            if key not in detected_map:
-                detected_map[key] = []
-            detected_map[key].append(device)
-            logger.debug(f"Added detected device: {key} -> MAC: {device.get('mac')}")
-
-    logger.info(f"Built detected device map for {len(detected_map)} port combinations")
-    return detected_map
-
-
-# --- Enhanced Device Aggregation ---
-
-
-def aggregate_port_devices(switch_serial, port_name, detected_map, dhcp_map, arp_map):
-    """Aggregate all device information for a specific port."""
     devices = []
+    raw_devices = data["results"]
+    logger.info(f"Processing {len(raw_devices)} devices from inventory...")
 
-    # Get detected devices for this port
-    port_key = f"{switch_serial}:{port_name}"
-    detected_devices = detected_map.get(port_key, [])
-
-    logger.debug(f"Port {port_name}: Found {len(detected_devices)} detected devices")
-
-    from app.utils.icon_db import get_icon
-
-    for device in detected_devices:
+    for device in raw_devices:
         mac = normalize_mac(device.get("mac"))
         if not mac:
             continue
 
-        # Get additional info from DHCP and ARP
-        dhcp_info = dhcp_map.get(mac, {})
-        arp_info = arp_map.get(mac, {})
+        ip_addr = device.get("ip_addr")
+        if isinstance(ip_addr, list) and len(ip_addr) > 0:
+            ip_addr = ip_addr[0]  # Take the first IP if it's a list
+        elif isinstance(ip_addr, list) and len(ip_addr) == 0:
+            ip_addr = None
 
-        # Determine device name/hostname
-        hostname = dhcp_info.get("hostname", "")
-        if not hostname:
-            hostname = f"Device-{port_name}-{mac[-5:].replace(':', '')}"
-
-        # Determine IP address
-        ip_address = dhcp_info.get("ip") or arp_info.get("ip", "Unknown")
-
-        # Get manufacturer info (prefer oui_lookup if not present)
-        manufacturer = device.get("manufacturer")
-        if not manufacturer or manufacturer == "Unknown":
-            try:
-                from app.utils.oui_lookup import get_manufacturer_from_mac
-
-                manufacturer_lookup = get_manufacturer_from_mac(mac)
-                if manufacturer_lookup:
-                    manufacturer = manufacturer_lookup
-            except Exception:
-                pass
-
-        # Try to get icon from DB
-        icon_info = get_icon(manufacturer=manufacturer)
-        if not icon_info:
-            icon_info = get_icon(device_type=device.get("device_type"))
-
-        device_info = {
-            "device_mac": mac,
-            "device_ip": ip_address,
-            "device_name": hostname,
-            "device_type": device.get("device_type", hostname),
-            "manufacturer": manufacturer,
-            "icon_path": icon_info["icon_path"] if icon_info else None,
-            "icon_title": icon_info["title"] if icon_info else None,
-            "source": "switch_controller_detected",
-            "vlan": device.get("vlan_id", "N/A"),
-            "last_seen": device.get("last_seen", 0),
-            "port_id": device.get("port_id", 0),
-            "dhcp_status": dhcp_info.get("status", "unknown"),
-            "dhcp_interface": dhcp_info.get("interface", ""),
-            "vci": dhcp_info.get("vci", ""),
+        processed_device = {
+            "mac": mac,
+            "ip": ip_addr,
+            "hostname": device.get("host", {}).get("name"),
+            "os": device.get("os_name"),
+            "os_version": device.get("os_ver"),
+            "hardware_vendor": device.get("hardware_vendor"),
+            "last_seen": device.get("last_seen"),
+            "last_seen_itf": device.get("last_seen_itf"),
+            "is_online": device.get("is_online", False),
+            "vendor": oui_lookup.lookup_vendor(mac),  # <-- fixed function name
         }
 
-        # Enhance with restaurant technology classification
-        enhanced_device_info = enhance_device_info(device_info)
-        devices.append(enhanced_device_info)
-        logger.debug(
-            f"Port {port_name}: Added device {hostname} ({mac}) with IP {ip_address}"
-        )
+        # Enhance with custom classification logic
+        enhanced_info = enhance_device_info(processed_device)
+        devices.append(enhanced_info)
 
+    logger.info(f"Successfully processed {len(devices)} devices from inventory.")
     return devices
 
 
-# --- Main Enhanced Service Function ---
-
-
-def get_fortiswitches_enhanced():
-    """
-    Enhanced FortiSwitch discovery with improved device detection and correlation.
-    Returns: List of FortiSwitch dictionaries with detailed port and device info.
-    """
-    logger.info("=== Starting ENHANCED FortiSwitch discovery process ===")
-
-    # 1. Fetch all required data
-    logger.info("--- Fetching data from FortiGate APIs ---")
-    switches_data = get_managed_switches()
-    detected_devices_data = get_detected_devices()
-    dhcp_data = get_fgt_dhcp()
-    arp_data = get_system_arp()
-    wan_ips = get_wan_ips()
-    logger.info("--- Finished fetching API data ---")
-
-    # 2. Build lookup maps
-    logger.info("--- Building device lookup maps ---")
-    dhcp_map = build_dhcp_map(dhcp_data)
-    arp_map = build_arp_map(arp_data)
-    detected_map = build_detected_device_map(detected_devices_data)
-
-    logger.info(
-        f"Maps built - DHCP: {len(dhcp_map)}, ARP: {len(arp_map)}, Detected: {len(detected_map)}"
-    )
-    logger.info("--- Finished building lookup maps ---")
-
-    # 3. Process switches
-    switches = []
-    switch_results = (
-        switches_data.get("results", []) if isinstance(switches_data, dict) else []
-    )
-
-    if not switch_results:
-        logger.error("No managed switches found in FortiGate response")
-        return []
-
-    logger.info(f"--- Processing {len(switch_results)} managed switches ---")
-
-    for switch_data in switch_results:
-        if not isinstance(switch_data, dict):
-            continue
-
-        switch_serial = switch_data.get("serial", "Unknown")
-        # FortiGate detected-device API uses 'switch_id' which corresponds to 'switch-id' in managed-switch
-        # Use this identifier when correlating detected devices to ports
-        switch_id_for_detected_map = switch_data.get("switch-id", switch_serial)
-        switch_name = switch_id_for_detected_map
-
-        logger.info(f"Processing switch: {switch_name} (Serial: {switch_serial})")
-
-        # Process ports
-        ports = []
-        ports_data = switch_data.get("ports", [])
-
-        for port_data in ports_data:
-            if not isinstance(port_data, dict):
-                continue
-
-            port_name = port_data.get("interface", "Unknown")
-
-            # Aggregate devices for this port
-            # IMPORTANT: detected-device map keys are built as f"{switch_id}:{port_name}"
-            # so we must use 'switch-id' here (not serial) to find matches
-            connected_devices = aggregate_port_devices(
-                switch_id_for_detected_map, port_name, detected_map, dhcp_map, arp_map
-            )
-
-            port_info = {
-                "name": port_name,
-                "status": port_data.get("status", "Unknown"),
-                "speed": port_data.get("speed", 0),
-                "duplex": port_data.get("duplex", "Unknown"),
-                "vlan": port_data.get("vlan", "Unknown"),
-                "poe_capable": port_data.get("poe_capable", False),
-                "poe_status": port_data.get("poe_status", "disabled"),
-                "fortilink_port": port_data.get("fortilink_port", False),
-                "connected_devices": connected_devices,
-            }
-
-            ports.append(port_info)
-
-            if connected_devices:
-                logger.info(
-                    f"  Port {port_name}: {len(connected_devices)} devices detected"
-                )
-
-        # Build switch object
-        switch_info = {
-            "name": switch_name,
-            "serial": switch_serial,
-            "model": switch_data.get("model", "Unknown"),
-            "status": switch_data.get("status", "Unknown"),
-            "version": switch_data.get("os_version", "Unknown"),
-            "ip": switch_data.get("connecting_from", "Unknown"),
-            "mac": switch_data.get("mac", "Unknown"),
-            "ports": ports,
-        }
-
-        switches.append(switch_info)
-        logger.info(f"Finished processing switch: {switch_name}")
-
-    logger.info(
-        f"=== Enhanced discovery complete. Processed {len(switches)} switches ==="
-    )
-    # Return switches and WAN IPs for hierarchical view
-    return {"switches": switches, "wan_ips": wan_ips}
-
-
-# --- Compatibility wrapper ---
-def get_fortiswitches():
-    """Main entry point for FortiSwitch data retrieval."""
-    return get_fortiswitches_enhanced()
-
-
-# --- Debug and Testing ---
-if __name__ == "__main__":
-    # Setup logging for testing
-    log_level_str = os.environ.get("LOG_LEVEL", "INFO").upper()
-    log_level = getattr(logging, log_level_str, logging.INFO)
-    logging.basicConfig(
-        level=log_level, format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
-    )
-
-    if not API_TOKEN and not session_manager.password:
-        logger.critical("No authentication available. Please configure authentication.")
-    else:
-        logger.info("Starting enhanced FortiSwitch service test...")
-        try:
-            switches = get_fortiswitches_enhanced()
-
-            import json
-
-            print(json.dumps(switches, indent=2))
-            logger.info(f"Successfully retrieved data for {len(switches)} switches")
-
-            # Print summary
-            total_devices = 0
-            for switch in switches:
-                for port in switch.get("ports", []):
-                    total_devices += len(port.get("connected_devices", []))
-
-            logger.info(f"Total devices detected across all switches: {total_devices}")
-
-        except Exception as e:
-            logger.critical(f"Error during test run: {e}", exc_info=True)
+# --- END OF NEW FUNCTIONS ---

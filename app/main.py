@@ -19,39 +19,34 @@ from app.services.fortigate_service import (
 from app.services.fortiswitch_service import (
     get_fortiswitches,
 )  # to get FortiSwitch information
+from app.services.hybrid_topology_service import get_hybrid_topology_service
+from app.services.redis_session_manager import get_redis_session_manager, cleanup_expired_sessions
+from app.services.fortigate_redis_session import get_fortigate_redis_session_manager
 
 
-# Helper to aggregate device details for dashboard
+# Helper to aggregate device details for dashboard using hybrid topology
 def get_all_device_details():
-    switches_data = get_fortiswitches()
-    # If switches_data is a dict, extract the list
-    if isinstance(switches_data, dict) and "switches" in switches_data:
-        switches = switches_data["switches"]
-    else:
-        switches = switches_data
-    devices = []
-    for switch in switches:
-        if not isinstance(switch, dict):
-            continue  # skip if not a dict (e.g., string or other type)
-        for port in switch.get("ports", []):
-            for dev in port.get("connected_devices", []):
-                # Add switch and port context to device
-                dev_copy = dev.copy()
-                dev_copy["switch_serial"] = switch.get("serial")
-                dev_copy["switch_name"] = switch.get("name")
-                dev_copy["port_name"] = port.get("name")
-                # If icon_path not present, try to enrich from DB
-                if not dev_copy.get("icon_path"):
-                    from app.utils.icon_db import get_icon
-
-                    icon_info = get_icon(manufacturer=dev_copy.get("manufacturer"))
-                    if not icon_info:
-                        icon_info = get_icon(device_type=dev_copy.get("device_type"))
-                    if icon_info:
-                        dev_copy["icon_path"] = icon_info["icon_path"]
-                        dev_copy["icon_title"] = icon_info["title"]
-                devices.append(dev_copy)
-    return devices
+    hybrid_service = get_hybrid_topology_service()
+    devices = hybrid_service.get_network_devices()
+    
+    # Enrich with icon information
+    enriched_devices = []
+    for dev in devices:
+        dev_copy = dev.copy()
+        # If icon_path not present, try to enrich from DB
+        if not dev_copy.get("icon_path"):
+            from app.utils.icon_db import get_icon
+            
+            icon_info = get_icon(manufacturer=dev_copy.get("manufacturer"))
+            if not icon_info:
+                icon_info = get_icon(device_type=dev_copy.get("device_type"))
+            if icon_info:
+                dev_copy["icon_path"] = icon_info["icon_path"]
+                dev_copy["icon_title"] = icon_info["title"]
+        
+        enriched_devices.append(dev_copy)
+    
+    return enriched_devices
 
 
 app = FastAPI()
@@ -144,43 +139,37 @@ async def api_topology_data():
     switches_data = []
     device_details = []
 
+    # Use hybrid topology service for comprehensive data
+    hybrid_service = get_hybrid_topology_service()
+    
     try:
-        with ThreadPoolExecutor(max_workers=3) as executor:
-            fut_if = executor.submit(get_interfaces)
-            fut_sw = executor.submit(get_fortiswitches)
-            fut_dev = executor.submit(get_all_device_details)
+        # Get data sequentially for reliability
+        try:
+            interfaces = get_interfaces()
+        except Exception as e:
+            logger.warning(f"get_interfaces() failed: {e}")
 
-            try:
-                interfaces = fut_if.result(timeout=4)
-            except FuturesTimeout:
-                logger.warning("get_interfaces() timed out; continuing with 0 interfaces")
-            except Exception as e:
-                logger.warning(f"get_interfaces() failed: {e}")
+        try:
+            switches_data = hybrid_service.get_comprehensive_topology()
+        except Exception as e:
+            logger.warning(f"hybrid topology failed: {e}")
 
-            try:
-                switches_data = fut_sw.result(timeout=5)
-            except FuturesTimeout:
-                logger.warning("get_fortiswitches() timed out; continuing with no switches")
-            except Exception as e:
-                logger.warning(f"get_fortiswitches() failed: {e}")
-
-            try:
-                device_details = fut_dev.result(timeout=5)
-            except FuturesTimeout:
-                logger.warning("get_all_device_details() timed out; continuing with 0 devices")
-            except Exception as e:
-                logger.warning(f"get_all_device_details() failed: {e}")
+        try:
+            device_details = get_all_device_details()
+        except Exception as e:
+            logger.warning(f"get_all_device_details() failed: {e}")
 
         logger.info(
-            f"Fetched for topology -> interfaces: {len(interfaces) if interfaces else 0}, "
-            f"switches: {len(switches_data['switches']) if isinstance(switches_data, dict) and 'switches' in switches_data else len(switches_data) if switches_data else 0}, "
-            f"devices: {len(device_details) if device_details else 0}"
+            f"Hybrid topology -> interfaces: {len(interfaces) if interfaces else 0}, "
+            f"switches: {len(switches_data.get('switches', [])) if switches_data else 0}, "
+            f"devices: {len(device_details) if device_details else 0}, "
+            f"source: {switches_data.get('source', 'unknown') if switches_data else 'none'}"
         )
     except Exception as e:
-        logger.warning(f"Concurrent fetch failed unexpectedly: {e}")
-        # Fall back to sequential but non-blocking defaults
+        logger.warning(f"Sequential fetch failed unexpectedly: {e}")
+        # Fall back to defaults
         interfaces = interfaces or {}
-        switches_data = switches_data or []
+        switches_data = switches_data or {"switches": [], "source": "error"}
         device_details = device_details or []
 
     # Transform data into topology format
@@ -208,11 +197,9 @@ async def api_topology_data():
         }
     })
     
-    # Process FortiSwitch data
-    if isinstance(switches_data, dict) and "switches" in switches_data:
-        switches = switches_data["switches"]
-    else:
-        switches = switches_data if switches_data else []
+    # Process FortiSwitch data from hybrid service
+    switches = switches_data.get("switches", []) if isinstance(switches_data, dict) else []
+    data_source = switches_data.get("source", "unknown") if isinstance(switches_data, dict) else "unknown"
     
     # Lay out switches horizontally under FortiGate, and endpoints below their switch
     switch_y = 280
@@ -374,19 +361,178 @@ async def api_topology_data():
         
         device_count += 1
     
-        logger.info("END /api/topology_data endpoint - returning topology data")
+    # Add metadata about data sources
+    topology_data["metadata"] = {
+        "data_source": data_source,
+        "interfaces_count": len(interfaces) if interfaces else 0,
+        "switches_count": len(switches),
+        "devices_count": len(device_details) if device_details else 0,
+        "enhancement_info": switches_data.get("enhancement_info", {}) if isinstance(switches_data, dict) else {},
+        "api_info": switches_data.get("api_info", {}) if isinstance(switches_data, dict) else {}
+    }
+    
+    # Log final topology data being returned
+    logger.info(f"Returning topology data: devices={len(topology_data['devices'])}, connections={len(topology_data['connections'])}")
+    has_switches = any(d["type"] == "fortiswitch" for d in topology_data["devices"])
+    has_endpoints = any(d["type"] in ["endpoint", "server"] for d in topology_data["devices"])
+    logger.info(f"Topology composition: switches={has_switches}, endpoints={has_endpoints}, source={data_source}")
+        
+    logger.info("END /api/topology_data endpoint - returning topology data")
     return topology_data
+
+@app.get("/api/debug/topology")
+async def debug_topology():
+    """Debug endpoint to check topology data sources"""
+    try:
+        import logging
+        logger = logging.getLogger("debug_topology")
+        
+        # Test individual services
+        hybrid_service = get_hybrid_topology_service()
+        
+        # Test hybrid topology
+        topo_data = hybrid_service.get_comprehensive_topology()
+        
+        # Test device aggregation
+        devices = get_all_device_details()
+        
+        return {
+            "topology_switches": len(topo_data.get("switches", [])),
+            "topology_source": topo_data.get("source", "unknown"),
+            "aggregated_devices": len(devices),
+            "first_device": devices[0] if devices else None,
+            "enhancement_info": topo_data.get("monitor_enhancement", {}),
+            "errors": topo_data.get("error") or "none"
+        }
+    except Exception as e:
+        return {"error": str(e), "type": "debug_endpoint_error"}
+
+@app.get("/api/debug/monitor")
+async def debug_monitor():
+    """Debug endpoint to test Monitor API directly"""
+    try:
+        from app.services.fortigate_monitor_service import get_fortigate_monitor_service
+        
+        monitor_service = get_fortigate_monitor_service()
+        
+        # Test detected devices
+        devices_result = monitor_service.get_detected_devices()
+        
+        return {
+            "service_status": "working",
+            "device_count": len(devices_result.get("devices", [])),
+            "active_devices": devices_result.get("active_devices", 0),
+            "data_source": devices_result.get("source", "unknown"),
+            "first_device": devices_result.get("devices", [{}])[0] if devices_result.get("devices") else None,
+            "api_info": devices_result.get("api_info", {}),
+            "error": devices_result.get("error", "none")
+        }
+    except Exception as e:
+        return {"error": str(e), "type": "monitor_service_error"}
 
 @app.get("/api/eraser/status")
 async def eraser_status():
     return {"enabled": eraser_service.is_enabled()}
+
 @app.post("/api/eraser/export")
 async def eraser_export(payload: dict):
     if not eraser_service.is_enabled():
         raise HTTPException(status_code=501, detail="Eraser AI integration not enabled")
     return eraser_service.export_topology(payload)
 
-# Simple status probe for Eraser integration toggle
-@app.get("/api/eraser/status")
-async def eraser_status():
-    return {"enabled": eraser_service.is_enabled()}
+# Redis Session Management Endpoints
+@app.get("/api/session/health")
+async def session_health():
+    """Get health status of Redis session management"""
+    try:
+        redis_manager = get_redis_session_manager()
+        session_manager = get_fortigate_redis_session_manager()
+        
+        redis_health = redis_manager.health_check()
+        session_health = session_manager.health_check()
+        
+        return {
+            "redis": redis_health,
+            "session_manager": session_health,
+            "timestamp": redis_health.get("timestamp")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+
+@app.get("/api/session/info")
+async def session_info():
+    """Get information about current sessions"""
+    try:
+        redis_manager = get_redis_session_manager()
+        session_manager = get_fortigate_redis_session_manager()
+        
+        redis_info = redis_manager.get_session_info()
+        current_session = session_manager.get_session_info()
+        
+        return {
+            "redis_sessions": redis_info,
+            "current_session": current_session
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Session info failed: {str(e)}")
+
+@app.post("/api/session/cleanup")
+async def session_cleanup():
+    """Manually trigger cleanup of expired sessions"""
+    try:
+        cleaned_count = cleanup_expired_sessions()
+        return {
+            "success": True,
+            "cleaned_sessions": cleaned_count,
+            "message": f"Cleaned up {cleaned_count} expired sessions"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Session cleanup failed: {str(e)}")
+
+@app.delete("/api/session/current")
+async def logout_current_session():
+    """Logout the current FortiGate session"""
+    try:
+        session_manager = get_fortigate_redis_session_manager()
+        session_manager.logout()
+        return {
+            "success": True,
+            "message": "Current session logged out successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Logout failed: {str(e)}")
+
+@app.get("/api/session/test")
+async def test_session_auth():
+    """Test session authentication with a simple API call"""
+    try:
+        # Force session authentication (disable token fallback temporarily)
+        original_fallback = os.getenv("FORTIGATE_ALLOW_TOKEN_FALLBACK")
+        os.environ["FORTIGATE_ALLOW_TOKEN_FALLBACK"] = "false"
+        
+        from app.services.fortigate_service import fgt_api
+        result = fgt_api("monitor/system/status")
+        
+        # Restore original setting
+        if original_fallback is not None:
+            os.environ["FORTIGATE_ALLOW_TOKEN_FALLBACK"] = original_fallback
+        else:
+            os.environ.pop("FORTIGATE_ALLOW_TOKEN_FALLBACK", None)
+        
+        if "error" in result:
+            return {
+                "success": False,
+                "error": result.get("error"),
+                "message": result.get("message", "Authentication test failed")
+            }
+        else:
+            return {
+                "success": True,
+                "message": "Session authentication working correctly",
+                "data": {
+                    "endpoint": "monitor/system/status",
+                    "response_keys": list(result.keys()) if isinstance(result, dict) else "non-dict response"
+                }
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Session test failed: {str(e)}")
