@@ -24,6 +24,33 @@ from app.services.redis_session_manager import get_redis_session_manager, cleanu
 from app.services.fortigate_redis_session import get_fortigate_redis_session_manager
 
 
+def get_device_icon_fallback(manufacturer, device_type):
+    """Simple fallback icon mapping when database lookup fails"""
+    icon_mapping = {
+        # Manufacturer-specific icons
+        "Apple Inc.": ("icons/apple.svg", "Apple Device"),
+        "Microsoft Corporation": ("icons/microsoft.svg", "Microsoft Device"),
+        "Dell Inc.": ("icons/nd/laptop.svg", "Dell Device"),
+        "ASUSTek COMPUTER INC.": ("icons/nd/laptop.svg", "ASUS Device"),
+        "BIZLINK TECHNOLOGY, INC.": ("icons/nd/laptop.svg", "Bizlink Device"),
+        "Hon Hai Precision": ("icons/nd/laptop.svg", "Foxconn Device"),
+        "Micro-Star INTL CO., LTD.": ("icons/nd/laptop.svg", "MSI Device"),
+        
+        # Device type fallbacks - use proper icons from our database
+        "server": ("icons/nd/server.svg", "Server"),
+        "endpoint": ("icons/nd/laptop.svg", "Endpoint"), 
+        "fortigate": ("icons/nd/firewall.svg", "FortiGate"),
+        "fortiswitch": ("icons/nd/switch.svg", "FortiSwitch"),
+    }
+    
+    # Try manufacturer first, then device type
+    if manufacturer and manufacturer in icon_mapping:
+        return icon_mapping[manufacturer]
+    elif device_type and device_type in icon_mapping:
+        return icon_mapping[device_type]
+    else:
+        return ("icons/Application.svg", "Unknown Device")
+
 # Helper to aggregate device details for dashboard using hybrid topology
 def get_all_device_details():
     hybrid_service = get_hybrid_topology_service()
@@ -322,6 +349,10 @@ async def api_topology_data():
                         icon_title = icon_info.get("title") or icon_title
             except Exception:
                 pass
+            
+            # Fallback to simple icon mapping if database lookup fails
+            if not icon_path:
+                icon_path, icon_title = get_device_icon_fallback(manufacturer, device_type)
 
         topology_data["devices"].append({
             "id": device_id,
@@ -438,6 +469,8 @@ async def debug_monitor():
 @app.get("/api/eraser/status")
 async def eraser_status():
     return {"enabled": eraser_service.is_enabled()}
+
+
 
 # Icon Management API Endpoints
 @app.get("/api/icons/browse")

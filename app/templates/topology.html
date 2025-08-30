@@ -50,10 +50,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
+      cursor: move;
       transition: all 0.3s ease;
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
       z-index: 10;
+      user-select: none;
+    }
+    
+    .device-icon.dragging {
+      opacity: 0.7;
+      transform: scale(1.1);
+      z-index: 1000;
+      cursor: grabbing;
     }
 
     .device-icon img {
@@ -452,6 +460,9 @@
         element.addEventListener('mouseleave', () => this.hideTooltip());
         element.addEventListener('click', () => this.selectDevice(device));
         
+        // Make device draggable
+        this.makeDraggable(element, device);
+        
         this.canvas.appendChild(element);
         
         // Add device label
@@ -564,6 +575,78 @@
         // Refresh button
         document.getElementById('refreshTopology').addEventListener('click', () => {
           this.refreshData();
+        });
+      }
+      
+      makeDraggable(element, device) {
+        let isDragging = false;
+        let startX, startY;
+        let currentX = device.position.x;
+        let currentY = device.position.y;
+        
+        const onMouseDown = (e) => {
+          if (e.button !== 0) return; // Only left mouse button
+          
+          isDragging = true;
+          startX = e.clientX - currentX;
+          startY = e.clientY - currentY;
+          
+          element.classList.add('dragging');
+          this.hideTooltip();
+          
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+          
+          e.preventDefault();
+          e.stopPropagation();
+        };
+        
+        const onMouseMove = (e) => {
+          if (!isDragging) return;
+          
+          const rect = this.canvas.getBoundingClientRect();
+          currentX = Math.max(30, Math.min(rect.width - 90, e.clientX - startX));
+          currentY = Math.max(30, Math.min(rect.height - 90, e.clientY - startY));
+          
+          element.style.left = `${currentX}px`;
+          element.style.top = `${currentY}px`;
+          
+          // Update device position
+          device.position.x = currentX;
+          device.position.y = currentY;
+          
+          // Update connections in real-time
+          this.updateConnectionLines();
+          
+          e.preventDefault();
+        };
+        
+        const onMouseUp = (e) => {
+          if (!isDragging) return;
+          
+          isDragging = false;
+          element.classList.remove('dragging');
+          
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          
+          // Save new position (could be extended to save to backend)
+          console.log(`Device ${device.name} moved to position:`, {x: currentX, y: currentY});
+          
+          e.preventDefault();
+        };
+        
+        element.addEventListener('mousedown', onMouseDown);
+      }
+      
+      updateConnectionLines() {
+        // Remove existing connection lines
+        const existingLines = this.canvas.querySelectorAll('.connection-line');
+        existingLines.forEach(line => line.remove());
+        
+        // Redraw all connections
+        this.connections.forEach(conn => {
+          this.drawConnection(conn);
         });
       }
       
