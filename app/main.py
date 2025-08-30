@@ -39,8 +39,8 @@ def get_device_icon_fallback(manufacturer, device_type):
         # Device type fallbacks - use proper icons from our database
         "server": ("icons/nd/server.svg", "Server"),
         "endpoint": ("icons/nd/laptop.svg", "Endpoint"), 
-        "fortigate": ("icons/nd/firewall.svg", "FortiGate"),
-        "fortiswitch": ("icons/nd/switch.svg", "FortiSwitch"),
+        "fortigate": ("icons/FG-100F_101F.svg", "FortiGate 100F"),
+        "fortiswitch": ("icons/FSW-124E.svg", "FortiSwitch 124E"),
     }
     
     # Try manufacturer first, then device type
@@ -224,8 +224,8 @@ async def api_topology_data():
             "model": "FortiGate",
             "interfaces": len(interfaces) if interfaces else 0,
             "status": "Active",
-            "iconPath": "icons/nd/firewall.svg",
-            "iconTitle": "Firewall"
+            "iconPath": "icons/FG-100F_101F.svg",
+            "iconTitle": "FortiGate 100F"
         }
     })
     
@@ -259,8 +259,8 @@ async def api_topology_data():
                     "ports": len(switch.get("ports", [])),
                     "status": switch.get("status", "Unknown"),
                     "connectedDevices": len([d for d in device_details if d.get("switch_serial") == switch.get("serial")]),
-                    "iconPath": "icons/nd/switch.svg",
-                    "iconTitle": "Switch"
+                    "iconPath": "icons/FSW-124E.svg",
+                    "iconTitle": "FortiSwitch 124E"
                 }
             })
             
