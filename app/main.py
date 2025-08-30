@@ -1,3 +1,7 @@
+# Route for FortiGate-style topology page
+@app.get("/topology-fortigate", response_class=HTMLResponse)
+async def topology_fortigate_page(request: Request):
+    return templates.TemplateResponse("topology_fortigate.html", {"request": request})
 from fastapi import FastAPI, Request, HTTPException
 from datetime import datetime
 from fastapi.responses import HTMLResponse
@@ -147,6 +151,7 @@ async def switches_page(request: Request):
 @app.get("/topology", response_class=HTMLResponse)
 async def topology_page(request: Request):
     return templates.TemplateResponse("topology.html", {"request": request})
+
 
 # 🌐 Route for 3D Network Topology "/topology-3d"
 @app.get("/topology-3d", response_class=HTMLResponse)

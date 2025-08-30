@@ -51,80 +51,94 @@
       align-items: center;
       justify-content: center;
       cursor: move;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      z-index: 10;
-      user-select: none;
-    }
-    
-    .device-icon.dragging {
-      opacity: 0.7;
-      transform: scale(1.1);
-      z-index: 1000;
-      cursor: grabbing;
-    }
 
-    .device-icon img {
-      width: 36px;
-      height: 36px;
-      object-fit: contain;
-      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
-    }
-    
-    .device-icon:hover {
-      transform: scale(1.1);
-      z-index: 20;
-    }
-    
-    /* Device Types */
-    .fortigate { background: linear-gradient(45deg, #2563eb, #1d4ed8); color: white; }
-    .fortiswitch { background: linear-gradient(45deg, #059669, #047857); color: white; }
-    .endpoint { background: linear-gradient(45deg, #7c3aed, #6d28d9); color: white; }
-    .server { 
-      border-radius: 15px; 
-      background: linear-gradient(45deg, #dc2626, #b91c1c); 
-      color: white;
-      width: 70px;
-      height: 50px;
-    }
-    
-    /* Risk Levels */
-    .risk-low { border: 3px solid #10b981; }
-    .risk-medium { border: 3px solid #f59e0b; }
-    .risk-high { border: 3px solid #ef4444; }
-    .risk-critical { border: 3px solid #dc2626; animation: pulse-warning 2s infinite; }
-    
-    @keyframes pulse-warning {
-      0%, 100% { box-shadow: 0 4px 15px rgba(220,38,38,0.4); }
-      50% { box-shadow: 0 4px 25px rgba(220,38,38,0.8); }
-    }
-    
-    /* Connection Lines */
-    .connection-line {
-      position: absolute;
-      background: #6b7280;
-      height: 2px;
-      transform-origin: left center;
-      z-index: 1;
-      opacity: 0.6;
-      transition: opacity 0.3s ease;
-    }
-    
-    .connection-line.active { background: #2563eb; opacity: 1; height: 4px; }
-    .connection-line.lag { height: 6px; background: #059669; }
-    
-    /* Traffic Bubbles */
-    .traffic-bubble {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(37, 99, 235, 0.1);
-      border: 2px solid #2563eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #2563eb;
-      font-weight: bold;
-      font-size: 12px;
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+          <meta charset="utf-8">
+          <title>FortiGate Topology</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <link rel="stylesheet" href="/static/styles.css">
+          <style>
+            body { font-family: Lato, Helvetica, Arial, sans-serif; margin: 0; background: #f5f7fa; }
+            .sidebar { width: 220px; background: #3a2a4d; color: #fff; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+            .sidebar .logo { padding: 20px; font-size: 1.2em; font-weight: bold; }
+            .sidebar .menu { padding: 0 20px; }
+            .sidebar .menu-item { padding: 12px 0; border-bottom: 1px solid #4b3b5a; cursor: pointer; }
+            .sidebar .menu-item.active { background: #2e1f3a; color: #ffd700; }
+            .main-content { margin-left: 220px; padding: 0; }
+            .header { background: #fff; padding: 16px 32px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+            .topology-area { position: relative; min-height: 800px; background: #fff; margin: 32px; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); overflow: hidden; }
+            /* Placeholder for topology map and device circles */
+            #topologyMap { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+            /* Add more styles as needed to match FortiGate look */
+          </style>
+      </head>
+      <body>
+        <div class="sidebar">
+          <div class="logo">FORTINET</div>
+          <div class="menu">
+            <div class="menu-item">Dashboard</div>
+            <div class="menu-item">Network</div>
+            <div class="menu-item">Policy & Objects</div>
+            <div class="menu-item">Security Profiles</div>
+            <div class="menu-item">User & Authentication</div>
+            <div class="menu-item">System</div>
+            <div class="menu-item active">Security Fabric</div>
+            <div class="menu-item">Physical Topology</div>
+            <div class="menu-item">Logical Topology</div>
+            <div class="menu-item">Fabric Connectors</div>
+            <div class="menu-item">Log & Report</div>
+          </div>
+        </div>
+        <div class="main-content">
+          <div class="header">
+            <div>Security Fabric &gt; Physical Topology</div>
+            <div>
+              <button id="updateBtn" style="background:#4caf50;color:#fff;border:none;padding:8px 16px;border-radius:4px;">Update Now</button>
+            </div>
+          </div>
+          <div class="topology-area">
+            <!-- Topology map and device circles will be injected here -->
+            <div id="topologyMap"></div>
+            <!-- Add other UI elements as needed -->
+          </div>
+        </div>
+        <script>
+          // Fetch parsed topology data and inject into topologyMap
+          async function renderTopology() {
+            const response = await fetch('/api/scraped_topology');
+            const data = await response.json();
+            const map = document.getElementById('topologyMap');
+            map.innerHTML = '';
+            // Example: Render device circles and connections
+            // You should enhance this to match the FortiGate visual style
+            if (data.devices) {
+              data.devices.forEach(device => {
+                const div = document.createElement('div');
+                div.style.position = 'absolute';
+                div.style.left = device.position.x + 'px';
+                div.style.top = device.position.y + 'px';
+                div.style.width = '100px';
+                div.style.height = '100px';
+                div.style.borderRadius = '50%';
+                div.style.background = '#2196f3';
+                div.style.color = '#fff';
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
+                div.style.justifyContent = 'center';
+                div.style.fontSize = '1.2em';
+                div.innerHTML = `<div>${device.name}<br>${device.details && device.details.deviceCount ? device.details.deviceCount + ' Devices' : ''}</div>`;
+                map.appendChild(div);
+              });
+            }
+            // TODO: Render connections as SVG lines or curves
+          }
+          document.addEventListener('DOMContentLoaded', renderTopology);
+          document.getElementById('updateBtn').addEventListener('click', renderTopology);
+        </script>
+      </body>
+      </html>
       z-index: 5;
     }
     
@@ -345,7 +359,7 @@
       async initializeTopology() {
         try {
           // Fetch real topology data from your FortiGate/FortiSwitch APIs
-          const response = await fetch('/api/topology_data');
+          const response = await fetch('/api/scraped_topology');
           const topologyData = await response.json();
           
           this.devices = topologyData.devices || [];
