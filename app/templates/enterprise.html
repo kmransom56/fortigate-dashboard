@@ -175,6 +175,68 @@
             </div>
         </div>
 
+        <!-- Real FortiGate Inventory Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="glass-card p-4">
+                    <h3 class="text-white mb-4">
+                        <i class="fas fa-server me-2"></i>FortiGate Inventory
+                    </h3>
+                    
+                    <!-- Loading State -->
+                    <div id="loading-inventory" class="text-center py-3">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading inventory data...</span>
+                        </div>
+                        <p class="text-white mt-2">Loading real FortiGate inventory...</p>
+                    </div>
+
+                    <!-- Inventory Stats -->
+                    <div id="inventory-stats" class="d-none">
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="stat-card text-center">
+                                    <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                                    <h5 id="inventory-total">0</h5>
+                                    <p class="mb-0">Total FortiGates</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card text-center">
+                                    <i class="fas fa-network-wired fa-2x mb-2"></i>
+                                    <h5 id="ip-ranges-count">0</h5>
+                                    <p class="mb-0">IP Ranges</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card text-center">
+                                    <i class="fas fa-map-marked-alt fa-2x mb-2"></i>
+                                    <h5 id="regions-count">0</h5>
+                                    <p class="mb-0">Regions</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card text-center">
+                                    <i class="fas fa-search fa-2x mb-2"></i>
+                                    <h5>
+                                        <a href="/api/fortigate/search?q=Sonic" class="text-white" style="text-decoration: none;">
+                                            Search
+                                        </a>
+                                    </h5>
+                                    <p class="mb-0">FortiGate Lookup</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Brand Breakdown -->
+                        <div id="inventory-brands" class="row">
+                            <!-- Brand cards will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Infrastructure Breakdown -->
         <div class="row mb-4">
             <div class="col-md-6">
@@ -213,10 +275,12 @@
         // Global variables
         let enterpriseData = {};
         let organizations = [];
+        let inventoryData = {};
 
         // Load enterprise data on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadEnterpriseData();
+            loadInventoryData();
         });
 
         async function loadEnterpriseData() {
@@ -236,6 +300,26 @@
             } catch (error) {
                 console.error('Error loading enterprise data:', error);
                 showAlert('Failed to load enterprise data: ' + error.message, 'danger');
+            }
+        }
+
+        async function loadInventoryData() {
+            try {
+                // Load real FortiGate inventory
+                const inventoryResponse = await fetch('/api/fortigate/inventory/summary');
+                inventoryData = await inventoryResponse.json();
+                
+                renderInventoryData();
+                
+            } catch (error) {
+                console.error('Error loading inventory data:', error);
+                showAlert('Failed to load FortiGate inventory: ' + error.message, 'warning');
+                
+                // Hide loading and show error state
+                document.getElementById('loading-inventory').classList.add('d-none');
+                document.getElementById('inventory-stats').innerHTML = 
+                    '<div class="alert alert-glass alert-warning">Failed to load real FortiGate inventory data</div>';
+                document.getElementById('inventory-stats').classList.remove('d-none');
             }
         }
 
@@ -287,6 +371,56 @@
                     </div>
                 `;
                 container.innerHTML += orgCard;
+            });
+        }
+
+        function renderInventoryData() {
+            // Hide loading state
+            document.getElementById('loading-inventory').classList.add('d-none');
+            document.getElementById('inventory-stats').classList.remove('d-none');
+            
+            // Update summary stats
+            document.getElementById('inventory-total').textContent = inventoryData.total_locations.toLocaleString();
+            document.getElementById('ip-ranges-count').textContent = Object.keys(inventoryData.ip_ranges || {}).length;
+            document.getElementById('regions-count').textContent = Object.keys(inventoryData.regions || {}).length;
+            
+            // Render brand cards
+            const brandsContainer = document.getElementById('inventory-brands');
+            brandsContainer.innerHTML = '';
+            
+            Object.entries(inventoryData.brands || {}).forEach(([brand, data]) => {
+                const brandClass = `brand-${brand.toLowerCase().replace('bww', 'bww').replace('arbys', 'arbys')}`;
+                const regionsList = data.regions.slice(0, 3).join(', ');
+                const ipRangesList = data.ip_ranges.slice(0, 2).join(', ');
+                
+                const brandCard = `
+                    <div class="col-md-4 mb-3">
+                        <div class="org-card ${brandClass} p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h6 class="text-white mb-0">${brand} FortiGates</h6>
+                                <span class="badge bg-light text-dark">${data.count.toLocaleString()}</span>
+                            </div>
+                            
+                            <div class="text-white">
+                                <p class="mb-1"><i class="fas fa-map-marked-alt me-2"></i><small>Regions (${data.regions.length})</small></p>
+                                <p class="small mb-2">${regionsList}${data.regions.length > 3 ? '...' : ''}</p>
+                                
+                                <p class="mb-1"><i class="fas fa-network-wired me-2"></i><small>IP Ranges (${data.ip_ranges.length})</small></p>
+                                <p class="small mb-3">${ipRangesList}${data.ip_ranges.length > 2 ? '...' : ''}</p>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-glass btn-sm flex-fill" onclick="viewBrandLocations('${brand}')">
+                                    <i class="fas fa-eye me-1"></i>View
+                                </button>
+                                <button class="btn btn-glass btn-sm flex-fill" onclick="searchBrand('${brand}')">
+                                    <i class="fas fa-search me-1"></i>Search
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                brandsContainer.innerHTML += brandCard;
             });
         }
 
@@ -365,6 +499,22 @@
 
         function viewSecurityAlerts() {
             showAlert('Security alerts feature coming soon!', 'info');
+        }
+
+        function viewBrandLocations(brand) {
+            showAlert(`Loading ${brand} FortiGate locations...`, 'info');
+            
+            // Open locations in new tab
+            const url = `/api/fortigate/locations?brand=${brand}&limit=10`;
+            window.open(url, '_blank');
+        }
+
+        function searchBrand(brand) {
+            showAlert(`Searching ${brand} FortiGates...`, 'info');
+            
+            // Open search results in new tab
+            const url = `/api/fortigate/search?q=${brand}&limit=20`;
+            window.open(url, '_blank');
         }
 
         function showAlert(message, type) {

@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, HTTPException
+from datetime import datetime
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -24,6 +25,7 @@ from app.services.redis_session_manager import get_redis_session_manager, cleanu
 from app.services.fortigate_redis_session import get_fortigate_redis_session_manager
 from app.services.restaurant_device_service import get_restaurant_device_service
 from app.services.organization_service import get_organization_service
+from app.services.fortigate_inventory_service import get_fortigate_inventory_service
 
 
 def get_device_icon_fallback(manufacturer, device_type):
@@ -686,6 +688,177 @@ async def get_meraki_switches(org_filter: str = None):
         return switches_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get Meraki switches: {str(e)}")
+
+# FortiGate Inventory API Endpoints
+@app.get("/api/fortigate/inventory/summary")
+async def get_fortigate_inventory_summary():
+    """Get comprehensive FortiGate inventory summary"""
+    try:
+        inventory_service = get_fortigate_inventory_service()
+        summary = inventory_service.get_inventory_summary()
+        return summary
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get inventory summary: {str(e)}")
+
+@app.get("/api/fortigate/locations")
+async def get_fortigate_locations(
+    brand: str = None,
+    region: str = None,
+    limit: int = 100,
+    offset: int = 0
+):
+    """Get FortiGate locations with filtering and pagination"""
+    try:
+        inventory_service = get_fortigate_inventory_service()
+        
+        if brand:
+            locations = inventory_service.get_locations_by_brand(brand, limit)
+        elif region:
+            locations = inventory_service.get_locations_by_region(region)
+        else:
+            locations = inventory_service.get_all_locations(limit, offset)
+        
+        # Convert to serializable format
+        location_data = []
+        for loc in locations:
+            location_data.append({
+                "store_number": loc.store_number,
+                "ip_address": loc.ip_address,
+                "brand": loc.brand,
+                "region": loc.region,
+                "mgmt_interface": loc.mgmt_interface,
+                "subnet_mask": loc.subnet_mask,
+                "status": loc.status,
+                "last_seen": loc.last_seen.isoformat() if loc.last_seen else None,
+                "model": loc.model,
+                "firmware": loc.firmware
+            })
+        
+        return {
+            "locations": location_data,
+            "total_count": len(locations),
+            "filters": {"brand": brand, "region": region},
+            "pagination": {"limit": limit, "offset": offset}
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get FortiGate locations: {str(e)}")
+
+@app.get("/api/fortigate/location/{store_number}")
+async def get_fortigate_location(store_number: str):
+    """Get specific FortiGate location details"""
+    try:
+        inventory_service = get_fortigate_inventory_service()
+        location = inventory_service.get_location(store_number)
+        
+        if not location:
+            raise HTTPException(status_code=404, detail=f"FortiGate location not found: {store_number}")
+        
+        return {
+            "store_number": location.store_number,
+            "ip_address": location.ip_address,
+            "brand": location.brand,
+            "region": location.region,
+            "mgmt_interface": location.mgmt_interface,
+            "subnet_mask": location.subnet_mask,
+            "status": location.status,
+            "last_seen": location.last_seen.isoformat() if location.last_seen else None,
+            "model": location.model,
+            "firmware": location.firmware
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get FortiGate location: {str(e)}")
+
+@app.get("/api/fortigate/location/{store_number}/connection")
+async def get_fortigate_connection_info(store_number: str):
+    """Get connection information for a specific FortiGate"""
+    try:
+        inventory_service = get_fortigate_inventory_service()
+        connection_info = inventory_service.get_fortigate_connection_info(store_number)
+        
+        if not connection_info:
+            raise HTTPException(status_code=404, detail=f"FortiGate not found: {store_number}")
+        
+        return connection_info
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get connection info: {str(e)}")
+
+@app.get("/api/fortigate/search")
+async def search_fortigate_locations(q: str, limit: int = 50):
+    """Search FortiGate locations by store number, IP, brand, or region"""
+    try:
+        inventory_service = get_fortigate_inventory_service()
+        locations = inventory_service.search_locations(q, limit)
+        
+        # Convert to serializable format
+        location_data = []
+        for loc in locations:
+            location_data.append({
+                "store_number": loc.store_number,
+                "ip_address": loc.ip_address,
+                "brand": loc.brand,
+                "region": loc.region,
+                "status": loc.status
+            })
+        
+        return {
+            "query": q,
+            "results": location_data,
+            "result_count": len(location_data)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+@app.get("/api/fortigate/discovery/locations")
+async def get_discovery_locations(brand: str = None, region: str = None, limit: int = 100):
+    """Get FortiGate locations formatted for discovery operations"""
+    try:
+        inventory_service = get_fortigate_inventory_service()
+        discovery_locations = inventory_service.get_locations_for_discovery(brand, region, limit)
+        
+        return {
+            "discovery_locations": discovery_locations,
+            "total_count": len(discovery_locations),
+            "filters": {"brand": brand, "region": region}
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get discovery locations: {str(e)}")
+
+@app.post("/api/fortigate/location/{store_number}/status")
+async def update_fortigate_status(store_number: str, status_update: dict):
+    """Update FortiGate location status"""
+    try:
+        inventory_service = get_fortigate_inventory_service()
+        
+        status = status_update.get("status", "unknown")
+        model = status_update.get("model")
+        firmware = status_update.get("firmware")
+        
+        # Build update kwargs
+        update_kwargs = {}
+        if model:
+            update_kwargs["model"] = model
+        if firmware:
+            update_kwargs["firmware"] = firmware
+        
+        success = inventory_service.update_location_status(store_number, status, **update_kwargs)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail=f"FortiGate location not found: {store_number}")
+        
+        return {
+            "success": True,
+            "store_number": store_number,
+            "status": status,
+            "updated_at": datetime.now().isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update status: {str(e)}")
 
 @app.get("/api/enterprise/summary")
 async def get_enterprise_summary():
