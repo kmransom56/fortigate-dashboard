@@ -23,6 +23,7 @@ from app.services.hybrid_topology_service import get_hybrid_topology_service
 from app.services.redis_session_manager import get_redis_session_manager, cleanup_expired_sessions
 from app.services.fortigate_redis_session import get_fortigate_redis_session_manager
 from app.services.restaurant_device_service import get_restaurant_device_service
+from app.services.organization_service import get_organization_service
 
 
 def get_device_icon_fallback(manufacturer, device_type):
@@ -152,6 +153,11 @@ async def topology_3d_page(request: Request):
 @app.get("/icons", response_class=HTMLResponse)
 async def icons_page(request: Request):
     return templates.TemplateResponse("icons.html", {"request": request})
+
+# 🏢 Route for Enterprise Dashboard "/enterprise"
+@app.get("/enterprise", response_class=HTMLResponse)
+async def enterprise_page(request: Request):
+    return templates.TemplateResponse("enterprise.html", {"request": request})
 
 
 # 📡 API endpoint for topology data
@@ -496,6 +502,200 @@ async def debug_monitor():
 @app.get("/api/eraser/status")
 async def eraser_status():
     return {"enabled": eraser_service.is_enabled()}
+
+# Organization Management API Endpoints
+@app.get("/api/organizations")
+async def get_organizations():
+    """Get all organizations"""
+    try:
+        org_service = get_organization_service()
+        organizations = org_service.get_all_organizations()
+        
+        return {
+            "organizations": [
+                {
+                    "id": org.id,
+                    "name": org.name,
+                    "brand": org.brand.value,
+                    "region": org.region,
+                    "location_count": org.location_count,
+                    "infrastructure_type": org.infrastructure_type.value,
+                    "created_at": org.created_at.isoformat()
+                }
+                for org in organizations
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get organizations: {str(e)}")
+
+@app.get("/api/organizations/{org_id}")
+async def get_organization(org_id: str):
+    """Get specific organization details"""
+    try:
+        org_service = get_organization_service()
+        org = org_service.get_organization(org_id)
+        
+        if not org:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        
+        return {
+            "id": org.id,
+            "name": org.name,
+            "brand": org.brand.value,
+            "region": org.region,
+            "location_count": org.location_count,
+            "infrastructure_type": org.infrastructure_type.value,
+            "created_at": org.created_at.isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get organization: {str(e)}")
+
+@app.get("/api/organizations/{org_id}/locations")
+async def get_organization_locations(org_id: str, limit: int = 100, offset: int = 0):
+    """Get locations for an organization"""
+    try:
+        org_service = get_organization_service()
+        org = org_service.get_organization(org_id)
+        
+        if not org:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        
+        locations = org_service.get_organization_locations(org_id, limit, offset)
+        
+        return {
+            "organization_id": org_id,
+            "organization_name": org.name,
+            "total_locations": org.location_count,
+            "returned_count": len(locations),
+            "limit": limit,
+            "offset": offset,
+            "locations": [
+                {
+                    "id": loc.id,
+                    "store_number": loc.store_number,
+                    "name": loc.name,
+                    "address": loc.address,
+                    "city": loc.city,
+                    "state": loc.state,
+                    "status": loc.status.value,
+                    "infrastructure_type": loc.infrastructure_type.value,
+                    "fortigate_ip": loc.fortigate_ip,
+                    "fortigate_model": loc.fortigate_model,
+                    "switch_count": loc.switch_count,
+                    "ap_count": loc.ap_count,
+                    "last_discovered": loc.last_discovered.isoformat() if loc.last_discovered else None
+                }
+                for loc in locations
+            ]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get locations: {str(e)}")
+
+@app.get("/api/organizations/{org_id}/discovery_config")
+async def get_organization_discovery_config(org_id: str):
+    """Get discovery configuration for an organization"""
+    try:
+        org_service = get_organization_service()
+        config = org_service.get_organization_discovery_config(org_id)
+        
+        if not config:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        
+        return config
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get discovery config: {str(e)}")
+
+@app.get("/api/organizations/{org_id}/compliance")
+async def get_organization_compliance(org_id: str):
+    """Get compliance requirements for an organization"""
+    try:
+        org_service = get_organization_service()
+        compliance = org_service.get_compliance_requirements(org_id)
+        
+        if not compliance:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        
+        return compliance
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get compliance requirements: {str(e)}")
+
+@app.post("/api/organizations/{org_id}/discover")
+async def start_organization_discovery(org_id: str, location_limit: int = None):
+    """Start device discovery for an organization"""
+    try:
+        org_service = get_organization_service()
+        result = await org_service.discover_organization_devices(org_id, location_limit)
+        
+        if "error" in result:
+            raise HTTPException(status_code=404, detail=result["error"])
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start discovery: {str(e)}")
+
+# Enterprise Topology API Endpoints
+@app.get("/api/topology/enterprise")
+async def get_enterprise_topology(org_filter: str = None):
+    """Get enterprise-wide topology including FortiSwitch and Meraki switches"""
+    try:
+        hybrid_service = get_hybrid_topology_service()
+        topology_data = hybrid_service.get_enterprise_topology(org_filter)
+        return topology_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get enterprise topology: {str(e)}")
+
+@app.get("/api/meraki/health")
+async def meraki_health_check():
+    """Check Meraki API connectivity"""
+    try:
+        from app.services.meraki_service import get_meraki_service
+        meraki_service = get_meraki_service()
+        health_data = meraki_service.health_check()
+        return health_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Meraki health check failed: {str(e)}")
+
+@app.get("/api/meraki/organizations")
+async def get_meraki_organizations():
+    """Get Meraki organizations"""
+    try:
+        from app.services.meraki_service import get_meraki_service
+        meraki_service = get_meraki_service()
+        orgs = meraki_service.get_organizations()
+        return {"organizations": orgs}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get Meraki organizations: {str(e)}")
+
+@app.get("/api/meraki/switches")
+async def get_meraki_switches(org_filter: str = None):
+    """Get Meraki switches for restaurant organizations"""
+    try:
+        from app.services.meraki_service import get_meraki_service
+        meraki_service = get_meraki_service()
+        switches_data = meraki_service.discover_restaurant_meraki_switches(org_filter)
+        return switches_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get Meraki switches: {str(e)}")
+
+@app.get("/api/enterprise/summary")
+async def get_enterprise_summary():
+    """Get enterprise-wide summary statistics"""
+    try:
+        org_service = get_organization_service()
+        summary = org_service.get_enterprise_summary()
+        return summary
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get enterprise summary: {str(e)}")
 
 @app.get("/api/restaurant/device_summary")
 async def restaurant_device_summary():

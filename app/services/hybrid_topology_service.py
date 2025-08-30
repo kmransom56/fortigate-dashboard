@@ -12,6 +12,8 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeou
 from .snmp_service import get_snmp_discovery
 from .fortiswitch_api_service import get_fortiswitch_api_service
 from .fortigate_monitor_service import get_fortigate_monitor_service
+from .meraki_service import get_meraki_service
+from .organization_service import get_organization_service
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,8 @@ class HybridTopologyService:
         self.snmp_service = get_snmp_discovery()
         self.api_service = get_fortiswitch_api_service()
         self.monitor_service = get_fortigate_monitor_service()
+        self.meraki_service = get_meraki_service()
+        self.org_service = get_organization_service()
     
     def get_comprehensive_topology(self) -> Dict[str, Any]:
         """
@@ -324,6 +328,118 @@ class HybridTopologyService:
         except Exception as e:
             logger.error(f"Error getting network devices: {e}")
             return []
+    
+    def get_enterprise_topology(self, org_filter: str = None) -> Dict[str, Any]:
+        """
+        Get enterprise-wide topology including both FortiSwitches and Meraki switches
+        
+        Args:
+            org_filter: Filter for specific organization (sonic, bww, arbys)
+        """
+        logger.info(f"Getting enterprise topology with filter: {org_filter}")
+        
+        enterprise_data = {
+            "fortiswitches": [],
+            "meraki_switches": [],
+            "source": "enterprise_multi_vendor",
+            "discovery_time": None,
+            "api_info": {
+                "fortiswitch_requests": 0,
+                "meraki_requests": 0,
+                "errors": []
+            }
+        }
+        
+        try:
+            # Get current location infrastructure type (from organization service)
+            # For now, assume we're in home lab (FortiSwitch only) but this would
+            # dynamically determine based on organization
+            
+            # Get FortiSwitch data (for Sonic locations and home lab)
+            if org_filter is None or org_filter == "sonic":
+                try:
+                    fortiswitch_data = self.get_comprehensive_topology()
+                    if fortiswitch_data and not fortiswitch_data.get("error"):
+                        enterprise_data["fortiswitches"] = fortiswitch_data.get("switches", [])
+                        enterprise_data["api_info"]["fortiswitch_requests"] = fortiswitch_data.get("api_info", {}).get("requests", 0)
+                        logger.info(f"Found {len(enterprise_data['fortiswitches'])} FortiSwitches")
+                    else:
+                        enterprise_data["api_info"]["errors"].append(f"FortiSwitch: {fortiswitch_data.get('error', 'Unknown error')}")
+                except Exception as e:
+                    logger.error(f"FortiSwitch discovery failed: {e}")
+                    enterprise_data["api_info"]["errors"].append(f"FortiSwitch exception: {str(e)}")
+            
+            # Get Meraki data (for BWW and Arby's locations)
+            if org_filter is None or org_filter in ["bww", "arbys"]:
+                try:
+                    meraki_data = self.meraki_service.get_switch_topology_data(org_filter)
+                    if meraki_data and not meraki_data.get("error"):
+                        enterprise_data["meraki_switches"] = meraki_data.get("switches", [])
+                        enterprise_data["api_info"]["meraki_requests"] = meraki_data.get("enhancement_info", {}).get("api_requests", 0)
+                        logger.info(f"Found {len(enterprise_data['meraki_switches'])} Meraki switches")
+                    else:
+                        enterprise_data["api_info"]["errors"].append(f"Meraki: {meraki_data.get('error', 'Unknown error')}")
+                except Exception as e:
+                    logger.error(f"Meraki discovery failed: {e}")
+                    enterprise_data["api_info"]["errors"].append(f"Meraki exception: {str(e)}")
+            
+            # Combine all switches into unified format
+            all_switches = []
+            
+            # Add FortiSwitches
+            for switch in enterprise_data["fortiswitches"]:
+                unified_switch = {
+                    "serial": switch.get("serial"),
+                    "model": switch.get("model"),
+                    "name": switch.get("name"),
+                    "status": switch.get("status"),
+                    "mgmt_ip": switch.get("mgmt_ip"),
+                    "switch_type": "fortiswitch",
+                    "organization": "sonic",  # Assume Sonic for FortiSwitches
+                    "infrastructure_type": "fortinet_full",
+                    "ports": switch.get("ports", []),
+                    "connected_devices_count": switch.get("total_connected_devices", 0)
+                }
+                all_switches.append(unified_switch)
+            
+            # Add Meraki switches
+            for switch in enterprise_data["meraki_switches"]:
+                org_name = switch.get("organization", "unknown").lower()
+                if "buffalo" in org_name or "bww" in org_name:
+                    org_brand = "bww"
+                elif "arby" in org_name:
+                    org_brand = "arbys"
+                else:
+                    org_brand = "unknown"
+                
+                unified_switch = {
+                    "serial": switch.get("serial"),
+                    "model": switch.get("model"),
+                    "name": switch.get("name"),
+                    "status": switch.get("status"),
+                    "mgmt_ip": switch.get("mgmt_ip"),
+                    "switch_type": "meraki",
+                    "organization": org_brand,
+                    "infrastructure_type": "fortinet_meraki",
+                    "ports": switch.get("ports", []),
+                    "connected_devices_count": switch.get("connected_clients", 0),
+                    "network": switch.get("network")
+                }
+                all_switches.append(unified_switch)
+            
+            enterprise_data["switches"] = all_switches
+            enterprise_data["total_switches"] = len(all_switches)
+            enterprise_data["fortiswitch_count"] = len(enterprise_data["fortiswitches"])
+            enterprise_data["meraki_count"] = len(enterprise_data["meraki_switches"])
+            
+            logger.info(f"Enterprise topology complete: {len(all_switches)} total switches ({enterprise_data['fortiswitch_count']} FortiSwitch, {enterprise_data['meraki_count']} Meraki)")
+            
+            return enterprise_data
+            
+        except Exception as e:
+            logger.error(f"Enterprise topology discovery failed: {e}")
+            enterprise_data["api_info"]["errors"].append(f"Enterprise discovery exception: {str(e)}")
+            return enterprise_data
     
     def get_topology_summary(self) -> Dict[str, Any]:
         """Get comprehensive topology summary"""
