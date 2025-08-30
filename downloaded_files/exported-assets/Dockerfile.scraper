@@ -1,0 +1,45 @@
+FROM node:18-alpine
+
+# Install Playwright dependencies and additional tools for scraping
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    curl \
+    wget
+
+# Set Playwright to use installed Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Install Playwright
+RUN npx playwright install chromium
+
+# Copy source code
+COPY src/ ./src/
+
+# Create necessary directories
+RUN mkdir -p assets tokens cache logs
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S scraper -u 1001
+
+# Change ownership of app directory
+RUN chown -R scraper:nodejs /app
+USER scraper
+
+# Run the scraper as a cron job
+CMD ["node", "src/cli/scraper.js", "--daemon"]

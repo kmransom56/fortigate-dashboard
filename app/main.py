@@ -22,6 +22,7 @@ from app.services.fortiswitch_service import (
 from app.services.hybrid_topology_service import get_hybrid_topology_service
 from app.services.redis_session_manager import get_redis_session_manager, cleanup_expired_sessions
 from app.services.fortigate_redis_session import get_fortigate_redis_session_manager
+from app.services.restaurant_device_service import get_restaurant_device_service
 
 
 def get_device_icon_fallback(manufacturer, device_type):
@@ -322,10 +323,30 @@ async def api_topology_data():
         if len(display_name) > 15:
             display_name = display_name[:12] + "..."
         
-        # Priority for icon resolution: binding by serial/mac/manufacturer -> manufacturer icon -> device_type icon
+        # Enhanced device identification with restaurant-specific logic
+        restaurant_service = get_restaurant_device_service()
+        restaurant_info = restaurant_service.identify_restaurant_device(
+            mac=device.get("mac") or device.get("device_mac", ""),
+            hostname=device.get("hostname"),
+            manufacturer=manufacturer
+        )
+        
+        # Update device type and risk based on restaurant identification
+        if restaurant_info.get('restaurant_device', False):
+            device_type = restaurant_info.get('device_type', device_type)
+            risk_level = restaurant_service.get_device_risk_assessment(restaurant_info)
+            display_name = restaurant_info.get('description', display_name)
+        
+        # Priority for icon resolution: restaurant device -> icon DB -> fallback
         icon_path = device.get("icon_path") or ""
         icon_title = device.get("icon_title") or ""
-        if not icon_path:
+        
+        # Try restaurant-specific icons first
+        if restaurant_info.get('restaurant_device', False):
+            rest_icon_path, rest_icon_title = restaurant_service.get_restaurant_device_icon_path(restaurant_info)
+            icon_path = rest_icon_path
+            icon_title = rest_icon_title
+        elif not icon_path:
             try:
                 from app.utils.icon_db import get_icon as _get_icon, get_icon_binding as _get_binding
                 binding = _get_binding(
@@ -371,7 +392,13 @@ async def api_topology_data():
                 "mac": device.get("mac") or device.get("device_mac", "N/A"),
                 "hostname": device.get("hostname") or device.get("device_name", "N/A"),
                 "iconPath": icon_path,
-                "iconTitle": icon_title
+                "iconTitle": icon_title,
+                # Restaurant-specific information
+                "restaurantDevice": restaurant_info.get('restaurant_device', False),
+                "deviceCategory": restaurant_info.get('category', 'general'),
+                "confidence": restaurant_info.get('confidence', 'low'),
+                "restaurantBrands": restaurant_info.get('restaurant_brands', []),
+                "securityRisk": restaurant_service.get_device_risk_assessment(restaurant_info) if restaurant_info.get('restaurant_device', False) else 'unknown'
             }
         })
         
@@ -469,6 +496,67 @@ async def debug_monitor():
 @app.get("/api/eraser/status")
 async def eraser_status():
     return {"enabled": eraser_service.is_enabled()}
+
+@app.get("/api/restaurant/device_summary")
+async def restaurant_device_summary():
+    """Get summary of restaurant-specific devices identified on the network"""
+    try:
+        # Get all device details
+        devices = get_all_device_details()
+        restaurant_service = get_restaurant_device_service()
+        
+        # Analyze each device for restaurant technology
+        device_analysis = []
+        category_counts = {}
+        brand_counts = {}
+        risk_counts = {}
+        
+        for device in devices:
+            mac = device.get("mac") or device.get("device_mac", "")
+            hostname = device.get("hostname")
+            manufacturer = device.get("manufacturer")
+            
+            restaurant_info = restaurant_service.identify_restaurant_device(
+                mac=mac, hostname=hostname, manufacturer=manufacturer
+            )
+            
+            if restaurant_info.get('restaurant_device', False):
+                device_analysis.append({
+                    'name': device.get('hostname', 'Unknown'),
+                    'mac': mac,
+                    'manufacturer': manufacturer,
+                    'device_type': restaurant_info.get('device_type'),
+                    'category': restaurant_info.get('category'),
+                    'confidence': restaurant_info.get('confidence'),
+                    'restaurant_brands': restaurant_info.get('restaurant_brands', []),
+                    'risk_level': restaurant_service.get_device_risk_assessment(restaurant_info)
+                })
+                
+                # Count by category
+                category = restaurant_info.get('category', 'unknown')
+                category_counts[category] = category_counts.get(category, 0) + 1
+                
+                # Count by restaurant brand
+                for brand in restaurant_info.get('restaurant_brands', []):
+                    brand_counts[brand] = brand_counts.get(brand, 0) + 1
+                
+                # Count by risk level
+                risk = restaurant_service.get_device_risk_assessment(restaurant_info)
+                risk_counts[risk] = risk_counts.get(risk, 0) + 1
+        
+        return {
+            "summary": {
+                "total_devices": len(devices),
+                "restaurant_devices": len(device_analysis),
+                "restaurant_percentage": round((len(device_analysis) / len(devices) * 100), 1) if devices else 0
+            },
+            "categories": category_counts,
+            "restaurant_brands": brand_counts,
+            "risk_levels": risk_counts,
+            "devices": device_analysis
+        }
+    except Exception as e:
+        return {"error": str(e), "type": "restaurant_analysis_error"}
 
 
 
