@@ -6,18 +6,20 @@ services:
     deploy:
       resources:
         limits:
+          memory: 1G  # Increased for enterprise caching
+          cpus: '1.0'
+        reservations:
           memory: 512M
           cpus: '0.5'
-        reservations:
-          memory: 256M
-          cpus: '0.25'
     command: >
       redis-server --appendonly yes 
-      --maxmemory 512mb 
+      --maxmemory 1gb 
       --maxmemory-policy allkeys-lru 
       --save 900 1 
       --save 300 10 
       --save 60 10000
+      --tcp-keepalive 300
+      --timeout 300
     logging:
       driver: "json-file"
       options:
@@ -30,19 +32,24 @@ services:
     deploy:
       resources:
         limits:
+          memory: 2G  # Increased for enterprise scale
+          cpus: '2.0'
+        reservations:
           memory: 1G
           cpus: '1.0'
-        reservations:
-          memory: 512M
-          cpus: '0.5'
       restart_policy:
         condition: on-failure
         delay: 5s
         max_attempts: 3
+      replicas: 1  # Can be increased for high availability
     environment:
       - LOG_LEVEL=WARNING
-      - MAX_WORKERS=2
+      - MAX_WORKERS=4  # Increased for enterprise load
       - FORTIGATE_SESSION_TTL=15  # Shorter sessions for security
+      - ENVIRONMENT=production
+      - ENABLE_ENTERPRISE_FEATURES=true
+      - CACHE_TTL=600  # Longer cache for production
+      - OUI_CACHE_UPDATE_INTERVAL=43200  # 12 hours in production
     logging:
       driver: "json-file"
       options:

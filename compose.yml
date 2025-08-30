@@ -34,6 +34,7 @@ services:
       - ./app/static/icons:/app/static/icons:ro
       - dashboard_logs:/app/logs
     environment:
+      # FortiGate Configuration
       - FORTIGATE_API_TOKEN_FILE=/run/secrets/fortigate_api_token
       - FORTIGATE_CERT_PATH=/app/certs/fortigate.pem
       - FORTIGATE_HOST=https://192.168.0.254:8443
@@ -42,16 +43,35 @@ services:
       - FORTIGATE_VERIFY_SSL=false
       - FORTIGATE_ALLOW_TOKEN_FALLBACK=true
       - FORTIGATE_SESSION_TTL=30
+      
+      # FortiSwitch Configuration
+      - FORTISWITCH_USERNAME=admin
+      - FORTISWITCH_PASSWORD_FILE=/run/secrets/fortiswitch_password
+      
+      # Meraki Configuration (for enterprise BWW/Arby's locations)
+      - MERAKI_API_KEY=
+      - MERAKI_ORG_FILTER=
+      
+      # Redis Configuration
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DB=0
-      - LOG_LEVEL=INFO
+      
+      # Application Configuration
       - PYTHONPATH=/app
-      - ICON_DB_PATH=/app/static/icons.db
-      - FORTISWITCH_USERNAME=admin
-      - FORTISWITCH_PASSWORD_FILE=/run/secrets/fortiswitch_password
-      - SVGO_ENABLED=true
+      - LOG_LEVEL=INFO
       - MAX_WORKERS=1
+      - ENVIRONMENT=development
+      
+      # Icon and Asset Configuration
+      - ICON_DB_PATH=/app/static/icons.db
+      - SVGO_ENABLED=true
+      
+      # Enterprise Features
+      - FORTIGATE_INVENTORY_CSV_PATH=/app/downloaded_files/vlan10_interfaces.csv
+      - ENABLE_ENTERPRISE_FEATURES=true
+      - CACHE_TTL=300
+      - OUI_CACHE_UPDATE_INTERVAL=86400
     depends_on:
       redis:
         condition: service_healthy
