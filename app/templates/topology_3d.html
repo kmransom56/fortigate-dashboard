@@ -43,6 +43,12 @@
         <button id="eraserExportBtn" class="btn btn-outline-primary btn-sm" disabled title="Enable ERASER_ENABLED to activate">
           <i class="fas fa-upload me-1"></i>Export to Eraser
         </button>
+        <button id="generate3DBtn" class="btn btn-outline-success btn-sm" title="Generate 3D icons">
+          <i class="fas fa-magic me-1"></i>Generate 3D Icons
+        </button>
+        <button id="iconStatsBtn" class="btn btn-outline-info btn-sm" title="Show 3D icon statistics">
+          <i class="fas fa-chart-bar me-1"></i>3D Stats
+        </button>
       </div>
     </div>
     <div id="notif" class="position-fixed top-0 end-0 p-3" style="z-index:1080;" aria-live="polite" role="status" aria-atomic="true"></div>
@@ -135,12 +141,13 @@
     };
     const RISK_SIZE = { low: 6, medium: 8, high: 10, critical: 12 };
 
-    async function loadData() {
+    async function load3DData() {
       let res;
       try {
-        const abs = new URL('/api/topology_data', window.location.origin).toString();
+        // Use new 3D topology API endpoint with Eraser AI integration
+        const abs = new URL('/api/topology_3d_data', window.location.origin).toString();
         const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), 8000);
+        const t = setTimeout(() => controller.abort(), 15000); // Longer timeout for 3D generation
         res = await fetch(abs, { cache: 'no-store', signal: controller.signal });
         clearTimeout(t);
       } catch (e) {
@@ -185,7 +192,7 @@
       }
     }
 
-    function toGraphData(topology) {
+    function to3DGraphData(topology) {
       const nodes = (topology.devices || []).map(d => ({
         id: d.id,
         name: d.name,
@@ -193,10 +200,34 @@
         risk: d.risk || 'low',
         ip: d.ip || 'N/A',
         mac: d.mac || '',
-        details: d.details || {}
+        details: d.details || {},
+        // 3D-specific properties
+        icon3D: d['3d_icon'] || null,
+        position3D: d['position_3d'] || null,
+        animation: d.animation || null,
+        // Enhanced metadata
+        manufacturer: d.manufacturer || 'Unknown',
+        model: d.model || '',
+        status: d.status || 'unknown'
       }));
-      const links = (topology.connections || []).map(c => ({ source: c.from, target: c.to }));
-      return { nodes, links };
+      
+      const links = (topology.connections || []).map(c => ({
+        source: c.from,
+        target: c.to,
+        // 3D connection properties
+        properties3D: c['3d_properties'] || {
+          line_width: 0.1,
+          color: "#4A90E2",
+          opacity: 0.7,
+          animate_flow: false
+        }
+      }));
+      
+      return { 
+        nodes, 
+        links,
+        metadata: topology.metadata || {}
+      };
     }
 
     let performanceMode = false;
@@ -336,6 +367,215 @@
       return group;
     }
 
+    function create3DDeviceObject(node, size) {
+      const group = new THREE.Group();
+      const color = TYPE_COLORS[node.type] || TYPE_COLORS.endpoint;
+      
+      // Check if we have 3D icon data from Eraser AI
+      if (node.icon3D && node.icon3D.threejs) {
+        return createEraserAI3DObject(group, node, size, color);
+      }
+      
+      // Fallback to traditional icon-based 3D rendering
+      return createTraditional3DObject(group, node, size, color);
+    }
+    
+    function createEraserAI3DObject(group, node, size, color) {
+      const icon3D = node.icon3D;
+      const threejsData = icon3D.threejs;
+      
+      try {
+        // Create geometry based on Eraser AI specifications
+        let geometry;
+        const geomData = threejsData.geometry;
+        
+        switch (geomData.type) {
+          case 'BoxGeometry':
+            geometry = new THREE.BoxGeometry(...geomData.args);
+            break;
+          case 'CylinderGeometry':
+            geometry = new THREE.CylinderGeometry(...geomData.args);
+            break;
+          case 'SphereGeometry':
+            geometry = new THREE.SphereGeometry(...geomData.args);
+            break;
+          default:
+            geometry = new THREE.BoxGeometry(size, size * 0.6, size * 0.8);
+        }
+        
+        // Create material with Eraser AI texture
+        let material;
+        const matData = threejsData.material;
+        
+        if (matData.map && matData.map !== 'undefined') {
+          // Load texture from Eraser AI or fallback
+          const textureLoader = new THREE.TextureLoader();
+          const texture = textureLoader.load(
+            matData.map,
+            // Success callback
+            function(texture) {
+              console.log('Loaded 3D texture from Eraser AI:', matData.map);
+            },
+            // Progress callback
+            undefined,
+            // Error callback
+            function(error) {
+              console.warn('Failed to load 3D texture, using color fallback:', error);
+              material.map = null;
+              material.color.setHex(color.replace('#', '0x'));
+            }
+          );
+          
+          material = new THREE.MeshPhongMaterial({
+            map: texture,
+            color: threejsData.color || color,
+            transparent: matData.transparent || true,
+            opacity: matData.opacity || 0.9,
+            shininess: matData.shininess || 30
+          });
+        } else {
+          // No texture, use enhanced color material
+          material = new THREE.MeshPhongMaterial({
+            color: threejsData.color || color,
+            transparent: true,
+            opacity: 0.9,
+            shininess: 60,
+            specular: 0x222222
+          });
+        }
+        
+        // Create main mesh
+        const mesh = new THREE.Mesh(geometry, material);
+        
+        // Apply position from geometry data
+        if (geomData.position) {
+          mesh.position.set(...geomData.position);
+        }
+        
+        // Apply scale from 3D data
+        const scale = threejsData.scale || [1, 1, 1];
+        mesh.scale.set(...scale.map(s => s * size));
+        
+        group.add(mesh);
+        
+        // Add enhanced lighting effects for Eraser AI objects
+        if (!performanceMode) {
+          addEnhanced3DEffects(group, node, size, threejsData.color || color);
+        }
+        
+        // Add metadata for animations
+        group.userData = {
+          deviceType: node.type,
+          eraserGenerated: true,
+          animationData: node.animation || null,
+          originalIcon: icon3D.original_svg || null
+        };
+        
+        console.log(`Created Eraser AI 3D object for ${node.name}:`, {
+          type: icon3D.type,
+          geometry: geomData.type,
+          hasTexture: !!matData.map,
+          scale: scale
+        });
+        
+      } catch (error) {
+        console.warn('Failed to create Eraser AI 3D object, using fallback:', error);
+        return createFallbackGeometry(group, node, size, color);
+      }
+      
+      return group;
+    }
+    
+    function createTraditional3DObject(group, node, size, color) {
+      // Traditional icon-based 3D rendering (existing implementation)
+      const iconPath = node.details?.iconPath;
+      
+      if (iconPath) {
+        try {
+          const iconSize = size * 1.2;
+          const loader = new THREE.TextureLoader();
+          const iconTexture = loader.load(`/${iconPath}`);
+          
+          const iconGeom = new THREE.PlaneGeometry(iconSize, iconSize);
+          const iconMat = new THREE.MeshBasicMaterial({
+            map: iconTexture,
+            transparent: true,
+            alphaTest: 0.1,
+            side: THREE.DoubleSide
+          });
+          
+          const iconMesh = new THREE.Mesh(iconGeom, iconMat);
+          iconMesh.position.y = size * 0.1;
+          iconMesh.userData.isIcon = true;
+          group.add(iconMesh);
+          
+          // Add glow effect
+          if (!performanceMode) {
+            const glowGeom = new THREE.PlaneGeometry(iconSize * 1.2, iconSize * 1.2);
+            const glowMat = new THREE.MeshBasicMaterial({ 
+              color: color,
+              transparent: true, 
+              opacity: 0.2,
+              side: THREE.DoubleSide
+            });
+            const glow = new THREE.Mesh(glowGeom, glowMat);
+            glow.position.y = size * 0.09;
+            glow.userData.isIcon = true;
+            group.add(glow);
+          }
+          
+        } catch (e) {
+          console.warn('Failed to load traditional icon, using geometry fallback:', e);
+          createFallbackGeometry(group, node, size, color);
+        }
+      } else {
+        createFallbackGeometry(group, node, size, color);
+      }
+      
+      return group;
+    }
+    
+    function addEnhanced3DEffects(group, node, size, color) {
+      // Enhanced effects for 3D objects
+      
+      // Status-based effects
+      if (node.status === 'online' || node.details?.status === 'Active') {
+        // Add subtle pulsing glow for active devices
+        const glowGeometry = new THREE.SphereGeometry(size * 1.1, 16, 16);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+          color: 0x00ff00,
+          transparent: true,
+          opacity: 0.1,
+          side: THREE.BackSide
+        });
+        const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+        glowMesh.userData.pulseEffect = true;
+        group.add(glowMesh);
+      }
+      
+      // Risk-based effects
+      if (node.risk && node.risk !== 'low') {
+        const riskColors = {
+          medium: 0xfbbf24,
+          high: 0xf59e0b,
+          critical: 0xdc2626
+        };
+        
+        const riskGeometry = new THREE.RingGeometry(size * 0.8, size * 1.0, 16);
+        const riskMaterial = new THREE.MeshBasicMaterial({
+          color: riskColors[node.risk] || 0xf59e0b,
+          transparent: true,
+          opacity: 0.6,
+          side: THREE.DoubleSide
+        });
+        const riskRing = new THREE.Mesh(riskGeometry, riskMaterial);
+        riskRing.rotation.x = -Math.PI / 2;
+        riskRing.position.y = -size * 0.1;
+        riskRing.userData.rotateEffect = true;
+        group.add(riskRing);
+      }
+    }
+
     function createFallbackGeometry(group, node, size, color) {
       // Fallback to geometric shapes when no icon is available
       const deviceType = node.type || 'endpoint';
@@ -425,18 +665,47 @@
       }
       let raw;
       try {
-        raw = await loadData();
+        showNotice('Loading 3D topology with Eraser AI integration...', 'info', 3000);
+        raw = await load3DData();
       } catch (e) {
         console.warn('Falling back to sample topology after load error:', e);
-        showNotice('Using sample topology (API error).', 'warning', 5000);
+        showNotice('Using sample topology (3D API error).', 'warning', 5000);
         raw = { devices: [ { id: 'fortigate_main', type: 'fortigate', name: 'FortiGate-Main', ip: '192.168.0.254', risk: 'low', details: { status: 'Degraded' } } ], connections: [] };
       }
-      const data = toGraphData(raw);
+      const data = to3DGraphData(raw);
+      
+      // Log 3D features status
+      if (raw.metadata) {
+        console.log('3D Topology Features:', {
+          '3D Enabled': raw.metadata['3d_enabled'],
+          'Eraser AI Enabled': raw.metadata.eraser_ai_enabled,
+          '3D Icons Stats': raw.metadata['3d_icon_stats'],
+          'Devices with 3D Icons': data.nodes.filter(n => n.icon3D).length
+        });
+        
+        if (raw.metadata.eraser_ai_enabled) {
+          showNotice('✨ Eraser AI 3D icons enabled!', 'success', 4000);
+        }
+      }
 
       const containerEl = document.getElementById('graph-3d');
       const Graph = ForceGraph3D()(containerEl)
         .graphData(data)
-        .nodeThreeObject(makeNodeObject)
+        .nodeThreeObject(node => {
+          const size = RISK_SIZE[node.risk] || 6;
+          const nodeObject = create3DDeviceObject(node, size);
+          
+          // Add enhanced label with better positioning
+          const labelFont = performanceMode ? 36 : 48;
+          const label = makeLabelSprite(node.name || node.id, labelFont);
+          label.position.set(0, -size * 1.5, 0);
+          nodeObject.add(label);
+          
+          // Store reference to node data for interactions
+          nodeObject.userData.nodeData = node;
+          
+          return nodeObject;
+        })
         .nodeLabel(nodeLabel)
         .nodeColor(n => TYPE_COLORS[n.type] || '#6b7280')
         .nodeRelSize(4)
@@ -450,17 +719,26 @@
         .linkThreeObject(link => {
           const group = new THREE.Group();
           
-          // Create animated particles along the link
-          if (!performanceMode) {
-            const particleCount = 3;
+          // Get 3D properties from link data
+          const props3D = link.properties3D || {
+            line_width: 0.1,
+            color: "#4A90E2", 
+            opacity: 0.7,
+            animate_flow: false,
+            flow_speed: 2.0
+          };
+          
+          // Create enhanced animated particles along the link
+          if (!performanceMode && props3D.animate_flow) {
+            const particleCount = 5;
             const particles = [];
             
             for (let i = 0; i < particleCount; i++) {
-              const particleGeom = new THREE.SphereGeometry(0.5, 8, 8);
+              const particleGeom = new THREE.SphereGeometry(props3D.line_width * 5, 8, 8);
               const particleMat = new THREE.MeshBasicMaterial({ 
-                color: 0x4a90e2,
+                color: new THREE.Color(props3D.color),
                 transparent: true,
-                opacity: 0.8
+                opacity: props3D.opacity * 0.8
               });
               const particle = new THREE.Mesh(particleGeom, particleMat);
               
@@ -830,6 +1108,135 @@
         }
       }
       animate();
+
+      // Enhanced 3D icon generation handlers
+      document.getElementById('generate3DBtn').addEventListener('click', async () => {
+        try {
+          showNotice('🔮 Starting batch 3D icon generation...', 'info');
+          
+          // Get current graph data to find devices with icons
+          const currentData = Graph.graphData();
+          const devices = currentData.nodes || [];
+          
+          // Prepare SVG paths for batch generation
+          const svgPaths = devices
+            .filter(device => device.details && device.details.iconPath)
+            .map(device => ({
+              svg_path: `app/static/${device.details.iconPath}`,
+              device_type: device.type || 'endpoint',
+              device_name: device.name || 'Unknown Device'
+            }));
+          
+          if (svgPaths.length === 0) {
+            showNotice('⚠️ No devices with SVG icons found to convert', 'warning');
+            return;
+          }
+          
+          // Call batch generation API
+          const response = await fetch('/api/3d_icons/batch_generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ svg_paths: svgPaths })
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const result = await response.json();
+          const stats = result.stats || {};
+          
+          showNotice(
+            `✨ Generated ${stats.successful || 0} 3D icons in ${stats.duration_seconds || 0}s!`, 
+            'success', 
+            5000
+          );
+          
+          // Reload the 3D topology to show new icons
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+          
+        } catch (error) {
+          console.error('3D icon generation failed:', error);
+          showNotice(`❌ 3D icon generation failed: ${error.message}`, 'danger', 8000);
+        }
+      });
+      
+      // 3D icon statistics handler
+      document.getElementById('iconStatsBtn').addEventListener('click', async () => {
+        try {
+          const response = await fetch('/api/3d_icons/stats');
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const stats = await response.json();
+          
+          // Create detailed stats display
+          const statsHtml = `
+            <div class="card">
+              <div class="card-header">
+                <h5><i class="fas fa-cube me-2"></i>3D Icon Statistics</h5>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6>Cache Status</h6>
+                    <ul class="list-unstyled">
+                      <li><strong>Cached Icons:</strong> ${stats.cached_icons_count || 0}</li>
+                      <li><strong>Cache Size:</strong> ${stats.cache_size_mb || 0} MB</li>
+                      <li><strong>Cache Hits:</strong> ${stats.cache_hits || 0}</li>
+                      <li><strong>Cache Misses:</strong> ${stats.cache_misses || 0}</li>
+                    </ul>
+                  </div>
+                  <div class="col-md-6">
+                    <h6>Generation Stats</h6>
+                    <ul class="list-unstyled">
+                      <li><strong>Total Generated:</strong> ${stats.total_generated || 0}</li>
+                      <li><strong>Eraser Requests:</strong> ${stats.eraser_requests || 0}</li>
+                      <li><strong>Fallback Used:</strong> ${stats.fallback_used || 0}</li>
+                      <li><strong>Eraser Enabled:</strong> ${stats.eraser_enabled ? '✅' : '❌'}</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="mt-3">
+                  <small class="text-muted">Last Updated: ${stats.last_updated || 'Never'}</small>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          // Show stats in notification area
+          const notificationArea = document.getElementById('notif');
+          const statsElement = document.createElement('div');
+          statsElement.className = 'toast show';
+          statsElement.innerHTML = `
+            <div class="toast-header">
+              <strong class="me-auto">3D Icon Statistics</strong>
+              <button type="button" class="btn-close" onclick="this.closest('.toast').remove()"></button>
+            </div>
+            <div class="toast-body">
+              ${statsHtml}
+            </div>
+          `;
+          
+          notificationArea.appendChild(statsElement);
+          
+          // Auto-remove after 15 seconds
+          setTimeout(() => {
+            if (statsElement.parentNode) {
+              statsElement.remove();
+            }
+          }, 15000);
+          
+        } catch (error) {
+          console.error('Failed to get 3D icon stats:', error);
+          showNotice(`❌ Failed to get 3D icon statistics: ${error.message}`, 'danger');
+        }
+      });
+      
     });
   </script>
 </body>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>FortiGate Topology</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+      body { font-family: Lato, Helvetica, Arial, sans-serif; margin: 0; background: #f5f7fa; }
+      .sidebar { width: 220px; background: #3a2a4d; color: #fff; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+      .sidebar .logo { padding: 20px; font-size: 1.2em; font-weight: bold; }
+      .sidebar .menu { padding: 0 20px; }
+      .sidebar .menu-item { padding: 12px 0; border-bottom: 1px solid #4b3b5a; cursor: pointer; }
+      .sidebar .menu-item.active { background: #2e1f3a; color: #ffd700; }
+      .main-content { margin-left: 220px; padding: 0; }
+      .header { background: #fff; padding: 16px 32px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+      .topology-area { position: relative; min-height: 800px; background: #fff; margin: 32px; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); overflow: hidden; }
+      #topologyMap { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+    </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo">FORTINET</div>
+    <div class="menu">
+      <div class="menu-item">Dashboard</div>
+      <div class="menu-item">Network</div>
+      <div class="menu-item">Policy & Objects</div>
+      <div class="menu-item">Security Profiles</div>
+      <div class="menu-item">User & Authentication</div>
+      <div class="menu-item">System</div>
+      <div class="menu-item active">Security Fabric</div>
+      <div class="menu-item">Physical Topology</div>
+      <div class="menu-item">Logical Topology</div>
+      <div class="menu-item">Fabric Connectors</div>
+      <div class="menu-item">Log & Report</div>
+    </div>
+  </div>
+  <div class="main-content">
+    <div class="header">
+      <div>Security Fabric &gt; Physical Topology</div>
+      <div>
+        <button id="updateBtn" style="background:#4caf50;color:#fff;border:none;padding:8px 16px;border-radius:4px;">Update Now</button>
+      </div>
+    </div>
+    <div class="topology-area">
+      <div id="topologyMap"></div>
+    </div>
+  </div>
+  <script>
+    async function renderTopology() {
+      const response = await fetch('/api/scraped_topology');
+      const data = await response.json();
+      const map = document.getElementById('topologyMap');
+      map.innerHTML = '';
+
+      // Create SVG for connections
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', '100%');
+      svg.setAttribute('height', '100%');
+      svg.style.position = 'absolute';
+      svg.style.top = '0';
+      svg.style.left = '0';
+      svg.style.width = '100%';
+      svg.style.height = '100%';
+
+      // Map device ids to positions for connection rendering
+      const devicePositions = {};
+      if (data.devices) {
+        data.devices.forEach(device => {
+          devicePositions[device.id] = {
+            x: device.position.x + 50, // center of node
+            y: device.position.y + 50
+          };
+        });
+      }
+
+      // Render connections as SVG lines
+      if (data.connections) {
+        data.connections.forEach(conn => {
+          const from = devicePositions[conn.from];
+          const to = devicePositions[conn.to];
+          if (from && to) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', from.x);
+            line.setAttribute('y1', from.y);
+            line.setAttribute('x2', to.x);
+            line.setAttribute('y2', to.y);
+            line.setAttribute('stroke', '#888');
+            line.setAttribute('stroke-width', '4');
+            svg.appendChild(line);
+          }
+        });
+      }
+      map.appendChild(svg);
+
+      // Render device nodes
+      if (data.devices) {
+        data.devices.forEach(device => {
+          const div = document.createElement('div');
+          div.style.position = 'absolute';
+          div.style.left = device.position.x + 'px';
+          div.style.top = device.position.y + 'px';
+          div.style.width = '100px';
+          div.style.height = '100px';
+          div.style.borderRadius = '50%';
+          div.style.background = device.details && device.details.color ? device.details.color : '#2196f3';
+          div.style.color = '#fff';
+          div.style.display = 'flex';
+          div.style.alignItems = 'center';
+          div.style.justifyContent = 'center';
+          div.style.fontSize = '1.2em';
+          div.style.boxShadow = '0 2px 12px rgba(0,0,0,0.12)';
+          div.style.cursor = 'pointer';
+          div.innerHTML = `<div><strong>${device.name}</strong><br>${device.details && device.details.deviceCount ? device.details.deviceCount + ' Devices' : ''}</div>`;
+
+          // Advanced tooltip (popover)
+          const tooltip = document.createElement('div');
+          tooltip.style.position = 'absolute';
+          tooltip.style.left = '110px';
+          tooltip.style.top = '0px';
+          tooltip.style.minWidth = '180px';
+          tooltip.style.background = '#fff';
+          tooltip.style.color = '#333';
+          tooltip.style.border = '1px solid #ccc';
+          tooltip.style.borderRadius = '8px';
+          tooltip.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+          tooltip.style.padding = '12px';
+          tooltip.style.zIndex = '1000';
+          tooltip.style.display = 'none';
+          tooltip.innerHTML = `
+            <div style="font-weight:bold;font-size:1.1em;margin-bottom:4px;">${device.name}</div>
+            <div>Type: <span style="color:${device.details && device.details.color ? device.details.color : '#2196f3'};font-weight:bold;">${device.type}</span></div>
+            <div>Count: ${device.details && device.details.deviceCount ? device.details.deviceCount : 1}</div>
+            <div>Position: (${device.position.x}, ${device.position.y})</div>
+            <div>Status: ${device.status ? device.status : 'unknown'}</div>
+            <div>Risk: ${device.risk ? device.risk : 'unknown'}</div>
+          `;
+          div.appendChild(tooltip);
+
+          div.addEventListener('mouseenter', () => {
+            tooltip.style.display = 'block';
+          });
+          div.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+          });
+
+          map.appendChild(div);
+        });
+      }
+    }
+    document.addEventListener('DOMContentLoaded', renderTopology);
+    document.getElementById('updateBtn').addEventListener('click', renderTopology);
+  </script>
+</body>
+</html>

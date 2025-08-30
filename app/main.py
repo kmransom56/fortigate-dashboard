@@ -26,6 +26,8 @@ from app.services.fortigate_redis_session import get_fortigate_redis_session_man
 from app.services.restaurant_device_service import get_restaurant_device_service
 from app.services.organization_service import get_organization_service
 from app.services.fortigate_inventory_service import get_fortigate_inventory_service
+from app.services.icon_3d_service import get_3d_icon_service
+from app.services.scraped_topology_service import get_scraped_topology_service
 
 
 def get_device_icon_fallback(manufacturer, device_type):
@@ -150,6 +152,11 @@ async def topology_page(request: Request):
 @app.get("/topology-3d", response_class=HTMLResponse)
 async def topology_3d_page(request: Request):
     return templates.TemplateResponse("topology_3d.html", {"request": request})
+
+# 🎯 Route for FortiGate Scraped Topology "/topology-fortigate"
+@app.get("/topology-fortigate", response_class=HTMLResponse)
+async def fortigate_topology_page(request: Request):
+    return templates.TemplateResponse("topology_fortigate.html", {"request": request})
 
 # 🎨 Route for Icon Management "/icons"
 @app.get("/icons", response_class=HTMLResponse)
@@ -450,6 +457,33 @@ async def api_topology_data():
         
     logger.info("END /api/topology_data endpoint - returning topology data")
     return topology_data
+
+@app.get("/api/scraped_topology")
+async def api_scraped_topology():
+    """API endpoint for scraped FortiGate topology data"""
+    try:
+        logger = logging.getLogger("api_scraped_topology")
+        logger.info("START /api/scraped_topology endpoint")
+        
+        scraped_service = get_scraped_topology_service()
+        topology_data = scraped_service.get_topology_data()
+        
+        logger.info(f"Scraped topology data source: {topology_data.get('metadata', {}).get('source', 'unknown')}")
+        logger.info(f"Device count: {len(topology_data.get('devices', []))}")
+        logger.info(f"Connection count: {len(topology_data.get('connections', []))}")
+        
+        return topology_data
+        
+    except Exception as e:
+        logger.error(f"Error in scraped topology endpoint: {e}")
+        return {
+            "devices": [],
+            "connections": [],
+            "metadata": {
+                "source": "error",
+                "error": str(e)
+            }
+        }
 
 @app.get("/api/debug/topology")
 async def debug_topology():
@@ -956,6 +990,212 @@ async def eraser_export(payload: dict):
     if not eraser_service.is_enabled():
         raise HTTPException(status_code=501, detail="Eraser AI integration not enabled")
     return eraser_service.export_topology(payload)
+
+# 3D Topology API Endpoints
+@app.get("/api/topology_3d_data")
+async def api_topology_3d_data():
+    """
+    Returns 3D topology data with Eraser AI-generated 3D icons
+    """
+    import logging
+    logger = logging.getLogger("api_topology_3d_data")
+    logger.info("START /api/topology_3d_data endpoint")
+    
+    try:
+        # Get the base topology data (same as 2D)
+        topology_2d = await api_topology_data()
+        
+        if not topology_2d or "devices" not in topology_2d:
+            logger.warning("No 2D topology data available")
+            return {"devices": [], "connections": [], "metadata": {"error": "No base topology data"}}
+        
+        # Get 3D icon service
+        icon_3d_service = get_3d_icon_service()
+        
+        # Convert 2D devices to 3D with enhanced icons
+        devices_3d = []
+        for device in topology_2d["devices"]:
+            device_3d = device.copy()
+            
+            # Get device information for 3D icon generation
+            device_type = device.get("type", "endpoint")
+            device_name = device.get("name", "Unknown Device")
+            icon_path = device.get("details", {}).get("iconPath", "")
+            
+            # Generate 3D icon data
+            if icon_path and icon_path.startswith("icons/"):
+                svg_path = f"app/static/{icon_path}"
+                try:
+                    icon_3d_data = icon_3d_service.get_3d_icon_data(svg_path, device_type, device_name)
+                    device_3d["3d_icon"] = icon_3d_data
+                    
+                    # Add 3D positioning data
+                    pos_2d = device.get("position", {"x": 0, "y": 0})
+                    device_3d["position_3d"] = {
+                        "x": (pos_2d["x"] - 400) / 100,  # Scale and center
+                        "y": 0,  # Ground level
+                        "z": -(pos_2d["y"] - 300) / 100  # Convert Y to Z, invert
+                    }
+                    
+                    # Add animation data
+                    device_3d["animation"] = {
+                        "hover_scale": [1.2, 1.2, 1.2],
+                        "click_rotation": [0, 0.5, 0],
+                        "status_pulse": device.get("status") != "online"
+                    }
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to generate 3D icon for {icon_path}: {e}")
+                    # Use fallback 3D data
+                    device_3d["3d_icon"] = icon_3d_service._get_fallback_3d_data(device_type, device_name)
+                    device_3d["position_3d"] = {
+                        "x": (pos_2d["x"] - 400) / 100,
+                        "y": 0,
+                        "z": -(pos_2d["y"] - 300) / 100
+                    }
+            else:
+                # No icon path, use basic 3D representation
+                device_3d["3d_icon"] = icon_3d_service._get_fallback_3d_data(device_type, device_name)
+                pos_2d = device.get("position", {"x": 0, "y": 0})
+                device_3d["position_3d"] = {
+                    "x": (pos_2d["x"] - 400) / 100,
+                    "y": 0,
+                    "z": -(pos_2d["y"] - 300) / 100
+                }
+            
+            devices_3d.append(device_3d)
+        
+        # Convert 2D connections to 3D
+        connections_3d = []
+        for connection in topology_2d.get("connections", []):
+            connection_3d = connection.copy()
+            connection_3d["3d_properties"] = {
+                "line_width": 0.1,
+                "color": "#4A90E2",
+                "opacity": 0.7,
+                "animate_flow": True,
+                "flow_speed": 2.0
+            }
+            connections_3d.append(connection_3d)
+        
+        # Enhanced 3D metadata
+        metadata_3d = topology_2d.get("metadata", {}).copy()
+        metadata_3d.update({
+            "3d_enabled": True,
+            "eraser_ai_enabled": eraser_service.is_enabled(),
+            "3d_icon_stats": icon_3d_service.get_cache_stats(),
+            "camera_position": {"x": 5, "y": 5, "z": 5},
+            "camera_target": {"x": 0, "y": 0, "z": 0},
+            "lighting": {
+                "ambient_color": "#404040",
+                "directional_color": "#ffffff",
+                "directional_position": {"x": -1, "y": 1, "z": 1}
+            },
+            "scene_background": "#f0f8ff"
+        })
+        
+        topology_3d = {
+            "devices": devices_3d,
+            "connections": connections_3d,
+            "metadata": metadata_3d
+        }
+        
+        logger.info(f"Returning 3D topology data: {len(devices_3d)} devices, {len(connections_3d)} connections")
+        logger.info("END /api/topology_3d_data endpoint")
+        
+        return topology_3d
+        
+    except Exception as e:
+        logger.error(f"Error in 3D topology data generation: {e}")
+        return {
+            "devices": [],
+            "connections": [],
+            "metadata": {
+                "error": str(e),
+                "3d_enabled": False,
+                "eraser_ai_enabled": eraser_service.is_enabled()
+            }
+        }
+
+@app.get("/api/3d_icons/stats")
+async def get_3d_icon_stats():
+    """Get 3D icon cache statistics"""
+    try:
+        icon_3d_service = get_3d_icon_service()
+        stats = icon_3d_service.get_cache_stats()
+        return stats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get 3D icon stats: {str(e)}")
+
+@app.post("/api/3d_icons/batch_generate")
+async def batch_generate_3d_icons(request: dict):
+    """Batch generate 3D icons for multiple devices"""
+    try:
+        icon_3d_service = get_3d_icon_service()
+        
+        # Extract SVG paths from request
+        svg_paths = request.get("svg_paths", [])
+        if not svg_paths:
+            raise HTTPException(status_code=400, detail="No SVG paths provided")
+        
+        # Convert to required format: [(svg_path, device_type, device_name), ...]
+        formatted_paths = []
+        for item in svg_paths:
+            if isinstance(item, dict):
+                formatted_paths.append((
+                    item.get("svg_path", ""),
+                    item.get("device_type", "endpoint"),
+                    item.get("device_name", "Unknown Device")
+                ))
+            elif isinstance(item, (list, tuple)) and len(item) >= 2:
+                formatted_paths.append((
+                    item[0],
+                    item[1],
+                    item[2] if len(item) > 2 else "Unknown Device"
+                ))
+        
+        if not formatted_paths:
+            raise HTTPException(status_code=400, detail="Invalid SVG paths format")
+        
+        # Batch generate icons
+        result = await icon_3d_service.batch_generate_3d_icons(formatted_paths)
+        return result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Batch generation failed: {str(e)}")
+
+@app.post("/api/3d_icons/cleanup")
+async def cleanup_3d_icon_cache():
+    """Clean up expired 3D icon cache entries"""
+    try:
+        icon_3d_service = get_3d_icon_service()
+        removed_count = icon_3d_service.cleanup_expired_cache()
+        return {
+            "success": True,
+            "removed_entries": removed_count,
+            "message": f"Cleaned up {removed_count} expired cache entries"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cache cleanup failed: {str(e)}")
+
+@app.get("/api/3d_icons/generate/{device_type}")
+async def generate_single_3d_icon(device_type: str, svg_path: str = "", device_name: str = ""):
+    """Generate a single 3D icon for testing"""
+    try:
+        icon_3d_service = get_3d_icon_service()
+        
+        # Use default SVG path if none provided
+        if not svg_path:
+            svg_path = f"app/static/icons/{device_type}.svg"
+        
+        if not device_name:
+            device_name = f"{device_type.title()} Device"
+        
+        icon_3d_data = icon_3d_service.get_3d_icon_data(svg_path, device_type, device_name)
+        return icon_3d_data
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"3D icon generation failed: {str(e)}")
 
 # Redis Session Management Endpoints
 @app.get("/api/session/health")
