@@ -3,6 +3,7 @@
 async def topology_fortigate_page(request: Request):
     return templates.TemplateResponse("topology_fortigate.html", {"request": request})
 from fastapi import FastAPI, Request, HTTPException
+from contextlib import asynccontextmanager
 from datetime import datetime
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -86,7 +87,15 @@ def get_all_device_details():
     return enriched_devices
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        seed_default_icons()
+    except Exception:
+        pass
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 # Add CORS middleware
 app.add_middleware(
@@ -107,8 +116,7 @@ templates = Jinja2Templates(directory="app/templates")
 app.include_router(fortigate.router)
 
 
-# Seed icons at startup
-seed_default_icons()
+
 
 # 🏠 Route for Home "/"
 @app.get("/", response_class=HTMLResponse)

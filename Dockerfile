@@ -93,4 +93,4 @@ RUN python -O -m compileall /app/app/ \
     && find /app -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 
 # Production command with optimized settings
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000", "--workers", "2", "--worker-class", "uvicorn.workers.UvicornWorker", "--access-log", "--log-level", "info"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000", "--workers", "2", "--access-log", "--log-level", "info"]
