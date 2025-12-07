@@ -366,6 +366,112 @@ All services have health checks defined in docker-compose files:
 6. **Test**: Add tests in `tests/` directory, run with `pytest`
 7. **Commit**: Always update GitHub repository after changes
 
+## Developer Tools
+
+### Testing & Validation Scripts (`tools/`)
+
+**FortiGate API Testing**:
+```bash
+python tools/test_fortigate_api.py           # Test API connectivity and endpoints
+python tools/fortigate_dev_helper.py         # Development utilities
+python tools/watch_dev.py                    # File watcher for hot-reload
+```
+
+**FortiSwitch API Testing**:
+```bash
+python tools/test_fortiswitch_api.py         # Test FortiSwitch API connectivity
+python tools/test_fortiswitch_models.py      # Test device model detection
+```
+
+**Authentication & Sessions**:
+```bash
+python tools/setup_auth.py                   # Configure authentication
+python tools/test_redis_session_auth.py      # Test Redis session management
+python tools/test_session_endpoints.py       # Validate session endpoints
+```
+
+**Network Monitoring**:
+```bash
+python tools/wan_monitor.py                  # Monitor WAN connectivity
+python tools/port_scanner.py                 # Network port scanning
+python tools/enhanced_network_discovery.py   # Advanced device discovery
+```
+
+**Icon & Asset Management**:
+```bash
+python tools/import_icon_pack.py             # Import icon packs
+python tools/test_topology_icons.py          # Test icon rendering
+python simple_Icons.py                       # Icon utilities
+python simple_svg_optimize.py                # Optimize SVG files
+python scrape_icons.py                       # Scrape web icons
+python extract_visio_stencils.py             # Convert Visio stencils to SVG
+```
+
+**Database Testing**:
+```bash
+python tools/test_neo4j_topology.py          # Test Neo4j topology database
+python tools/test_redis_connection.py        # Test Redis connectivity
+python tools/test_postgresql.py              # Test PostgreSQL
+```
+
+**Topology Services**:
+```bash
+python tools/test_hybrid_topology.py         # Test hybrid topology service
+python tools/test_topology_service.py        # Test topology endpoints
+```
+
+### Visio Stencil Conversion
+
+Convert official Fortinet Visio stencils to SVG icons:
+
+```bash
+cd libvisio2svg
+./vss2svg-conv -i "Fortinet Visio Stencil/FortiGate_Series_R22_2025Q2.vss" -o ./out/ -s 4.0
+./vss2svg-conv -i "Fortinet Visio Stencil/FortiSwitch_Series_R14_2025Q2.vss" -o ./out/ -s 4.0
+./vss2svg-conv -i "Fortinet Visio Stencil/FortiAP Series_R8_2025Q2.vss" -o ./out/ -s 4.0
+```
+
+Available stencils in `libvisio2svg/Fortinet Visio Stencil/`:
+- FortiGate, FortiSwitch, FortiAP, FortiExtender
+- FortiWeb, FortiMail, FortiAuthenticator, FortiSIEM
+- FortiDDoS, FortiSwitch-Rugged, FortiCamera
+- Fortinet Icons, Professional Services, Accessories
+
+## Asset Catalog
+
+### Fortinet Device Icons (`app/static/icons/fortinet/`)
+
+**Icon Summary** (190 SVG files total):
+- FortiGate: 91 icons (firewalls, security appliances)
+- FortiSwitch: 63 icons (network switches, PoE models)
+- FortiAP: 26 icons (wireless access points)
+- FortiAuthenticator: 1 icon
+- FortiMail: 1 icon
+- FortiWeb: 1 icon
+- FortiSIEM: 1 icon
+- Other: 6 icons (cameras, transceivers)
+
+**Usage in templates**:
+```html
+<img src="/static/icons/fortinet/fortigate/FG-100F.svg" alt="FortiGate 100F">
+<img src="/static/icons/fortinet/fortiswitch/FSW-248E-POE.svg" alt="FortiSwitch 248E-POE">
+<img src="/static/icons/fortinet/fortiap/FAP-231F.svg" alt="FortiAP 231F">
+```
+
+### Cisco Meraki Icons (`app/static/icons/meraki/`)
+
+Available models (4 icons):
+- MS120-24P, MS220-24P, MS220-48FP, MS350-48
+
+### Additional Icon Packs
+
+- `app/static/icons/packs/ntwrk-clean-and-flat/` - Modern flat network icons
+- `app/static/icons/packs/affinity/` - Multi-color variants (red, gray, blue, green)
+- `app/static/icons/Fortinet-Icon-Library/` - Official Fortinet brand icons
+- `app/static/icons/restaurant/` - Hospitality-specific icons
+
+**For complete asset catalog**, see `docs/ASSET_CATALOG.md`
+
 ## GitHub Actions (to be implemented)
 
 Per project guidelines, GitHub Actions should include:
