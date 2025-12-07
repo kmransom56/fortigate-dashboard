@@ -420,6 +420,21 @@ python tools/test_hybrid_topology.py         # Test hybrid topology service
 python tools/test_topology_service.py        # Test topology endpoints
 ```
 
+**API Troubleshooting & Discovery**:
+```bash
+python tools/api_troubleshoot.py             # Comprehensive API auth diagnostics
+python tools/api_endpoint_discovery.py       # Discover available API endpoints
+```
+
+**Deployment & Automation**:
+```bash
+python tools/deploy_enhanced_fortiswitch.py  # Deploy enhanced FortiSwitch service
+python tools/upgrade_oui_automation.py       # Upgrade OUI lookup with automation
+python tools/seed_fortinet_icons.py          # Seed Fortinet icons into database
+```
+
+**For detailed documentation**, see `docs/DEPLOYMENT_SCRIPTS.md`
+
 ### Visio Stencil Conversion
 
 Convert official Fortinet Visio stencils to SVG icons:
