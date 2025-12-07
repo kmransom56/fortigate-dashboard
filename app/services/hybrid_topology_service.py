@@ -395,14 +395,14 @@ class HybridTopologyService:
                     "status": switch.get("status"),
                     "mgmt_ip": switch.get("mgmt_ip"),
                     "switch_type": "fortiswitch",
-                    "organization": "sonic",  # Assume Sonic for FortiSwitches
+                    "organization": "sonic",  # Sonic uses FortiGate + FortiSwitch + FortiAP
                     "infrastructure_type": "fortinet_full",
                     "ports": switch.get("ports", []),
                     "connected_devices_count": switch.get("total_connected_devices", 0)
                 }
                 all_switches.append(unified_switch)
             
-            # Add Meraki switches
+            # Add Meraki switches (BWW and Arby's use FortiGate + Meraki + FortiAP)
             for switch in enterprise_data["meraki_switches"]:
                 org_name = switch.get("organization", "unknown").lower()
                 if "buffalo" in org_name or "bww" in org_name:
@@ -420,7 +420,7 @@ class HybridTopologyService:
                     "mgmt_ip": switch.get("mgmt_ip"),
                     "switch_type": "meraki",
                     "organization": org_brand,
-                    "infrastructure_type": "fortinet_meraki",
+                    "infrastructure_type": "fortinet_meraki",  # BWW/Arby's: FortiGate + Meraki + FortiAP
                     "ports": switch.get("ports", []),
                     "connected_devices_count": switch.get("connected_clients", 0),
                     "network": switch.get("network")

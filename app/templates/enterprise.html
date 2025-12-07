@@ -341,7 +341,7 @@
             
             organizations.forEach(org => {
                 const brandClass = `brand-${org.brand}`;
-                const infraType = org.infrastructure_type === 'fortinet_full' ? 'Full Fortinet' : 'Fortinet + Meraki';
+                const infraType = org.infrastructure_type === 'fortinet_full' ? 'FortiGate + FortiSwitch + FortiAP' : 'FortiGate + Meraki + FortiAP';
                 
                 const orgCard = `
                     <div class="col-md-4 mb-4">
@@ -435,7 +435,7 @@
             container.innerHTML = `
                 <div class="mb-3">
                     <div class="d-flex justify-content-between text-white mb-1">
-                        <span><i class="fas fa-shield-alt me-2"></i>Full Fortinet</span>
+                        <span><i class="fas fa-shield-alt me-2"></i>Sonic (FortiGate + FortiSwitch + FortiAP)</span>
                         <span>${(breakdown.fortinet_full || 0).toLocaleString()} locations</span>
                     </div>
                     <div class="progress mb-2">
@@ -446,7 +446,7 @@
                 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between text-white mb-1">
-                        <span><i class="fas fa-network-wired me-2"></i>Fortinet + Meraki</span>
+                        <span><i class="fas fa-network-wired me-2"></i>BWW/Arby's (FortiGate + Meraki + FortiAP)</span>
                         <span>${(breakdown.fortinet_meraki || 0).toLocaleString()} locations</span>
                     </div>
                     <div class="progress mb-2">

@@ -1,122 +1,301 @@
-# Production Docker Compose Configuration  
-# Usage: docker-compose -f compose.yml -f docker-compose.prod.yml up
+version: '3.8'
 
+# Production deployment with enterprise-scale optimizations
 services:
-  redis:
+  # Main FortiGate Dashboard Application - Production
+  fortigate-dashboard:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: fortigate-dashboard:production
+    container_name: fortigate-dashboard-prod
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - FORTIGATE_HOST=${FORTIGATE_HOST}
+      - FORTIGATE_USERNAME=${FORTIGATE_USERNAME}
+      - FORTIGATE_PASSWORD=${FORTIGATE_PASSWORD}
+      - FORTIGATE_API_PORT=${FORTIGATE_API_PORT:-8443}
+      - FORTIGATE_API_TOKEN_FILE=/app/secrets/fortigate_api_token.txt
+      - FORTISWITCH_PASSWORD_FILE=/app/secrets/fortiswitch_password.txt
+      - REDIS_HOST=redis-cluster
+      - REDIS_PORT=6379
+      - REDIS_CLUSTER=true
+      - POSTGRES_HOST=postgres-primary
+      - POSTGRES_DB=fortigate_dashboard_prod
+      - POSTGRES_USER=dashboard_prod_user
+      - POSTGRES_PASSWORD_FILE=/app/secrets/postgres_password.txt
+      - ERASER_ENABLED=${ERASER_ENABLED:-true}
+      - ERASER_API_URL=${ERASER_API_URL:-https://app.eraser.io}
+      - ERASER_API_KEY_FILE=/app/secrets/eraser_api_token.txt
+      - NEO4J_URI=bolt://neo4j-cluster:7687
+      - NEO4J_USERNAME=neo4j
+      - NEO4J_PASSWORD_FILE=/app/secrets/neo4j_password.txt
+      - MERAKI_API_KEY_FILE=/app/secrets/meraki_api_key.txt
+      - SNMP_COMMUNITY=${SNMP_COMMUNITY:-netintegrate}
+      - LOG_LEVEL=INFO
+      - WORKERS=4
+      - MAX_REQUESTS=1000
+      - MAX_REQUESTS_JITTER=100
+    volumes:
+      - ./secrets:/app/secrets:ro
+      - ./downloaded_files:/app/downloaded_files:ro
+      - fortigate_static:/app/static
+      - fortigate_data:/app/data
+      - fortigate_logs:/app/logs
+      - fortigate_cache:/app/cache
     deploy:
+      replicas: 3
       resources:
         limits:
-          memory: 1G  # Increased for enterprise caching
-          cpus: '1.0'
+          cpus: '2'
+          memory: 4G
         reservations:
-          memory: 512M
-          cpus: '0.5'
-    command: >
-      redis-server --appendonly yes 
-      --maxmemory 1gb 
-      --maxmemory-policy allkeys-lru 
-      --save 900 1 
-      --save 300 10 
-      --save 60 10000
-      --tcp-keepalive 300
-      --timeout 300
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  dashboard:
-    build:
-      target: production
-    deploy:
-      resources:
-        limits:
-          memory: 2G  # Increased for enterprise scale
-          cpus: '2.0'
-        reservations:
-          memory: 1G
-          cpus: '1.0'
+          cpus: '1'
+          memory: 2G
       restart_policy:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-      replicas: 1  # Can be increased for high availability
-    environment:
-      - LOG_LEVEL=WARNING
-      - MAX_WORKERS=4  # Increased for enterprise load
-      - FORTIGATE_SESSION_TTL=15  # Shorter sessions for security
-      - ENVIRONMENT=production
-      - ENABLE_ENTERPRISE_FEATURES=true
-      - CACHE_TTL=600  # Longer cache for production
-      - OUI_CACHE_UPDATE_INTERVAL=43200  # 12 hours in production
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "5"
+    depends_on:
+      - redis-cluster
+      - postgres-primary
+      - neo4j-cluster
+    networks:
+      - fortigate_production
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:10000/api/cloud_status"]
-      interval: 60s
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/debug/topology"]
+      interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 30s
+      retries: 5
+      start_period: 60s
 
-  wan_monitor:
+  # Redis Cluster for production caching and sessions
+  redis-cluster:
+    image: redis:7-alpine
+    container_name: fortigate-redis-cluster
+    command: redis-server --appendonly yes --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000
+    ports:
+      - "7000-7005:7000-7005"
+    volumes:
+      - redis_cluster_data:/data
+    networks:
+      - fortigate_production
+    deploy:
+      replicas: 6
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    restart: unless-stopped
+
+  # PostgreSQL Primary for enterprise data
+  postgres-primary:
+    image: postgres:15-alpine
+    container_name: fortigate-postgres-primary
+    environment:
+      - POSTGRES_DB=fortigate_dashboard_prod
+      - POSTGRES_USER=dashboard_prod_user
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+      - POSTGRES_REPLICATION_MODE=master
+      - POSTGRES_REPLICATION_USER=replicator
+      - POSTGRES_REPLICATION_PASSWORD_FILE=/run/secrets/postgres_replication_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_primary_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    secrets:
+      - postgres_password
+      - postgres_replication_password
+    networks:
+      - fortigate_production
     deploy:
       resources:
         limits:
-          memory: 256M
-          cpus: '0.25'
+          cpus: '4'
+          memory: 8G
         reservations:
-          memory: 128M
-          cpus: '0.1'
-    logging:
-      driver: "json-file"  
-      options:
-        max-size: "20m"
-        max-file: "3"
-
-  # Production monitoring (optional)
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
+          cpus: '2'
+          memory: 4G
     restart: unless-stopped
+
+  # PostgreSQL Read Replica
+  postgres-replica:
+    image: postgres:15-alpine
+    container_name: fortigate-postgres-replica
+    environment:
+      - POSTGRES_MASTER_SERVICE=postgres-primary
+      - POSTGRES_REPLICATION_MODE=slave
+      - POSTGRES_REPLICATION_USER=replicator
+      - POSTGRES_REPLICATION_PASSWORD_FILE=/run/secrets/postgres_replication_password
+    depends_on:
+      - postgres-primary
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+    secrets:
+      - postgres_replication_password
+    networks:
+      - fortigate_production
+    restart: unless-stopped
+
+  # Neo4j Cluster for network topology
+  neo4j-cluster:
+    image: neo4j:5.15-enterprise
+    container_name: fortigate-neo4j-cluster
+    environment:
+      - NEO4J_AUTH=neo4j/neo4j_production_password
+      - NEO4J_PLUGINS=["graph-data-science", "apoc"]
+      - NEO4J_dbms_mode=CORE
+      - NEO4J_causal__clustering_discovery__type=LIST
+      - NEO4J_causal__clustering_initial__discovery__members=neo4j-cluster:5000
+      - NEO4J_dbms_memory_heap_initial__size=2G
+      - NEO4J_dbms_memory_heap_max__size=8G
+      - NEO4J_dbms_memory_pagecache_size=2G
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+      - "5000:5000"
+    volumes:
+      - neo4j_cluster_data:/data
+      - neo4j_cluster_logs:/logs
+    networks:
+      - fortigate_production
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 10G
+        reservations:
+          cpus: '2'
+          memory: 6G
+    restart: unless-stopped
+
+  # Load Balancer
+  nginx-lb:
+    image: nginx:alpine
+    container_name: fortigate-nginx-lb
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+      - nginx_prod_logs:/var/log/nginx
+    depends_on:
+      - fortigate-dashboard
+    networks:
+      - fortigate_production
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+
+  # Monitoring Stack
+  prometheus-prod:
+    image: prom/prometheus:latest
+    container_name: fortigate-prometheus-prod
+    command:
+      - '--config.file=/etc/prometheus/prometheus-prod.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
     ports:
       - "9090:9090"
-    networks:
-      - fortinet_net
     volumes:
-      - prometheus_data:/prometheus
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-      - '--web.enable-lifecycle'
-    profiles:
-      - monitoring
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
+      - ./monitoring/prometheus-prod.yml:/etc/prometheus/prometheus-prod.yml:ro
+      - prometheus_prod_data:/prometheus
+    networks:
+      - fortigate_production
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
     restart: unless-stopped
+
+  grafana-prod:
+    image: grafana/grafana:latest
+    container_name: fortigate-grafana-prod
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD_FILE=/run/secrets/grafana_admin_password
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel,grafana-polystat-panel
+      - GF_DATABASE_TYPE=postgres
+      - GF_DATABASE_HOST=postgres-primary:5432
+      - GF_DATABASE_NAME=grafana_prod
+      - GF_DATABASE_USER=grafana_user
+      - GF_DATABASE_PASSWORD_FILE=/run/secrets/grafana_db_password
     ports:
       - "3000:3000"
-    networks:
-      - fortinet_net
     volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    profiles:
-      - monitoring
+      - grafana_prod_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards-prod:/var/lib/grafana/dashboards:ro
+      - ./monitoring/grafana/provisioning-prod:/etc/grafana/provisioning:ro
+    secrets:
+      - grafana_admin_password
+      - grafana_db_password
+    depends_on:
+      - prometheus-prod
+      - postgres-primary
+    networks:
+      - fortigate_production
+    restart: unless-stopped
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  postgres_replication_password:
+    file: ./secrets/postgres_replication_password.txt
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt
+  grafana_db_password:
+    file: ./secrets/grafana_db_password.txt
 
 volumes:
-  prometheus_data:
+  redis_cluster_data:
     driver: local
-  grafana_data:
+  postgres_primary_data:
     driver: local
+  postgres_replica_data:
+    driver: local
+  neo4j_cluster_data:
+    driver: local
+  neo4j_cluster_logs:
+    driver: local
+  prometheus_prod_data:
+    driver: local
+  grafana_prod_data:
+    driver: local
+  fortigate_static:
+    driver: local
+  fortigate_data:
+    driver: local
+  fortigate_logs:
+    driver: local
+  fortigate_cache:
+    driver: local
+  nginx_prod_logs:
+    driver: local
+
+networks:
+  fortigate_production:
+    driver: overlay
+    attachable: true
+    ipam:
+      config:
+        - subnet: 10.0.0.0/16

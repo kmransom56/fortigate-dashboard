@@ -1,0 +1,75 @@
+# Syncthing Global Ignore Patterns for AI Platform Sync
+
+# Log files
+*.log
+*.log.*
+logs/
+*.out
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+temp/
+
+# Cache directories
+**/cache/
+**/__pycache__/
+**/.cache/
+node_modules/
+.npm/
+
+# Build artifacts
+**/dist/
+**/build/
+**/target/
+**/.next/
+**/.nuxt/
+
+# Version control
+.git/
+.svn/
+.hg/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker runtime
+**/data/
+**/volumes/
+
+# SSL certificates (sync configs, not actual certs)
+*.pem
+*.key
+*.crt
+!/configs/**/*.pem
+!/configs/**/*.key
+!/configs/**/*.crt
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Large media files
+*.iso
+*.img
+*.vmdk
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Runtime states
+*.pid
+*.lock

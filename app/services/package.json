@@ -1,0 +1,41 @@
+{
+  "name": "fortigate-scraper-tools",
+  "version": "1.0.0",
+  "description": "FortiGate topology scraping and token extraction tools",
+  "main": "scraper.js",
+  "scripts": {
+    "scrape": "node scraper.js",
+    "scrape-map": "node scrape-fortigate-map.js",
+    "extract-tokens": "node token-extractor.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "fortigate",
+    "network",
+    "topology",
+    "scraping",
+    "automation"
+  ],
+  "author": "FortiGate Dashboard Team",
+  "license": "MIT",
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.0",
+    "chalk": "^5.3.0",
+    "ora": "^7.0.0",
+    "fs-extra": "^11.2.0",
+    "css": "^3.0.0",
+    "postcss": "^8.4.32",
+    "cheerio": "^1.0.0-rc.12",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

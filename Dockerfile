@@ -1,96 +1,95 @@
-# Multi-stage build for enterprise FortiGate Dashboard
-FROM python:3.12-slim AS base
+FROM python:3.12-slim
+
+LABEL maintainer="FortiGate Dashboard Team"
+LABEL description="Enterprise FortiGate Network Management Dashboard with 3D Topology & AI Integration"
+LABEL version="2.0"
 
 # Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV UV_VERSION=0.4.18
-ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    NODE_VERSION=20
 
-# Install system dependencies with better caching
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install system dependencies including Node.js for scraping tools
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    pkg-config \
+    libssl-dev \
+    libffi-dev \
     curl \
-    ca-certificates \
-    iputils-ping \
-    net-tools \
-    sqlite3 \
-    nodejs \
-    npm \
-    snmp \
+    wget \
     git \
-    && curl -Ls https://astral.sh/uv/install.sh | sh \
-    && mv ~/.local/bin/uv /usr/local/bin/uv \
-    && chmod +x /usr/local/bin/uv \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    sqlite3 \
+    dnsutils \
+    net-tools \
+    iputils-ping \
+    snmp \
+    snmp-mibs-downloader \
+    && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Optionally install SVGO for runtime SVG optimization
-RUN npm install -g svgo@4.0.0 || true
-
-# Set working directory
+# Create app directory
 WORKDIR /app
 
-# Copy requirements file first for better Docker layer caching
-COPY requirements.txt ./requirements.txt
+# Install uv for faster Python package management
+RUN pip install --no-cache-dir uv
 
-# Install Python dependencies
-RUN uv pip install --no-cache-dir --system -r requirements.txt
+# Copy requirements first for better caching
+COPY requirements.txt .
 
-# Create necessary directories for enterprise features
-RUN mkdir -p /app/certs \
-    && mkdir -p /app/data \
-    && mkdir -p /app/static/icons \
-    && mkdir -p /app/static/icons_backup \
-    && mkdir -p /app/logs \
-    && mkdir -p /app/cache \
-    && mkdir -p /app/temp
+# Install Python dependencies with uv
+RUN uv pip install --system --no-cache-dir -r requirements.txt
 
-# Copy application code and static files
-COPY app ./app
-COPY tools ./tools
-COPY scripts ./scripts
+# Install additional packages for enterprise features
+RUN uv pip install --system --no-cache-dir \
+    pandas \
+    numpy \
+    beautifulsoup4 \
+    lxml \
+    redis \
+    asyncio \
+    aiofiles \
+    playwright \
+    meraki
 
-# Copy FortiGate inventory data and downloaded files
-COPY downloaded_files ./downloaded_files
+# Copy application code
+COPY . .
 
-# Create secrets directory (will be overridden by Docker secrets in production)
-RUN mkdir -p ./secrets
+# Install Node.js dependencies for scraping tools (if package.json exists)
+RUN if [ -f "./app/services/package.json" ]; then \
+    cd app/services && npm ci --only=production; \
+    fi
 
-# Ensure icon database and SVG files are properly copied
-COPY app/static/ ./app/static/
+# Install Playwright browsers for scraping
+RUN playwright install --with-deps chromium
 
-# Copy enterprise architecture documentation and project files
-COPY ENTERPRISE_ARCHITECTURE.md ./ENTERPRISE_ARCHITECTURE.md
-COPY CLAUDE.md ./CLAUDE.md
-COPY README.md ./README.md 
+# Create necessary directories
+RUN mkdir -p /app/data \
+    /app/static/icons \
+    /app/templates \
+    /app/secrets \
+    /app/downloaded_files \
+    /app/logs \
+    /app/cache \
+    /app/assets
 
-# Create a non-root user for security
-RUN groupadd -r appuser && useradd -r -g appuser appuser \
-    && chown -R appuser:appuser /app \
-    && chmod -R 755 /app
+# Set up default secrets directory structure
+RUN touch /app/secrets/.keep
 
-# Switch to non-root user
+# Create non-root user for security
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN chown -R appuser:appuser /app
 USER appuser
 
-# Expose the port the app runs on
-EXPOSE 10000
+# Expose port
+EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:10000/api/cloud_status || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/api/debug/topology || exit 1
 
-# Development stage
-FROM base AS development
-ENV ENVIRONMENT=development
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000", "--reload", "--workers", "1"]
-
-# Production stage
-FROM base AS production
-ENV ENVIRONMENT=production
-
-# Additional production optimizations
-RUN python -O -m compileall /app/app/ \
-    && find /app -name "*.pyc" -delete \
-    && find /app -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
-
-# Production command with optimized settings
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000", "--workers", "2", "--worker-class", "uvicorn.workers.UvicornWorker", "--access-log", "--log-level", "info"]
+# Default command
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

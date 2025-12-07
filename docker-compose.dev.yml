@@ -1,49 +1,229 @@
-# Development Docker Compose Configuration
-# Usage: docker-compose -f compose.yml -f docker-compose.dev.yml up
+version: '3.8'
 
+# Development environment with hot-reload and debugging tools
 services:
-  redis:
-    ports:
-      - "6379:6379"  # Expose Redis for development debugging
-    command: >
-      redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-
-  dashboard:
+  # Development FortiGate Dashboard with live reload
+  fortigate-dashboard-dev:
     build:
+      context: .
+      dockerfile: Dockerfile
       target: development
-    volumes:
-      - ./app:/app/app:delegated  # Live code reloading
-      - ./tools:/app/tools:delegated
-      - ./scripts:/app/scripts:delegated
-      - ./app/static/icons:/app/static/icons:ro
-      - ./app/data:/app/data
-      - ./app/certs:/app/certs:ro
+    container_name: fortigate-dashboard-dev
+    ports:
+      - "8000:8000"
+      - "5678:5678"  # Python debugger port
     environment:
-      - LOG_LEVEL=DEBUG
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - PYTHONPATH=/app
+      - FORTIGATE_HOST=${FORTIGATE_HOST:-192.168.0.254}
+      - FORTIGATE_USERNAME=${FORTIGATE_USERNAME:-admin}
+      - FORTIGATE_PASSWORD=${FORTIGATE_PASSWORD:-password}
+      - FORTIGATE_API_PORT=${FORTIGATE_API_PORT:-8443}
+      - FORTIGATE_API_TOKEN_FILE=/app/secrets/fortigate_api_token.txt
+      - FORTISWITCH_PASSWORD_FILE=/app/secrets/fortiswitch_password.txt
+      - REDIS_HOST=redis-dev
+      - REDIS_PORT=6379
       - REDIS_DB=0
-      - FORTIGATE_SESSION_TTL=60  # Longer sessions for development
-    command: >
-      uvicorn app.main:app 
-      --host 0.0.0.0 
-      --port 10000 
-      --reload 
-      --reload-dir /app/app
-      --log-level debug
-    ports:
-      - "10000:10000"
+      - POSTGRES_HOST=postgres-dev
+      - POSTGRES_DB=fortigate_dashboard_dev
+      - POSTGRES_USER=dev_user
+      - POSTGRES_PASSWORD=dev_pass
+      - ERASER_ENABLED=${ERASER_ENABLED:-true}
+      - ERASER_API_URL=${ERASER_API_URL:-https://app.eraser.io}
+      - ERASER_API_KEY_FILE=/app/secrets/eraser_api_token.txt
+      - NEO4J_URI=bolt://neo4j-dev:7687
+      - NEO4J_USERNAME=neo4j
+      - NEO4J_PASSWORD=dev_neo4j_password
+      - MERAKI_API_KEY=${MERAKI_API_KEY:-your_meraki_api_key}
+      - SNMP_COMMUNITY=${SNMP_COMMUNITY:-netintegrate}
+      - RELOAD=true
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - .:/app
+      - ./secrets:/app/secrets:ro
+      - ./downloaded_files:/app/downloaded_files:ro
+      - dev_node_modules:/app/app/services/node_modules
+      - dev_cache:/app/cache
     depends_on:
-      redis:
-        condition: service_healthy
-
-  # Development database browser (optional)
-  adminer:
-    image: adminer:4.8.1
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
+      - redis-dev
+      - postgres-dev
+      - neo4j-dev
     networks:
-      - fortinet_net
+      - fortigate_dev
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app --log-level debug
+    restart: unless-stopped
+
+  # Redis for development
+  redis-dev:
+    image: redis:7-alpine
+    container_name: fortigate-redis-dev
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - fortigate_dev
+    command: redis-server --appendonly yes --save 60 1000
+    restart: unless-stopped
+
+  # PostgreSQL for development
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: fortigate-postgres-dev
     environment:
-      ADMINER_DEFAULT_SERVER: dashboard
-    profiles:
-      - tools
+      - POSTGRES_DB=fortigate_dashboard_dev
+      - POSTGRES_USER=dev_user
+      - POSTGRES_PASSWORD=dev_pass
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    networks:
+      - fortigate_dev
+    restart: unless-stopped
+
+  # Neo4j for development
+  neo4j-dev:
+    image: neo4j:5.15-community
+    container_name: fortigate-neo4j-dev
+    environment:
+      - NEO4J_AUTH=neo4j/dev_neo4j_password
+      - NEO4J_PLUGINS=["graph-data-science"]
+      - NEO4J_dbms_memory_heap_initial__size=256m
+      - NEO4J_dbms_memory_heap_max__size=1G
+      - NEO4J_dbms_memory_pagecache_size=256m
+    ports:
+      - "7475:7474"  # HTTP
+      - "7688:7687"  # Bolt
+    volumes:
+      - neo4j_dev_data:/data
+    networks:
+      - fortigate_dev
+    restart: unless-stopped
+
+  # Development tools container
+  dev-tools:
+    image: node:20-alpine
+    container_name: fortigate-dev-tools
+    working_dir: /app
+    volumes:
+      - .:/app
+      - dev_node_modules:/app/app/services/node_modules
+    environment:
+      - NODE_ENV=development
+    networks:
+      - fortigate_dev
+    command: tail -f /dev/null  # Keep container running
+    restart: unless-stopped
+
+  # Jupyter notebook for data analysis
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: fortigate-jupyter
+    ports:
+      - "8888:8888"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=fortigate_dev
+    volumes:
+      - .:/home/jovyan/work
+      - jupyter_data:/home/jovyan
+    networks:
+      - fortigate_dev
+    restart: unless-stopped
+
+  # Mailhog for email testing
+  mailhog:
+    image: mailhog/mailhog
+    container_name: fortigate-mailhog
+    ports:
+      - "1025:1025"  # SMTP port
+      - "8025:8025"  # Web UI port
+    networks:
+      - fortigate_dev
+    restart: unless-stopped
+
+  # MinIO for S3-compatible storage testing
+  minio:
+    image: minio/minio
+    container_name: fortigate-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+    networks:
+      - fortigate_dev
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+  # Grafana for development monitoring
+  grafana-dev:
+    image: grafana/grafana:latest
+    container_name: fortigate-grafana-dev
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Editor
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_dev_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - fortigate_dev
+    restart: unless-stopped
+
+  # Prometheus for development metrics
+  prometheus-dev:
+    image: prom/prometheus:latest
+    container_name: fortigate-prometheus-dev
+    command:
+      - '--config.file=/etc/prometheus/prometheus-dev.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./monitoring/prometheus-dev.yml:/etc/prometheus/prometheus-dev.yml:ro
+      - prometheus_dev_data:/prometheus
+    networks:
+      - fortigate_dev
+    restart: unless-stopped
+
+volumes:
+  redis_dev_data:
+    driver: local
+  postgres_dev_data:
+    driver: local
+  neo4j_dev_data:
+    driver: local
+  dev_node_modules:
+    driver: local
+  dev_cache:
+    driver: local
+  jupyter_data:
+    driver: local
+  minio_data:
+    driver: local
+  grafana_dev_data:
+    driver: local
+  prometheus_dev_data:
+    driver: local
+
+networks:
+  fortigate_dev:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

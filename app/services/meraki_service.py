@@ -133,7 +133,8 @@ class MerakiService:
     
     def discover_restaurant_meraki_switches(self, organization_filter: str = None) -> Dict[str, Any]:
         """
-        Discover Meraki switches across restaurant organizations
+        Discover Meraki switches for BWW and Arby's restaurant locations
+        (Both brands use FortiGate + Meraki + FortiAP infrastructure)
         
         Args:
             organization_filter: Filter for specific organization (bww, arbys)

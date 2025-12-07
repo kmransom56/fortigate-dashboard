@@ -1,7 +1,8 @@
 """
-FortiSwitch API Service
+FortiSwitch API Service for Sonic Locations
 
-Uses FortiGate API to discover and manage FortiSwitch devices.
+Uses FortiGate API to discover and manage FortiSwitch devices for Sonic restaurants
+(Sonic uses FortiGate + FortiSwitch + FortiAP infrastructure).
 Based on the working API endpoint: cmdb/switch-controller/managed-switch
 """
 
@@ -214,8 +215,13 @@ class FortiSwitchAPIService:
 _fortiswitch_api_service = None
 
 def get_fortiswitch_api_service() -> FortiSwitchAPIService:
-    """Get global FortiSwitch API service instance"""
+    """Get global FortiSwitch API service instance for Sonic locations"""
     global _fortiswitch_api_service
     if _fortiswitch_api_service is None:
         _fortiswitch_api_service = FortiSwitchAPIService()
     return _fortiswitch_api_service
+
+# Legacy compatibility
+def get_fortiswitch_service() -> FortiSwitchAPIService:
+    """Legacy alias for FortiSwitch service (Sonic locations)"""
+    return get_fortiswitch_api_service()
