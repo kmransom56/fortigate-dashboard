@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Network Topology - FortiGate Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+
+        #topology-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            min-width: 280px;
+        }
+
+        .controls h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .control-group select,
+        .control-group input[type="checkbox"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .control-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        .stats {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            min-width: 280px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .node-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            min-width: 300px;
+            max-width: 400px;
+            display: none;
+        }
+
+        .node-info h4 {
+            margin: 0 0 12px 0;
+            color: #333;
+            font-size: 16px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 6px;
+        }
+
+        .info-row {
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .info-label {
+            color: #666;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px 50px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .legend-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="topology-container"></div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Loading network topology...</div>
+    </div>
+
+    <div class="controls">
+        <h3>🎮 Controls</h3>
+
+        <div class="control-group">
+            <label>View Mode</label>
+            <select id="viewMode">
+                <option value="all">All Devices</option>
+                <option value="infrastructure">Infrastructure Only</option>
+                <option value="endpoints">Endpoints Only</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="showLabels" checked>
+                <span>Show Labels</span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="showParticles">
+                <span>Link Particles</span>
+            </label>
+        </div>
+
+        <button onclick="resetCamera()">Reset Camera</button>
+        <button onclick="refreshData()">Refresh Data</button>
+        <button onclick="window.location.href='/topology'">2D View</button>
+    </div>
+
+    <div class="stats">
+        <div class="stat-item">
+            <span class="stat-label">Total Devices:</span>
+            <span class="stat-value" id="deviceCount">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Connections:</span>
+            <span class="stat-value" id="linkCount">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Infrastructure:</span>
+            <span class="stat-value" id="infrastructureCount">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Endpoints:</span>
+            <span class="stat-value" id="endpointCount">0</span>
+        </div>
+    </div>
+
+    <div class="node-info" id="nodeInfo">
+        <h4 id="nodeName">Device Information</h4>
+        <div id="nodeDetails"></div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-title">Device Types</div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff4444;"></div>
+            <span>FortiGate</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #4444ff;"></div>
+            <span>FortiSwitch</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #44ff44;"></div>
+            <span>FortiAP</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff44ff;"></div>
+            <span>Server</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #cccccc;"></div>
+            <span>Endpoint</span>
+        </div>
+    </div>
+
+    <!-- 3d-force-graph library -->
+    <script src="https://unpkg.com/3d-force-graph@1.79.0/dist/3d-force-graph.min.js"></script>
+    <!-- Three.js (required for custom sprites) -->
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+
+    <script>
+        let graph;
+        let graphData = { nodes: [], links: [] };
+        let allData = { nodes: [], links: [] };
+
+        // Initialize 3D force graph
+        function initGraph() {
+            const container = document.getElementById('topology-container');
+
+            graph = ForceGraph3D()(container)
+                .backgroundColor('#667eea')
+                .nodeLabel('name')
+                .nodeAutoColorBy('type')
+                .nodeVal(node => node.size || 4)
+                .linkDirectionalParticles(node => document.getElementById('showParticles').checked ? 2 : 0)
+                .linkDirectionalParticleSpeed(0.005)
+                .linkWidth(link => link.width || 1)
+                .linkColor(link => link.color || '#999')
+                .onNodeClick(handleNodeClick)
+                .onNodeHover(handleNodeHover);
+
+            // Custom node rendering with sprites for icons
+            graph.nodeThreeObject(node => {
+                const sprite = createNodeSprite(node);
+                return sprite;
+            });
+        }
+
+        // Create node sprite with icon
+        function createNodeSprite(node) {
+            const imgSize = node.size || 12;
+
+            // Create sprite with icon if available
+            if (node.icon && node.icon.startsWith('icons/')) {
+                const texture = new THREE.TextureLoader().load(`/static/${node.icon}`);
+                texture.colorSpace = THREE.SRGBColorSpace;
+                const material = new THREE.SpriteMaterial({
+                    map: texture,
+                    sizeAttenuation: true
+                });
+                const sprite = new THREE.Sprite(material);
+                sprite.scale.set(imgSize, imgSize, 1);
+
+                return sprite;
+            } else {
+                // Fallback to colored sphere
+                const geometry = new THREE.SphereGeometry(imgSize / 2, 16, 16);
+                const material = new THREE.MeshLambertMaterial({
+                    color: node.color || '#999',
+                    emissive: node.color || '#999',
+                    emissiveIntensity: 0.3
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+
+                return mesh;
+            }
+        }
+
+        // Load topology data
+        async function loadTopologyData() {
+            try {
+                const response = await fetch('/api/enhanced-topology/3d');
+                const data = await response.json();
+
+                // Store all data
+                allData = {
+                    nodes: data.nodes || [],
+                    links: data.links || []
+                };
+
+                // Update graph
+                updateGraph();
+
+                // Update stats
+                updateStats();
+
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+
+                console.log('Topology loaded:', data);
+            } catch (error) {
+                console.error('Error loading topology:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div class="spinner"></div>
+                    <div>Error loading topology</div>
+                    <div style="font-size: 12px; color: #999; margin-top: 10px;">
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Update graph based on view mode
+        function updateGraph() {
+            const viewMode = document.getElementById('viewMode').value;
+
+            let filteredNodes = allData.nodes;
+            if (viewMode === 'infrastructure') {
+                filteredNodes = allData.nodes.filter(n => n.is_infrastructure);
+            } else if (viewMode === 'endpoints') {
+                filteredNodes = allData.nodes.filter(n => !n.is_infrastructure);
+            }
+
+            // Filter links to only include visible nodes
+            const nodeIds = new Set(filteredNodes.map(n => n.id));
+            const filteredLinks = allData.links.filter(l =>
+                nodeIds.has(l.source.id || l.source) &&
+                nodeIds.has(l.target.id || l.target)
+            );
+
+            graphData = {
+                nodes: filteredNodes,
+                links: filteredLinks
+            };
+
+            graph.graphData(graphData);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const infrastructure = allData.nodes.filter(n => n.is_infrastructure).length;
+            const endpoints = allData.nodes.filter(n => !n.is_infrastructure).length;
+
+            document.getElementById('deviceCount').textContent = allData.nodes.length;
+            document.getElementById('linkCount').textContent = allData.links.length;
+            document.getElementById('infrastructureCount').textContent = infrastructure;
+            document.getElementById('endpointCount').textContent = endpoints;
+        }
+
+        // Handle node click
+        function handleNodeClick(node) {
+            if (!node) return;
+
+            const info = document.getElementById('nodeInfo');
+            const details = document.getElementById('nodeDetails');
+
+            document.getElementById('nodeName').textContent = node.name || node.id;
+
+            details.innerHTML = `
+                <div class="info-row">
+                    <span class="info-label">Type:</span>
+                    <span class="info-value">${node.type || 'Unknown'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">IP:</span>
+                    <span class="info-value">${node.ip || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">MAC:</span>
+                    <span class="info-value">${node.mac || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Vendor:</span>
+                    <span class="info-value">${node.vendor || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value">${node.status || 'Unknown'}</span>
+                </div>
+                ${node.interface ? `
+                    <div class="info-row">
+                        <span class="info-label">Interface:</span>
+                        <span class="info-value">${node.interface}</span>
+                    </div>
+                ` : ''}
+                ${node.fortiswitch_port ? `
+                    <div class="info-row">
+                        <span class="info-label">Switch Port:</span>
+                        <span class="info-value">${node.fortiswitch_port}</span>
+                    </div>
+                ` : ''}
+                ${node.fortiap_ssid ? `
+                    <div class="info-row">
+                        <span class="info-label">SSID:</span>
+                        <span class="info-value">${node.fortiap_ssid}</span>
+                    </div>
+                ` : ''}
+            `;
+
+            info.style.display = 'block';
+        }
+
+        // Handle node hover
+        function handleNodeHover(node) {
+            document.body.style.cursor = node ? 'pointer' : 'default';
+        }
+
+        // Reset camera
+        function resetCamera() {
+            graph.cameraPosition(
+                { x: 0, y: 0, z: 400 },
+                { x: 0, y: 0, z: 0 },
+                1000
+            );
+        }
+
+        // Refresh data
+        function refreshData() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('nodeInfo').style.display = 'none';
+            loadTopologyData();
+        }
+
+        // Event listeners
+        document.getElementById('viewMode').addEventListener('change', updateGraph);
+
+        document.getElementById('showLabels').addEventListener('change', (e) => {
+            graph.nodeLabel(e.target.checked ? 'name' : null);
+        });
+
+        document.getElementById('showParticles').addEventListener('change', (e) => {
+            graph.linkDirectionalParticles(e.target.checked ? 2 : 0);
+        });
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initGraph();
+            loadTopologyData();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (graph) {
+                const container = document.getElementById('topology-container');
+                graph.width(container.clientWidth);
+                graph.height(container.clientHeight);
+            }
+        });
+    </script>
+</body>
+</html>

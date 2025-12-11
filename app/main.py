@@ -29,6 +29,7 @@ from app.services.redis_session_manager import (
 )
 from app.services.restaurant_device_service import get_restaurant_device_service
 from app.services.scraped_topology_service import get_scraped_topology_service
+from app.services.topology_integration_service import get_topology_integration_service
 
 
 def get_device_icon_fallback(manufacturer, device_type):
@@ -118,6 +119,13 @@ async def read_home(request: Request):
 @app.get("/topology-fortigate", response_class=HTMLResponse)
 async def topology_fortigate_page(request: Request):
     return templates.TemplateResponse("topology_fortigate.html", {"request": request})
+
+
+# Route for 3D Force Graph topology
+@app.get("/topology-3d-force", response_class=HTMLResponse)
+async def topology_3d_force_page(request: Request):
+    """Enhanced 3D topology using 3d-force-graph with sprite icons"""
+    return templates.TemplateResponse("topology_3d_force.html", {"request": request})
 
 
 # 📊 Route for Dashboard "/dashboard"
@@ -1531,3 +1539,94 @@ async def test_session_auth():
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Session test failed: {str(e)}")
+
+
+# ====================================================================
+# Enhanced Topology Integration Endpoints (FortiGate-Visio-Topology)
+# ====================================================================
+
+@app.get("/api/enhanced-topology/2d")
+async def api_enhanced_topology_2d():
+    """
+    Get enhanced 2D topology with LLDP, FortiSwitch, and FortiAP data.
+    Uses FortiGate-Visio-Topology API for comprehensive network discovery.
+    """
+    try:
+        topology_service = get_topology_integration_service()
+        if not topology_service.is_available():
+            raise HTTPException(
+                status_code=503,
+                detail="Enhanced topology integration not available. Ensure FortiGate-Visio-Topology API is running."
+            )
+
+        return topology_service.get_2d_topology_data()
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get enhanced 2D topology: {str(e)}")
+
+
+@app.get("/api/enhanced-topology/3d")
+async def api_enhanced_topology_3d():
+    """
+    Get enhanced 3D topology for 3d-force-graph visualization.
+    Includes 3D positioning, colors, and model references.
+    """
+    try:
+        topology_service = get_topology_integration_service()
+        if not topology_service.is_available():
+            raise HTTPException(
+                status_code=503,
+                detail="Enhanced topology integration not available. Ensure FortiGate-Visio-Topology API is running."
+            )
+
+        return topology_service.get_3d_topology_data()
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get enhanced 3D topology: {str(e)}")
+
+
+@app.get("/api/enhanced-topology/hybrid")
+async def api_enhanced_topology_hybrid():
+    """
+    Get hybrid topology format compatible with existing dashboard services.
+    """
+    try:
+        topology_service = get_topology_integration_service()
+        if not topology_service.is_available():
+            raise HTTPException(
+                status_code=503,
+                detail="Enhanced topology integration not available"
+            )
+
+        return topology_service.get_hybrid_topology_data()
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get hybrid topology: {str(e)}")
+
+
+@app.get("/api/enhanced-topology/statistics")
+async def api_enhanced_topology_statistics():
+    """
+    Get topology statistics including device counts by type.
+    """
+    try:
+        topology_service = get_topology_integration_service()
+        return topology_service.get_device_statistics()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get statistics: {str(e)}")
+
+
+@app.get("/api/enhanced-topology/health")
+async def api_enhanced_topology_health():
+    """
+    Check health of enhanced topology integration.
+    """
+    topology_service = get_topology_integration_service()
+    return {
+        "available": topology_service.is_available(),
+        "service": "FortiGate-Visio-Topology Integration",
+        "timestamp": datetime.now().isoformat()
+    }
