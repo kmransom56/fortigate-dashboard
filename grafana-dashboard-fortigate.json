@@ -1,0 +1,361 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "fortigate-network-overview",
+    "title": "FortiGate Network Overview - 370K Devices",
+    "tags": ["fortigate", "network", "monitoring"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 0,
+    "refresh": "30s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "Total Managed Switches",
+        "targets": [
+          {
+            "expr": "count(fortigate_switch_status)",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "type": "stat",
+        "title": "Switches Online",
+        "targets": [
+          {
+            "expr": "count(fortigate_switch_status{status=\"authorized\"})",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "percentage",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 80, "color": "yellow"},
+                {"value": 95, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": "stat",
+        "title": "Total Active Ports",
+        "targets": [
+          {
+            "expr": "sum(fortigate_switch_port_status{status=\"up\"})",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 4,
+        "type": "stat",
+        "title": "PoE Power Usage",
+        "targets": [
+          {
+            "expr": "sum(fortigate_switch_poe_watts)",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "watt",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 800, "color": "yellow"},
+                {"value": 1000, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "type": "graph",
+        "title": "Switch CPU Usage (%)",
+        "targets": [
+          {
+            "expr": "fortigate_switch_cpu_usage",
+            "legendFormat": "{{switch_name}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "yaxes": [
+          {
+            "format": "percent",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [80],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "name": "High Switch CPU Usage"
+        }
+      },
+      {
+        "id": 6,
+        "type": "graph",
+        "title": "Switch Memory Usage (%)",
+        "targets": [
+          {
+            "expr": "fortigate_switch_memory_usage",
+            "legendFormat": "{{switch_name}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "yaxes": [
+          {
+            "format": "percent",
+            "min": 0,
+            "max": 100
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "type": "table",
+        "title": "Switch Status Overview",
+        "targets": [
+          {
+            "expr": "fortigate_switch_info",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 12},
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {
+                "switch_name": 0,
+                "model": 1,
+                "version": 2,
+                "status": 3,
+                "uptime": 4,
+                "cpu_usage": 5,
+                "memory_usage": 6,
+                "temperature": 7
+              },
+              "renameByName": {
+                "switch_name": "Switch Name",
+                "model": "Model",
+                "version": "Firmware",
+                "status": "Status",
+                "uptime": "Uptime",
+                "cpu_usage": "CPU %",
+                "memory_usage": "Memory %",
+                "temperature": "Temp °C"
+              }
+            }
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {
+              "displayName": "CPU %",
+              "desc": true
+            }
+          ]
+        }
+      },
+      {
+        "id": 8,
+        "type": "piechart",
+        "title": "Switches by Status",
+        "targets": [
+          {
+            "expr": "count by (status) (fortigate_switch_status)",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 22},
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["value", "percent"]
+          },
+          "pieType": "donut"
+        }
+      },
+      {
+        "id": 9,
+        "type": "graph",
+        "title": "Port Status Over Time",
+        "targets": [
+          {
+            "expr": "sum by (status) (fortigate_switch_port_status)",
+            "legendFormat": "{{status}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 16, "x": 8, "y": 22},
+        "yaxes": [
+          {
+            "format": "short",
+            "min": 0
+          }
+        ],
+        "seriesOverrides": [
+          {
+            "alias": "up",
+            "color": "#73BF69"
+          },
+          {
+            "alias": "down",
+            "color": "#F2495C"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "type": "heatmap",
+        "title": "Switch Temperature Heatmap",
+        "targets": [
+          {
+            "expr": "fortigate_switch_temperature",
+            "format": "time_series",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 30},
+        "options": {
+          "calculate": true,
+          "cellGap": 2,
+          "color": {
+            "exponent": 0.5,
+            "fill": "dark-orange",
+            "mode": "scheme",
+            "reverse": false,
+            "scheme": "Spectral",
+            "steps": 64
+          }
+        },
+        "dataFormat": "tsbuckets"
+      },
+      {
+        "id": 11,
+        "type": "gauge",
+        "title": "Network Port Utilization",
+        "targets": [
+          {
+            "expr": "sum(fortigate_switch_port_status{status=\"up\"}) / sum(fortigate_switch_port_total) * 100",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 30},
+        "options": {
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 70, "color": "yellow"},
+                {"value": 90, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "type": "alertlist",
+        "title": "Active Alerts",
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 38},
+        "options": {
+          "showOptions": "current",
+          "maxItems": 20,
+          "sortOrder": 1,
+          "dashboardAlerts": true,
+          "alertName": "",
+          "dashboardTitle": "",
+          "tags": []
+        }
+      }
+    ]
+  }
+}

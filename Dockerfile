@@ -11,7 +11,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     NODE_VERSION=20
 
 # Install system dependencies including Node.js for scraping tools
-RUN apt-get update && apt-get install -y \
+RUN sed -i 's/main/main contrib non-free/g' /etc/apt/sources.list.d/debian.sources && \
+    apt-get update && apt-get install -y \
     gcc \
     g++ \
     pkg-config \
@@ -60,7 +61,7 @@ COPY . .
 
 # Install Node.js dependencies for scraping tools (if package.json exists)
 RUN if [ -f "./app/services/package.json" ]; then \
-    cd app/services && npm ci --only=production; \
+    cd app/services && npm install --omit=dev; \
     fi
 
 # Install Playwright browsers for scraping

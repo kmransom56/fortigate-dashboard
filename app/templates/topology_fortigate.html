@@ -1,37 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8">
-    <title>FortiGate Topology</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/static/styles.css">
-    <style>
-      body { font-family: Lato, Helvetica, Arial, sans-serif; margin: 0; background: #f5f7fa; }
-      .sidebar { width: 220px; background: #3a2a4d; color: #fff; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
-      .sidebar .logo { padding: 20px; font-size: 1.2em; font-weight: bold; }
-      .sidebar .menu { padding: 0 20px; }
-      .sidebar .menu-item { padding: 12px 0; border-bottom: 1px solid #4b3b5a; cursor: pointer; }
-      .sidebar .menu-item.active { background: #2e1f3a; color: #ffd700; }
-      .main-content { margin-left: 220px; padding: 0; }
-      .header { background: #fff; padding: 16px 32px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
-      .topology-area { position: relative; min-height: 800px; background: #fff; margin: 32px; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); overflow: hidden; }
-      #topologyMap { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
-    </style>
+  <meta charset="utf-8">
+  <title>FortiGate Topology</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Lato, Helvetica, Arial, sans-serif;
+      margin: 0;
+      background: #f5f7fa;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #3a2a4d;
+      color: #fff;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+
+    .sidebar .logo {
+      padding: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    .sidebar .menu {
+      padding: 0 20px;
+    }
+
+    .sidebar .menu-item {
+      padding: 12px 0;
+      border-bottom: 1px solid #4b3b5a;
+      cursor: pointer;
+    }
+
+    .sidebar .menu-item.active {
+      background: #2e1f3a;
+      color: #ffd700;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      padding: 0;
+    }
+
+    .header {
+      background: #fff;
+      padding: 16px 32px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topology-area {
+      position: relative;
+      min-height: 800px;
+      background: #fff;
+      margin: 32px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    #topologyMap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+  </style>
 </head>
+
 <body>
   <div class="sidebar">
     <div class="logo">FORTINET</div>
     <div class="menu">
       <div class="menu-item">Dashboard</div>
       <div class="menu-item">Network</div>
-      <div class="menu-item">Policy & Objects</div>
-      <div class="menu-item">Security Profiles</div>
-      <div class="menu-item">User & Authentication</div>
       <div class="menu-item">System</div>
       <div class="menu-item active">Security Fabric</div>
       <div class="menu-item">Physical Topology</div>
       <div class="menu-item">Logical Topology</div>
-      <div class="menu-item">Fabric Connectors</div>
+      <div class="menu-item">FortiSwitch Ports</div>
+      <div class="menu-item">FortiAP Clients</div>
+      <div class="menu-item">3D Visualization</div>
       <div class="menu-item">Log & Report</div>
     </div>
   </div>
@@ -39,7 +98,8 @@
     <div class="header">
       <div>Security Fabric &gt; Physical Topology</div>
       <div>
-        <button id="updateBtn" style="background:#4caf50;color:#fff;border:none;padding:8px 16px;border-radius:4px;">Update Now</button>
+        <button id="updateBtn"
+          style="background:#4caf50;color:#fff;border:none;padding:8px 16px;border-radius:4px;">Update Now</button>
       </div>
     </div>
     <div class="topology-area">
@@ -47,9 +107,34 @@
     </div>
   </div>
   <script>
-    async function renderTopology() {
-      const response = await fetch('/api/scraped_topology');
-      const data = await response.json();
+    // Track current view mode
+    let currentView = 'enhanced'; // 'scraped', 'enhanced', 'fortiswitch-ports', 'fortiap-clients'
+
+      async function renderTopology(viewMode = currentView) {
+      currentView = viewMode;
+
+      // Determine which endpoint to use
+      let endpoint = '/api/scraped_topology';
+      if (viewMode === 'enhanced') {
+        endpoint = '/api/topology_data';
+      } else if (viewMode === 'fortiswitch-ports') {
+        endpoint = '/api/topology/fortiswitch-ports';
+      } else if (viewMode === 'fortiap-clients') {
+        endpoint = '/api/topology/fortiap-clients';
+      }
+
+      try {
+        const response = await fetch(endpoint);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        
+        if (!data || (!data.devices && !data.connections)) {
+          console.warn('Empty or invalid topology data received');
+          showErrorMessage('No topology data available. Please check API connectivity.');
+          return;
+        }
       const map = document.getElementById('topologyMap');
       map.innerHTML = '';
 
@@ -67,9 +152,12 @@
       const devicePositions = {};
       if (data.devices) {
         data.devices.forEach(device => {
+          // Handle both old format (device.position.x) and new format (device.x)
+          const x = device.position ? device.position.x : (device.x || 0);
+          const y = device.position ? device.position.y : (device.y || 0);
           devicePositions[device.id] = {
-            x: device.position.x + 50, // center of node
-            y: device.position.y + 50
+            x: x + 50, // center of node
+            y: y + 50
           };
         });
       }
@@ -77,16 +165,39 @@
       // Render connections as SVG lines
       if (data.connections) {
         data.connections.forEach(conn => {
-          const from = devicePositions[conn.from];
-          const to = devicePositions[conn.to];
+          // Handle both old format (conn.from/conn.to) and new format (conn.source/conn.target)
+          const fromId = conn.from || conn.source;
+          const toId = conn.to || conn.target;
+          const from = devicePositions[fromId];
+          const to = devicePositions[toId];
           if (from && to) {
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             line.setAttribute('x1', from.x);
             line.setAttribute('y1', from.y);
             line.setAttribute('x2', to.x);
             line.setAttribute('y2', to.y);
-            line.setAttribute('stroke', '#888');
-            line.setAttribute('stroke-width', '4');
+
+            // Use different colors for different connection types
+            const connType = conn.type || 'physical';
+            const strokeColor = connType === 'lldp' ? '#00ff00' :
+              connType === 'wifi' ? '#ff9800' :
+                '#888';
+            const strokeWidth = connType === 'lldp' ? '5' : '4';
+            const strokeDash = connType === 'lldp' ? '8,4' : '';
+
+            line.setAttribute('stroke', strokeColor);
+            line.setAttribute('stroke-width', strokeWidth);
+            if (strokeDash) line.setAttribute('stroke-dasharray', strokeDash);
+
+            // Add connection tooltip
+            const connTitle = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+            let connTooltip = `Connection: ${fromId} → ${toId}`;
+            if (conn.interface_source) connTooltip += `\nSource Port: ${conn.interface_source}`;
+            if (conn.interface_target) connTooltip += `\nTarget Port: ${conn.interface_target}`;
+            if (conn.type) connTooltip += `\nType: ${conn.type}`;
+            connTitle.textContent = connTooltip;
+            line.appendChild(connTitle);
+
             svg.appendChild(line);
           }
         });
@@ -96,29 +207,48 @@
       // Render device nodes
       if (data.devices) {
         data.devices.forEach(device => {
+          const x = device.position ? device.position.x : (device.x || 0);
+          const y = device.position ? device.position.y : (device.y || 0);
+
           const div = document.createElement('div');
           div.style.position = 'absolute';
-          div.style.left = device.position.x + 'px';
-          div.style.top = device.position.y + 'px';
+          div.style.left = x + 'px';
+          div.style.top = y + 'px';
           div.style.width = '100px';
           div.style.height = '100px';
           div.style.borderRadius = '50%';
-          div.style.background = device.details && device.details.color ? device.details.color : '#2196f3';
-          div.style.color = '#fff';
-          div.style.display = 'flex';
-          div.style.alignItems = 'center';
-          div.style.justifyContent = 'center';
-          div.style.fontSize = '1.2em';
+
+          // Use enhanced icon if available
+          if (device.icon && device.icon.startsWith('/static/icons/')) {
+            div.style.background = '#fff';
+            div.style.border = '3px solid #c8102e';
+            div.style.padding = '10px';
+            const img = document.createElement('img');
+            img.src = device.icon;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'contain';
+            div.appendChild(img);
+          } else {
+            div.style.background = device.details && device.details.color ? device.details.color : '#2196f3';
+            div.style.color = '#fff';
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.justifyContent = 'center';
+            div.style.fontSize = '1.2em';
+            div.innerHTML = `<div><strong>${device.name}</strong><br>${device.details && device.details.deviceCount ? device.details.deviceCount + ' Devices' : ''}</div>`;
+          }
+
           div.style.boxShadow = '0 2px 12px rgba(0,0,0,0.12)';
           div.style.cursor = 'pointer';
-          div.innerHTML = `<div><strong>${device.name}</strong><br>${device.details && device.details.deviceCount ? device.details.deviceCount + ' Devices' : ''}</div>`;
 
-          // Advanced tooltip (popover)
+          // Enhanced tooltip (popover)
           const tooltip = document.createElement('div');
           tooltip.style.position = 'absolute';
           tooltip.style.left = '110px';
           tooltip.style.top = '0px';
-          tooltip.style.minWidth = '180px';
+          tooltip.style.minWidth = '220px';
+          tooltip.style.maxWidth = '320px';
           tooltip.style.background = '#fff';
           tooltip.style.color = '#333';
           tooltip.style.border = '1px solid #ccc';
@@ -127,14 +257,34 @@
           tooltip.style.padding = '12px';
           tooltip.style.zIndex = '1000';
           tooltip.style.display = 'none';
-          tooltip.innerHTML = `
-            <div style="font-weight:bold;font-size:1.1em;margin-bottom:4px;">${device.name}</div>
-            <div>Type: <span style="color:${device.details && device.details.color ? device.details.color : '#2196f3'};font-weight:bold;">${device.type}</span></div>
-            <div>Count: ${device.details && device.details.deviceCount ? device.details.deviceCount : 1}</div>
-            <div>Position: (${device.position.x}, ${device.position.y})</div>
-            <div>Status: ${device.status ? device.status : 'unknown'}</div>
-            <div>Risk: ${device.risk ? device.risk : 'unknown'}</div>
+          tooltip.style.fontSize = '0.9em';
+
+          let tooltipContent = `
+            <div style="font-weight:bold;font-size:1.1em;margin-bottom:8px;color:#c8102e;">${device.name}</div>
+            <div><strong>Type:</strong> <span style="color:${device.details && device.details.color ? device.details.color : '#2196f3'};">${device.type}</span></div>
           `;
+
+          if (device.model) tooltipContent += `<div><strong>Model:</strong> ${device.model}</div>`;
+          if (device.serial) tooltipContent += `<div><strong>Serial:</strong> ${device.serial}</div>`;
+          if (device.ip) tooltipContent += `<div><strong>IP:</strong> ${device.ip}</div>`;
+          if (device.firmware) tooltipContent += `<div><strong>Firmware:</strong> ${device.firmware}</div>`;
+          if (device.manufacturer) tooltipContent += `<div><strong>Manufacturer:</strong> ${device.manufacturer}</div>`;
+
+          if (viewMode === 'fortiswitch-ports' && device.ports) {
+            const activePorts = device.ports.filter(p => p.status === 'up').length;
+            tooltipContent += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #eee;">`;
+            tooltipContent += `<strong>Ports:</strong> ${activePorts}/${device.ports.length} active</div>`;
+          }
+
+          if (viewMode === 'fortiap-clients' && device.clients) {
+            tooltipContent += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #eee;">`;
+            tooltipContent += `<strong>WiFi Clients:</strong> ${device.clients.length} connected</div>`;
+          }
+
+          tooltipContent += `<div style="margin-top:8px;"><strong>Status:</strong> ${device.status || 'unknown'}</div>`;
+          if (device.risk) tooltipContent += `<div><strong>Risk:</strong> ${device.risk}</div>`;
+
+          tooltip.innerHTML = tooltipContent;
           div.appendChild(tooltip);
 
           div.addEventListener('mouseenter', () => {
@@ -146,10 +296,107 @@
 
           map.appendChild(div);
         });
+      } else {
+        showErrorMessage('No devices found in topology data.');
+      }
+      } catch (error) {
+        console.error('Error rendering topology:', error);
+        showErrorMessage(`Failed to load topology: ${error.message}`);
       }
     }
-    document.addEventListener('DOMContentLoaded', renderTopology);
-    document.getElementById('updateBtn').addEventListener('click', renderTopology);
+    
+    function showErrorMessage(message) {
+      const map = document.getElementById('topologyMap');
+      map.innerHTML = `
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                    text-align: center; padding: 2rem; background: #fff; border-radius: 8px; 
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 400px;">
+          <div style="color: #dc3545; font-size: 2rem; margin-bottom: 1rem;">⚠️</div>
+          <div style="color: #333; font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">Error Loading Topology</div>
+          <div style="color: #666; font-size: 0.9rem;">${message}</div>
+          <button onclick="renderTopology(currentView)" 
+                  style="margin-top: 1rem; padding: 0.5rem 1.5rem; background: #4caf50; 
+                         color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Retry
+          </button>
+        </div>
+      `;
+    }
+
+    // Update Now button - refresh topology data
+    async function updateTopology() {
+      const updateBtn = document.getElementById('updateBtn');
+      const originalHTML = updateBtn.innerHTML;
+      updateBtn.disabled = true;
+      updateBtn.innerHTML = '<span style="animation: spin 1s linear infinite; display: inline-block;">⟳</span> Updating...';
+
+      try {
+        // Trigger backend refresh if using enhanced mode
+        if (currentView !== 'scraped') {
+          await fetch('/api/topology/refresh', { method: 'POST' });
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        // Re-render with current view mode
+        await renderTopology(currentView);
+
+        updateBtn.innerHTML = '✓ Updated';
+        setTimeout(() => {
+          updateBtn.innerHTML = originalHTML;
+        }, 2000);
+      } catch (error) {
+        console.error('Error updating topology:', error);
+        updateBtn.innerHTML = '⚠ Update Failed';
+        setTimeout(() => {
+          updateBtn.innerHTML = originalHTML;
+        }, 3000);
+      } finally {
+        updateBtn.disabled = false;
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTopology('enhanced');
+
+      // Wire up Update Now button
+      document.getElementById('updateBtn').addEventListener('click', updateTopology);
+
+      // Wire up sidebar menu items
+      const menuItems = document.querySelectorAll('.menu-item');
+      menuItems.forEach(item => {
+        item.addEventListener('click', function (e) {
+          e.preventDefault();
+          const text = this.textContent.trim();
+
+          // Remove active class from all items
+          menuItems.forEach(mi => mi.classList.remove('active'));
+          this.classList.add('active');
+
+          // Handle menu actions
+          if (text === 'Dashboard') {
+            window.location.href = '/';
+          } else if (text === 'Security Fabric') {
+            renderTopology('enhanced');
+          } else if (text === 'Physical Topology') {
+            renderTopology('scraped');
+          } else if (text === 'Logical Topology') {
+            renderTopology('enhanced');
+          } else if (text === 'FortiSwitch Ports') {
+            renderTopology('fortiswitch-ports');
+          } else if (text === 'FortiAP Clients') {
+            renderTopology('fortiap-clients');
+          } else if (text === '3D Visualization') {
+            window.location.href = '/topology-3d';
+          } else if (text === 'Network') {
+            window.location.href = '/topology-3d';
+          } else if (text === 'Log & Report') {
+            window.location.href = '/switches';
+          }
+        });
+      });
+    });
   </script>
 </body>
+
 </html>

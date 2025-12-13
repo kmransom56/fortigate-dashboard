@@ -1,1 +1,5 @@
 /secretsapp/services/__pycache__/
+
+# Zed file watcher exclusions
+venv/lib64
+libvisio2svg/deps/memstream-0.1

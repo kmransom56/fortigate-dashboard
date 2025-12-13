@@ -2,8 +2,8 @@ services:
   fortigate-dashboard:
     build: .
     container_name: fortigate-dashboard
-    ports:
-      - "8001:8000"
+    network_mode: "host"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
     environment:
       # Application
       - ENVIRONMENT=development
@@ -18,18 +18,19 @@ services:
       - FORTISWITCH_PASSWORD_FILE=/app/secrets/fortiswitch_password.txt
 
       # Redis Configuration (CRITICAL FIX)
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_HOST=localhost
+      - REDIS_PORT=6380
       - REDIS_DB=0
 
       # PostgreSQL
-      - POSTGRES_HOST=postgres
+      - POSTGRES_HOST=localhost
+      - POSTGRES_PORT=5437
       - POSTGRES_DB=fortigate_dashboard
       - POSTGRES_USER=dashboard_user
       - POSTGRES_PASSWORD=dashboard_pass
 
       # Neo4j
-      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_URI=bolt://localhost:7688
       - NEO4J_USERNAME=neo4j
       - NEO4J_PASSWORD=letsencrypt#0$
 
@@ -55,11 +56,63 @@ services:
         condition: service_healthy
       neo4j:
         condition: service_started
-    networks:
-      - fortigate_network
+    network_mode: "host"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 11000 --reload
+    environment:
+      # Application
+      - ENVIRONMENT=development
+      - DEBUG=true
+
+      # FortiGate Connection
+      - FORTIGATE_HOST=192.168.0.254
+      - FORTIGATE_USERNAME=admin
+      - FORTIGATE_PASSWORD=!cg@RW%G@o
+      - FORTIGATE_API_PORT=10443
+      - FORTIGATE_API_TOKEN_FILE=/app/secrets/fortigate_api_token.txt
+      - FORTISWITCH_PASSWORD_FILE=/app/secrets/fortiswitch_password.txt
+
+      # Redis Configuration (CRITICAL FIX)
+      - REDIS_HOST=localhost
+      - REDIS_PORT=6380
+      - REDIS_DB=0
+
+      # PostgreSQL
+      - POSTGRES_HOST=localhost
+      - POSTGRES_PORT=5437
+      - POSTGRES_DB=fortigate_dashboard
+      - POSTGRES_USER=dashboard_user
+      - POSTGRES_PASSWORD=dashboard_pass
+
+      # Neo4j
+      - NEO4J_URI=bolt://localhost:7688
+      - NEO4J_USERNAME=neo4j
+      - NEO4J_PASSWORD=letsencrypt#0$
+
+      # Eraser.io
+      - ERASER_ENABLED=true
+      - ERASER_API_URL=https://app.eraser.io
+      - ERASER_API_KEY_FILE=/app/secrets/eraser_api_token.txt
+
+      # Other
+      - MERAKI_API_KEY=fd3b9969d25792d90f0789a7e28cc661c81e2150
+      - SNMP_COMMUNITY=netintegrate
+    volumes:
+      - ./secrets:/app/secrets:ro
+      - ./downloaded_files:/app/downloaded_files:ro
+      - ./app/static/icons:/app/static/icons:rw
+      - ./app/data:/app/data:rw
+      - fortigate_logs:/app/logs
+      - fortigate_cache:/app/cache
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_started
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:11000/" ]
       interval: 30s
       timeout: 10s
       retries: 3

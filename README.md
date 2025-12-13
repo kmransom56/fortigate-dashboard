@@ -1,384 +1,417 @@
-# 🛡️ FortiGate Enterprise Dashboard
+# FortiGate Network Operations Platform
 
-![Python](https://img.shields.io/badge/python-3.12-blue.svg)
+**Complete Integration Suite for Enterprise Network Management**
 
-## Features Overview
-
-- Interactive network topology with real-time device discovery
-- Glass-morphism UI with modern animations and gradients
-- Live status widgets showing FortiGate status, switch count, and device count
-- Mobile-responsive design with Bootstrap 5
-- Self-contained assets for faster loading
-- Enterprise-grade visual design
-
-## Enhanced Network Automation
-
-- Intelligent OUI lookup (50 requests/minute rate limiting)
-- Persistent caching system
-- Expanded manufacturer database (Microsoft, Dell, Apple, Samsung, etc.)
-- Automatic device risk assessment
-- Power Automate integration ready
-
-## Real-Time Monitoring
-
-- FortiGate interface monitoring
-- FortiSwitch management
-- Connected device enumeration
-- WAN status alerts
-- Comprehensive error handling
-
-## Quick Start
-
-### Prerequisites
-
-- API token for FortiGate authentication
-- Network connectivity to FortiGate management interface
-
-### Clone & Setup
-
-```bash
-git clone https://github.com/kmransom56/fortigate-dashboard.git
-cd fortigate-dashboard
-```
-
-### Configure Secrets
-
-```bash
-# Create secrets directory
-mkdir -p secrets
-# Add your FortiGate API token
-echo "your-fortigate-api-token" > secrets/fortigate_api_token.txt
-# Add FortiGate admin password
-echo "your-admin-password" > secrets/fortigate_password.txt
-# Add FortiSwitch password (if different)
-echo "your-fortiswitch-password" > secrets/fortiswitch_password.txt
-```
-
-### Configure Environment
-
-Update `compose.yml` with your FortiGate settings:
-
-```yaml
-environment:
-  - FORTIGATE_HOST=https://192.168.0.254  # Your FortiGate IP
-  - FORTIGATE_USERNAME=admin
-  - FORTIGATE_VERIFY_SSL=false
-  - LOG_LEVEL=DEBUG
-  - FORTISWITCH_HOST=192.168.0.253       # Your FortiSwitch IP
-  - FORTISWITCH_USERNAME=admin
-```
-
-### Deploy with Docker
-
-```bash
-# Build and start all services
-docker compose up --build -d
-# View logs
-docker compose logs -f dashboard
-```
-
-### Access Dashboard
-
-Open your browser to: [http://localhost:10000](http://localhost:10000)
-
-## Dashboard Interfaces
-
-### Home Dashboard
-
-- Professional landing page with live status widgets
-- Three main navigation options:
-  - Manage FortiSwitches (port and device management)
-  - Network Topology (Security Fabric visualization)
-  - FortiGate Dashboard (interface and policy monitoring)
-
-### Network Topology (`/topology`)
-
-- Security Fabric visualization matching official FortiGate interface
-- Interactive device icons with manufacturer identification
-- Connection mapping between FortiGate → FortiSwitch → Endpoints
-- Risk-based color coding:
-  - Green: Fully identified devices (low risk)
-  - Yellow: Known manufacturer, missing details (medium risk)
-  - Red: Unknown devices or security threats (high risk)
-
-### FortiSwitch Management (`/switches`)
-
-- Switch overview with model, serial, and status information
-- Port-level device visibility with manufacturer identification
-- Device details including hostname, MAC, IP, and connection port
-- Real-time device discovery with automatic manufacturer lookup
-- Device enumeration across all connected switches
-- Policy and security status overview
-- Performance metrics and system health
-
-## API Documentation
-
-### Topology Data Endpoint
-
-```http
-GET /api/topology_data
-```
-
-**Response Example:**
-
-```json
-{
-  "devices": [
-    {
-      "id": "fortigate_main",
-      "type": "fortigate",
-      "name": "FortiGate-Main",
-      "ip": "192.168.0.254",
-      "status": "Active"
-    }
-  ],
-  "connections": [
-    {
-      "from": "fortigate_main",
-      "to": "switch_0"
-    }
-  ]
-}
-```
-
-### FortiSwitch Data Endpoint
-
-```http
-GET /fortigate/api/switches
-```
-
-### Interface Information Endpoint
-
-```http
-GET /fortigate/api/interfaces
-```
-
-## Enhanced OUI Lookup System
-
-The dashboard includes an intelligent MAC address vendor lookup system:
-
-```python
-# Rate limiting: 50 requests/minute
-# Persistent caching across container restarts
-# Exponential backoff for API limits
-```
-
-- Fallback handling - Graceful degradation
-- Extensive database - Pre-loaded common manufacturers
-
-## Container Architecture
-
-```text
-┌─────────────────┐    ┌──────────────────┐
-│   Dashboard     │    │   WAN Monitor    │
-│   Port 10000    │    │   Background     │
-│                 │    │   Service        │
-├─────────────────┤    └──────────────────┘
-│ FastAPI         │
-│ Real-time APIs  │
-└─────────────────┘
-         │
-         ▼
-┌─────────────────┐    ┌──────────────────┐
-│   FortiGate     │    │   FortiSwitch    │
-│   192.168.0.254 │◄──►│   192.168.0.253  │
-└─────────────────┘    └──────────────────┘
-```
-
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `FORTISWITCH_HOST` | FortiSwitch management IP | `192.168.0.253` |
-
-## Volume Mounts
-
-```yaml
-volumes:
-  - ./app/certs:/app/certs           # SSL certificates
-  - ./app/data:/app/data             # Persistent cache data
-```
-
-## Power Automate Integration
-
-### Automation Endpoints
-
-Perfect for Microsoft Power Automate workflows:
-
-```http
-# Device discovery notifications
-GET /api/topology_data
-
-# Security risk alerts
-GET /api/topology_data?filter=risk
-
-# New device detection
-GET /api/topology_data?changes=true
-```
-
-### Webhook Integration
-
-```json
-{
-  "event": "device_discovered",
-  "device": {
-    "mac": "FC:8C:11:AA:BB:CC",
-    "manufacturer": "Microsoft Corporation",
-    "risk_level": "low",
-    "switch": "S124EPTQ22000276",
-    "port": "port15"
-  },
-  "timestamp": "2025-07-19T08:00:00Z"
-}
-```
-
-### Process Automation Examples
-
-1. New Device Alerts → Teams notification
-2. Security Risk Detection → Email alert
-3. Unauthorized Device → Network quarantine
-4. Daily Inventory Report → SharePoint update
-
-## Security Features
-
-### Network Security
-
-### Access Control
-
-
-docker compose logs -f dashboard
-
-## Performance Optimizations
-
-### Caching Strategy
-
-- Persistent OUI lookup cache (`app/data/oui_cache.json`)
-- API response caching for frequently accessed data
-- Rate limiting: 50 requests/minute for external APIs
-- Connection pooling for database operations
-- Lazy loading for large device inventories
-- Compressed asset delivery for faster page loads
-
-### Debug Mode
-
-```bash
-docker compose logs dashboard | grep "API"
-# Clear browser cache
-# Hard refresh: Ctrl+F5 (Windows) or Cmd+Shift+R (Mac)
-docker compose logs -f dashboard
-```
-
-### Performance Monitoring
-
-```bash
-# Application metrics
-curl http://localhost:10000/api/topology_data | jq '.devices | length'
-```
-
-
-pip install -r requirements.txt
-
-## Development
-
-### Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### Run development server
-
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 10000
-```
-
-1. New API Endpoints: Add routes in `app/main.py`
-2. UI Components: Create templates in `app/templates/`
-3. Services: Add business logic in `app/services/`
-4. Utilities: Helper functions in `app/utils/`
-
-## Monitoring & Analytics
-
-- Device discovery count and manufacturer distribution
-- API response times and error rates
-- Cache hit ratios
-- Network topology changes over time
-- Prometheus metrics endpoint (planned)
-- Grafana dashboards
-- ELK stack for logs
-- Custom webhook notifications
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-- Additional device manufacturers
-- UI/UX improvements
-- New FortiGate API integrations
-- Advanced analytics/reporting
-- Enhanced security features
-
-## Changelog
-
-### v2.0.0 (Latest)
-
-- Security Fabric topology visualization
-- Professional UI redesign
-- Enhanced OUI lookup
-- Power Automate integration
-- Real-time device discovery
-- Advanced security risk assessment
-
-### v1.0.0
-
-- Basic FortiGate dashboard
-- FortiSwitch management
-- Interface monitoring
-- Docker containerization
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-- Documentation: This README and inline code comments
-- Issues: Open a GitHub issue for bugs or feature requests
-- Discussions: Use GitHub Discussions for questions and ideas
-
-## Acknowledgments
-
-- Fortinet for FortiGate API documentation and design inspiration
-- FastAPI for the excellent web framework
-- Bootstrap for UI components
-- Docker for containerization
+Scale: **370,000 devices** across **20,247 locations**
 
 ---
 
-### Built with ❤️ for network automation and security professionals
+## 🎯 What's Included
 
-*Transform your FortiGate management experience with enterprise-grade visualization and intelligent automation.*
+This integration package includes **4 major components**:
 
-## Network Topology 3D (`/topology-3d`)
+### 1. 🗺️ **Network Topology Visualization**
+- Neo4j graph database for network relationships
+- Real-time topology mapping
+- Path finding between devices
+- Network health analysis
+- Visual representation of 370K+ devices
 
-- Three.js-based 3D force layout using 3d-force-graph via CDN
-- Type-based colors and risk halos consistent with the 2D view
-- Hover labels show device details; click to select
-- Camera orbit, pan, and zoom supported
-- Cross-links between 2D (`/topology`) and 3D (`/topology-3d`) views
+### 2. 🔄 **Switch Discovery & Management**
+- Automated FortiSwitch discovery
+- Real-time port monitoring
+- Health metrics (CPU, memory, temperature)
+- Auto-configuration templates
+- Rogue device detection
+- Comprehensive reporting
 
-### Eraser AI (Preview)
+### 3. 📊 **Grafana Monitoring Dashboards**
+- Pre-built FortiGate dashboard
+- Real-time metrics visualization
+- Alert configuration
+- Custom panels for switches, ports, PoE
+- Performance monitoring
 
-- This repository includes hooks for future Eraser AI integration.
-- Set `ERASER_ENABLED=true` in the dashboard environment to enable the export endpoint.
-- API: `POST /api/eraser/export` returns 501 unless `ERASER_ENABLED` is set to true.
-- The 3D view contains a disabled “Export to Eraser” button that becomes enabled when the endpoint is active.
-- Full Eraser AI integration will be added in a future update.
+### 4. 🔧 **OSI Troubleshooting Integration**
+- 14 AI agents across 7 OSI layers
+- Automated issue detection
+- Prioritized remediation plans
+- Network health scoring
+- Layer-by-layer diagnostics
 
-#### CDN with SRI and local fallback
+---
 
-- The 3D view uses pinned CDN URLs with Subresource Integrity (SRI) for Three.js and 3d-force-graph.
-- If CDN loading fails (e.g., offline/air-gapped), the page attempts to load local copies from:
-  - /static/vendor/three.min.js
-  - /static/vendor/3d-force-graph.min.js
-- To use local-only loading, block access to unpkg in your environment or remove the CDN script tags in app/templates/topology_3d.html. The runtime will detect missing globals and load local vendor files.
+## 📦 Files Included
+
+```
+topology_visualization.py          # Neo4j topology service
+switch_discovery.py                 # Switch discovery & management
+osi_troubleshooting_integration.py  # OSI agents integration
+network_operations_router.py        # Unified FastAPI router
+grafana-dashboard-fortigate.json    # Grafana dashboard config
+DEPLOYMENT_GUIDE.md                 # Complete deployment guide
+setup.sh                            # Automated setup script
+README.md                           # This file
+```
+
+---
+
+## ⚡ Quick Start
+
+### Option 1: Automated Setup
+
+```bash
+# Download all files to your project directory
+cd /home/keith/fortigate-dashboard
+
+# Run setup script
+chmod +x setup.sh
+./setup.sh
+```
+
+### Option 2: Manual Setup
+
+```bash
+# 1. Create directories
+mkdir -p app/services app/routers monitoring/grafana
+
+# 2. Copy files
+cp topology_visualization.py app/services/
+cp switch_discovery.py app/services/
+cp osi_troubleshooting_integration.py app/services/
+cp network_operations_router.py app/routers/
+cp grafana-dashboard-fortigate.json monitoring/grafana/
+
+# 3. Install dependencies
+uv pip install neo4j aiohttp redis
+
+# 4. Update main.py
+# Add: from app.routers.network_operations_router import router as network_router
+#      app.include_router(network_router)
+
+# 5. Restart
+docker-compose restart fortigate-dashboard
+```
+
+---
+
+## 🌐 API Endpoints
+
+After deployment, access these endpoints:
+
+### Dashboard
+- `GET /api/network/dashboard/overview` - Complete dashboard
+- `GET /api/network/dashboard/enterprise` - Enterprise metrics
+
+### Topology
+- `GET /api/network/topology/full` - Full network topology
+- `GET /api/network/topology/device/{id}` - Device neighborhood
+- `GET /api/network/topology/path/{source}/{target}` - Path finding
+- `POST /api/network/topology/rebuild` - Rebuild topology
+
+### Switches
+- `GET /api/network/switches` - List all switches
+- `GET /api/network/switches/{id}` - Switch details
+- `GET /api/network/switches/{id}/health` - Health metrics
+- `POST /api/network/switches/{id}/configure` - Auto-configure
+- `GET /api/network/switches/report/summary` - Generate report
+
+### Security
+- `GET /api/network/security/rogue-devices` - Scan for rogues
+
+### Troubleshooting
+- `GET /api/network/troubleshooting/analyze` - Full analysis
+- `GET /api/network/troubleshooting/device/{id}` - Device analysis
+- `GET /api/network/troubleshooting/remediation-plan` - Get plan
+
+### Interactive Docs
+- `http://localhost:8000/docs` - Swagger UI
+
+---
+
+## 🎨 Grafana Dashboard
+
+### Import Dashboard
+
+1. Access Grafana: `http://localhost:3001`
+2. Login: `admin` / `admin_password`
+3. Go to: **Dashboards → Import**
+4. Upload: `monitoring/grafana/grafana-dashboard-fortigate.json`
+
+### Panels Included
+
+- **Stats**: Total switches, online switches, active ports, PoE usage
+- **Graphs**: CPU usage, memory usage, port status over time
+- **Table**: Switch status overview with sorting
+- **Pie Chart**: Switches by status
+- **Heatmap**: Temperature monitoring
+- **Gauge**: Port utilization
+- **Alerts**: Active alerts list
+
+---
+
+## 🗄️ Neo4j Topology
+
+Access Neo4j Browser: `http://localhost:7475`
+
+### Useful Cypher Queries
+
+```cypher
+// View all devices
+MATCH (n:Device) RETURN n
+
+// Find critical devices (high connectivity)
+MATCH (n:Device)-[r]-()
+WITH n, count(r) as connections
+WHERE connections > 5
+RETURN n.name, connections
+ORDER BY connections DESC
+
+// Find isolated devices
+MATCH (n:Device)
+WHERE NOT (n)--()
+RETURN n
+
+// Shortest path between devices
+MATCH path = shortestPath(
+  (a:Device {id: 'device1'})-[*]-(b:Device {id: 'device2'})
+)
+RETURN path
+```
+
+---
+
+## 🔧 OSI Troubleshooting Agents
+
+### Architecture
+
+14 agents monitoring 7 OSI layers:
+
+- **Layer 1 (Physical)**: Cable issues, port errors, signal strength
+- **Layer 2 (Data Link)**: VLANs, MAC tables, STP, storms
+- **Layer 3 (Network)**: Routing, IP conflicts, subnets
+- **Layers 4-7**: Custom agents (add your remaining 11)
+
+### Running Analysis
+
+```bash
+# Analyze entire network
+curl http://localhost:8000/api/network/troubleshooting/analyze
+
+# Analyze specific device  
+curl http://localhost:8000/api/network/troubleshooting/device/FS108E001
+
+# Get remediation plan
+curl http://localhost:8000/api/network/troubleshooting/remediation-plan
+```
+
+### Health Score
+
+The system calculates a 0-100 health score:
+- **90-100**: Healthy
+- **70-89**: Moderate issues
+- **50-69**: High risk
+- **0-49**: Critical issues
+
+---
+
+## 🚀 Enterprise Scale
+
+### Your Infrastructure
+
+- **Devices**: 370,000
+- **Locations**: 20,247  
+- **Organizations**: 7
+- **Device Types**: FortiGate, FortiSwitch, AP, Clients
+
+### Deployment Architecture
+
+```
+Load Balancer (nginx)
+    ↓
+FortiGate Dashboard (6 replicas)
+    ↓
+┌─────────┬──────────┬──────────┐
+Redis     Postgres    Neo4j
+Cluster   Cluster     Cluster
+(6 nodes) (primary+2) (3 cores)
+```
+
+### Performance Optimizations
+
+- **Batch Processing**: 1000 devices per batch
+- **Caching**: Redis for session management
+- **Horizontal Scaling**: 6 dashboard replicas
+- **Database Clustering**: High availability
+- **Rate Limiting**: API throttling
+
+---
+
+## 📊 Market Opportunity
+
+**Your OSI Troubleshooting Platform:**
+
+- ✅ **Market**: $2.8B validated opportunity
+- ✅ **Pricing**: $199-999/month SaaS
+- ✅ **Target ARR**: $180K - $2.4M
+- ✅ **Competitive Edge**: 60-80% cost savings vs SolarWinds/Cisco DNA Center
+- ✅ **Technology**: 14 AI agents, 13 tools, AutoGen framework
+- ✅ **Grant**: Hiring Our Heroes deadline Dec 15, 2024
+- ✅ **Strategy**: De-risked side hustle → $100K ARR
+
+---
+
+## 🧪 Testing
+
+### 1. Test API
+
+```bash
+# Test dashboard
+curl http://localhost:8000/ | jq '.'
+
+# Test network overview
+curl http://localhost:8000/api/network/dashboard/overview | jq '.'
+```
+
+### 2. Test Topology
+
+```bash
+# Rebuild topology
+curl -X POST http://localhost:8000/api/network/topology/rebuild
+
+# View topology
+curl http://localhost:8000/api/network/topology/full | jq '.nodes | length'
+```
+
+### 3. Test Switch Discovery
+
+```bash
+# Discover switches
+curl http://localhost:8000/api/network/switches | jq '.[].name'
+
+# Get report
+curl http://localhost:8000/api/network/switches/report/summary | jq '.summary'
+```
+
+### 4. Test OSI Agents
+
+```bash
+# Run analysis
+curl http://localhost:8000/api/network/troubleshooting/analyze | jq '.health'
+```
+
+---
+
+## 🛠️ Troubleshooting
+
+### Check Services
+
+```bash
+# Check all containers
+docker-compose ps
+
+# Check specific service
+docker logs fortigate-dashboard --tail=50
+docker logs fortigate-neo4j --tail=50
+```
+
+### Common Issues
+
+**Neo4j Connection Failed**
+```bash
+# Check Neo4j is running
+docker ps | grep neo4j
+
+# Test connection
+docker exec fortigate-neo4j cypher-shell -u neo4j -p neo4j_password "RETURN 1"
+```
+
+**FortiGate API Issues**
+```bash
+# Test API connectivity
+curl -k https://192.168.0.254:10443/api/v2/cmdb/system/status
+
+# Check environment variables
+docker exec fortigate-dashboard env | grep FORTIGATE
+```
+
+**Import Errors**
+```bash
+# Check Python path
+docker exec fortigate-dashboard python -c "import sys; print('\n'.join(sys.path))"
+
+# Install missing dependencies
+docker exec fortigate-dashboard pip install neo4j aiohttp redis
+```
+
+---
+
+## 📚 Documentation
+
+- **Full Guide**: `DEPLOYMENT_GUIDE.md`
+- **API Docs**: `http://localhost:8000/docs`
+- **Neo4j Browser**: `http://localhost:7475`
+- **Grafana**: `http://localhost:3001`
+- **Prometheus**: `http://localhost:9091`
+
+---
+
+## 🎯 Next Steps
+
+1. **Deploy Integration**
+   - Run `setup.sh` or follow manual steps
+   - Update `main.py` with router
+   - Restart services
+
+2. **Import Grafana Dashboard**
+   - Access Grafana UI
+   - Import dashboard JSON
+   - Configure data sources
+
+3. **Test Everything**
+   - Run API tests
+   - View topology in Neo4j
+   - Check Grafana panels
+   - Run OSI analysis
+
+4. **Customize**
+   - Add remaining OSI agents (11 more)
+   - Create custom Grafana dashboards
+   - Configure alerting rules
+   - Integrate additional tools
+
+5. **Scale**
+   - Deploy to production
+   - Enable clustering
+   - Set up monitoring
+   - Configure backups
+
+6. **Grant Application**
+   - Prepare Hiring Our Heroes application
+   - Document market validation
+   - Showcase competitive advantages
+   - Submit by December 15, 2024
+
+---
+
+## 🤝 Support
+
+For issues or questions:
+
+1. Check logs: `docker-compose logs -f fortigate-dashboard`
+2. Review `DEPLOYMENT_GUIDE.md`
+3. Test individual components
+4. Verify environment variables
+
+---
+
+## 📝 License
+
+Your proprietary OSI troubleshooting platform.
+
+---
+
+**Built for Enterprise Network Management at Scale** 🚀
+
+*370,000 devices | 20,247 locations | $2.8B market opportunity*
+

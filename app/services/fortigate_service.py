@@ -176,7 +176,7 @@ def _fgt_api_with_token(
             f"Making API request to: {endpoint} (FortiGate: {fortigate_ip}) using token authentication"
         )
 
-        response = requests.get(url, headers=headers, verify=False, timeout=30)
+        response = requests.get(url, headers=headers, verify=False, timeout=2)
 
         # Handle specific HTTP status codes
         if response.status_code == 401:

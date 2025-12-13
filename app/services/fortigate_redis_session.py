@@ -146,7 +146,7 @@ class FortiGateRedisSessionManager:
 
             # Perform login
             response = self.session.post(
-                login_url, data=login_data, timeout=30, allow_redirects=False
+                login_url, data=login_data, timeout=2, allow_redirects=False
             )
 
             if response.status_code == 200:
@@ -219,7 +219,7 @@ class FortiGateRedisSessionManager:
             # Logout from FortiGate
             if self.fortigate_ip:
                 logout_url = f"https://{self.fortigate_ip}/logout"
-                self.session.get(logout_url, timeout=10)
+                self.session.get(logout_url, timeout=2)
                 logger.info("FortiGate session logged out")
             
             # Delete session from Redis
@@ -278,7 +278,7 @@ class FortiGateRedisSessionManager:
             url = f"https://{self.fortigate_ip}/api/v2/{endpoint}"
 
             # Use session cookies for authentication
-            response = self.session.get(url, timeout=30)
+            response = self.session.get(url, timeout=2)
 
             if response.status_code == 401:
                 # Session expired, delete from Redis and try to re-authenticate once
@@ -287,7 +287,7 @@ class FortiGateRedisSessionManager:
 
                 session_key = self.get_session_key()
                 if session_key:
-                    response = self.session.get(url, timeout=30)
+                    response = self.session.get(url, timeout=2)
                 else:
                     return {
                         "error": "authentication_failed",

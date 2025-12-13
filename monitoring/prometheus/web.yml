@@ -1,0 +1,7 @@
+# Prometheus Web Configuration
+# Basic authentication configuration
+# Username: admin
+# Password: letsencrypt#0$
+
+basic_auth_users:
+  admin: '$2y$10$rYfGmjvBc/1iBMuPgTKFlescGA9q6hz50scRKBmL/feosR/l6ooKK'

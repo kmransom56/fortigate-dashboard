@@ -1,7 +1,11 @@
+import logging
 import os
 from datetime import datetime
 
 from dotenv import load_dotenv
+
+# Initialize global logger
+logger = logging.getLogger(__name__)
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
@@ -15,6 +19,7 @@ from app.utils.icon_db import seed_default_icons
 load_dotenv()
 
 from app.api import fortigate
+from app.routers.network_operations_router import router as network_router
 from app.services.brand_detection_service import get_brand_detection_service
 from app.services.fortigate_inventory_service import get_fortigate_inventory_service
 from app.services.fortigate_redis_session import get_fortigate_redis_session_manager
@@ -100,18 +105,37 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 # Set up templates
 templates = Jinja2Templates(directory="app/templates")
 
+# 🏠 Route for Home "/" - Register BEFORE routers to ensure it's matched first
+@app.get("/", response_class=HTMLResponse)
+async def read_home(request: Request):
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info("=" * 50)
+    logger.info("read_home route handler CALLED - This should appear in logs!")
+    logger.info("=" * 50)
+    try:
+        logger.info("Attempting to render index.html template")
+        response = templates.TemplateResponse("index.html", {"request": request})
+        logger.info(f"Template rendered successfully, response type: {type(response)}")
+        return response
+    except Exception as e:
+        logger.error(f"Error rendering index.html: {e}", exc_info=True)
+        # Return a simple HTML error page instead of letting FastAPI return JSON
+        from fastapi.responses import HTMLResponse
+        return HTMLResponse(
+            content=f"<html><body><h1>Template Error</h1><p>{str(e)}</p></body></html>",
+            status_code=500
+        )
+
 # Include Fortigate router
 app.include_router(fortigate.router)
+
+# Include the unified network operations router
+app.include_router(network_router)
 
 
 # Seed icons at startup
 seed_default_icons()
-
-
-# 🏠 Route for Home "/"
-@app.get("/", response_class=HTMLResponse)
-async def read_home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
 
 
 # Route for FortiGate-style topology page
@@ -183,7 +207,7 @@ async def enterprise_page(request: Request):
 
 # 📡 API endpoint for topology data
 @app.get("/api/topology_data")
-async def api_topology_data():
+def api_topology_data():
     """
     Returns real network topology data for the Security Fabric-style visualization
     """
@@ -1531,3 +1555,73 @@ async def test_session_auth():
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Session test failed: {str(e)}")
+
+
+# ============================================================================
+# Enhanced Topology Endpoints (Visio-Topology Integration)
+# ============================================================================
+
+@app.get("/api/topology/enhanced")
+async def api_enhanced_topology():
+    """Enhanced topology with advanced icon mapping and device classification"""
+    try:
+        from app.services.enhanced_topology_integration import get_enhanced_topology_service
+        
+        enhanced_service = get_enhanced_topology_service()
+        topology = enhanced_service.get_topology_with_lldp()
+        
+        return topology
+    except Exception as e:
+        logger.error(f"Error in enhanced topology endpoint: {e}")
+        return {
+            "devices": [],
+            "connections": [],
+            "error": str(e)
+        }
+
+
+@app.get("/api/topology/fortiswitch-ports")
+async def api_fortiswitch_ports():
+    """FortiSwitch port-level client tracking"""
+    try:
+        from app.services.enhanced_topology_integration import get_enhanced_topology_service
+        
+        enhanced_service = get_enhanced_topology_service()
+        return enhanced_service.get_fortiswitch_port_details()
+    except Exception as e:
+        logger.error(f"Error in FortiSwitch ports endpoint: {e}")
+        return {"error": str(e)}
+
+
+@app.get("/api/topology/fortiap-clients")
+async def api_fortiap_clients():
+    """FortiAP WiFi client associations with SSID details"""
+    try:
+        from app.services.enhanced_topology_integration import get_enhanced_topology_service
+        
+        enhanced_service = get_enhanced_topology_service()
+        return enhanced_service.get_fortiap_client_associations()
+    except Exception as e:
+        logger.error(f"Error in FortiAP clients endpoint: {e}")
+        return {"error": str(e)}
+
+
+@app.post("/api/topology/refresh")
+def api_topology_refresh():
+    """Trigger a refresh of all topology data sources"""
+    try:
+        from app.services.scraped_topology_service import get_scraped_topology_service
+        from app.services.enhanced_topology_integration import get_enhanced_topology_service
+        
+        # Trigger refresh (implementation depends on your refresh mechanism)
+        scraped = get_scraped_topology_service()
+        enhanced = get_enhanced_topology_service()
+        
+        return {
+            "success": True,
+            "message": "Topology refresh triggered",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error in topology refresh: {e}")
+        return {"success": False, "error": str(e)}

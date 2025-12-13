@@ -1,11 +1,12 @@
-import time
 import smtplib
 import ssl
+import time
+
 import requests
 
 # FortiGate API details
 FORTIGATE_HOST = "https://192.168.0.254"
-API_TOKEN = "Ggtw6bdjz8wrsshpwHd50HHkzg0dze"
+API_TOKEN = "199psNw33b8bq581dNmQqNpkGH53bm"
 
 # Email settings
 SMTP_SERVER = "smtp.yourprovider.com"
