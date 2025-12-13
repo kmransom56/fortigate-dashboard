@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Development environment with hot-reload and debugging tools
 services:
   # Development FortiGate Dashboard with live reload
