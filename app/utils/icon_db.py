@@ -180,7 +180,9 @@ def get_icon_binding(
     # Build UNION query to prioritize by provided order then by priority asc
     union_parts = []
     for key_type, key_value in clauses:
-        union_parts.append("SELECT icon_path, title, device_type, priority FROM icon_bindings WHERE key_type=? AND key_value=?")
+        union_parts.append(
+            "SELECT icon_path, title, device_type, priority FROM icon_bindings WHERE key_type=? AND key_value=?"
+        )
         params.extend([key_type, key_value])
     sql = " UNION ALL ".join(union_parts) + " ORDER BY priority ASC LIMIT 1"
     with sqlite3.connect(DB_PATH) as conn:
@@ -188,7 +190,12 @@ def get_icon_binding(
         cur.execute(sql, params)
         row = cur.fetchone()
         if row:
-            return {"icon_path": row[0], "title": row[1], "device_type": row[2], "priority": row[3]}
+            return {
+                "icon_path": row[0],
+                "title": row[1],
+                "device_type": row[2],
+                "priority": row[3],
+            }
     return None
 
 
@@ -294,23 +301,79 @@ def seed_default_icons():
 
     # Network diagram device-type icon seeds (generic)
     device_types = [
-        {"device_type": "fortigate", "title": "Firewall", "icon_path": "icons/nd/firewall.svg"},
-        {"device_type": "firewall", "title": "Firewall", "icon_path": "icons/nd/firewall.svg"},
-        {"device_type": "fortiswitch", "title": "Switch", "icon_path": "icons/nd/switch.svg"},
-        {"device_type": "switch", "title": "Switch", "icon_path": "icons/nd/switch.svg"},
-        {"device_type": "router", "title": "Router", "icon_path": "icons/nd/router.svg"},
-        {"device_type": "endpoint", "title": "Endpoint", "icon_path": "icons/nd/laptop.svg"},
-        {"device_type": "server", "title": "Server", "icon_path": "icons/nd/server.svg"},
-        {"device_type": "access-point", "title": "Access Point", "icon_path": "icons/nd/access-point.svg"},
+        {
+            "device_type": "fortigate",
+            "title": "Firewall",
+            "icon_path": "icons/nd/firewall.svg",
+        },
+        {
+            "device_type": "firewall",
+            "title": "Firewall",
+            "icon_path": "icons/nd/firewall.svg",
+        },
+        {
+            "device_type": "fortiswitch",
+            "title": "Switch",
+            "icon_path": "icons/nd/switch.svg",
+        },
+        {
+            "device_type": "switch",
+            "title": "Switch",
+            "icon_path": "icons/nd/switch.svg",
+        },
+        {
+            "device_type": "router",
+            "title": "Router",
+            "icon_path": "icons/nd/router.svg",
+        },
+        {
+            "device_type": "endpoint",
+            "title": "Endpoint",
+            "icon_path": "icons/nd/laptop.svg",
+        },
+        {
+            "device_type": "server",
+            "title": "Server",
+            "icon_path": "icons/nd/server.svg",
+        },
+        {
+            "device_type": "access-point",
+            "title": "Access Point",
+            "icon_path": "icons/nd/access-point.svg",
+        },
         {"device_type": "cloud", "title": "Cloud", "icon_path": "icons/nd/cloud.svg"},
-        {"device_type": "internet", "title": "Internet", "icon_path": "icons/nd/internet.svg"},
-        {"device_type": "printer", "title": "Printer", "icon_path": "icons/nd/printer.svg"},
-        {"device_type": "camera", "title": "Camera", "icon_path": "icons/nd/camera.svg"},
+        {
+            "device_type": "internet",
+            "title": "Internet",
+            "icon_path": "icons/nd/internet.svg",
+        },
+        {
+            "device_type": "printer",
+            "title": "Printer",
+            "icon_path": "icons/nd/printer.svg",
+        },
+        {
+            "device_type": "camera",
+            "title": "Camera",
+            "icon_path": "icons/nd/camera.svg",
+        },
         {"device_type": "nas", "title": "NAS", "icon_path": "icons/nd/nas.svg"},
         {"device_type": "phone", "title": "Phone", "icon_path": "icons/nd/phone.svg"},
-        {"device_type": "tablet", "title": "Tablet", "icon_path": "icons/nd/tablet.svg"},
-        {"device_type": "wifi-controller", "title": "WiFi Controller", "icon_path": "icons/nd/wifi-controller.svg"},
-        {"device_type": "load-balancer", "title": "Load Balancer", "icon_path": "icons/nd/load-balancer.svg"},
+        {
+            "device_type": "tablet",
+            "title": "Tablet",
+            "icon_path": "icons/nd/tablet.svg",
+        },
+        {
+            "device_type": "wifi-controller",
+            "title": "WiFi Controller",
+            "icon_path": "icons/nd/wifi-controller.svg",
+        },
+        {
+            "device_type": "load-balancer",
+            "title": "Load Balancer",
+            "icon_path": "icons/nd/load-balancer.svg",
+        },
         {"device_type": "vpn", "title": "VPN", "icon_path": "icons/nd/vpn.svg"},
     ]
 
@@ -371,30 +434,31 @@ def seed_default_icons():
                 )
         conn.commit()
 
+
 def browse_icons(manufacturer=None, device_type=None, limit=50, offset=0):
     """Browse icons with optional filtering"""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    
+
     # Build WHERE clause based on filters
     where_conditions = []
     params = []
-    
+
     if manufacturer:
         where_conditions.append("manufacturer = ?")
         params.append(manufacturer)
-    
+
     if device_type:
-        where_conditions.append("device_type = ?") 
+        where_conditions.append("device_type = ?")
         params.append(device_type)
-    
+
     where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
-    
+
     # Get total count
     count_query = f"SELECT COUNT(*) FROM icons {where_clause}"
     cursor.execute(count_query, params)
     total = cursor.fetchone()[0]
-    
+
     # Get icons with pagination
     query = f"""
         SELECT manufacturer, device_type, slug, title, icon_path, source_url, tags
@@ -404,41 +468,45 @@ def browse_icons(manufacturer=None, device_type=None, limit=50, offset=0):
         LIMIT ? OFFSET ?
     """
     params.extend([limit, offset])
-    
+
     cursor.execute(query, params)
     results = cursor.fetchall()
-    
+
     icons = []
     for row in results:
         manufacturer, device_type, slug, title, icon_path, source_url, tags = row
-        icons.append({
-            "manufacturer": manufacturer,
-            "device_type": device_type, 
-            "slug": slug,
-            "title": title,
-            "icon_path": icon_path,
-            "source_url": source_url,
-            "tags": tags.split(",") if tags else []
-        })
-    
+        icons.append(
+            {
+                "manufacturer": manufacturer,
+                "device_type": device_type,
+                "slug": slug,
+                "title": title,
+                "icon_path": icon_path,
+                "source_url": source_url,
+                "tags": tags.split(",") if tags else [],
+            }
+        )
+
     conn.close()
-    
+
     return {
         "icons": icons,
         "total": total,
         "limit": limit,
         "offset": offset,
-        "has_more": offset + limit < total
+        "has_more": offset + limit < total,
     }
+
 
 def search_icons(query, limit=20):
     """Search icons by title or tags"""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    
+
     search_term = f"%{query}%"
-    
-    cursor.execute("""
+
+    cursor.execute(
+        """
         SELECT manufacturer, device_type, slug, title, icon_path, source_url, tags
         FROM icons
         WHERE title LIKE ? OR tags LIKE ? OR manufacturer LIKE ?
@@ -451,27 +519,35 @@ def search_icons(query, limit=20):
             END,
             title
         LIMIT ?
-    """, (search_term, search_term, search_term, search_term, search_term, search_term, limit))
-    
+    """,
+        (
+            search_term,
+            search_term,
+            search_term,
+            search_term,
+            search_term,
+            search_term,
+            limit,
+        ),
+    )
+
     results = cursor.fetchall()
-    
+
     icons = []
     for row in results:
         manufacturer, device_type, slug, title, icon_path, source_url, tags = row
-        icons.append({
-            "manufacturer": manufacturer,
-            "device_type": device_type,
-            "slug": slug,
-            "title": title,
-            "icon_path": icon_path,
-            "source_url": source_url,
-            "tags": tags.split(",") if tags else []
-        })
-    
+        icons.append(
+            {
+                "manufacturer": manufacturer,
+                "device_type": device_type,
+                "slug": slug,
+                "title": title,
+                "icon_path": icon_path,
+                "source_url": source_url,
+                "tags": tags.split(",") if tags else [],
+            }
+        )
+
     conn.close()
-    
-    return {
-        "icons": icons,
-        "query": query,
-        "count": len(icons)
-    }
+
+    return {"icons": icons, "query": query, "count": len(icons)}

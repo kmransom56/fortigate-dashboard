@@ -25,7 +25,6 @@ RUN apt-get update && apt-get install -y \
     net-tools \
     iputils-ping \
     snmp \
-    snmp-mibs-downloader \
     && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean \
@@ -60,7 +59,12 @@ COPY . .
 
 # Install Node.js dependencies for scraping tools (if package.json exists)
 RUN if [ -f "./app/services/package.json" ]; then \
-    cd app/services && npm ci --only=production; \
+    cd app/services && \
+    if [ -f "package-lock.json" ]; then \
+        npm ci --omit=dev; \
+    else \
+        npm install --omit=dev; \
+    fi; \
     fi
 
 # Install Playwright browsers for scraping

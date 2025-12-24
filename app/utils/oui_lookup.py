@@ -8,47 +8,51 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+
 class OUILookupCache:
     """Process automation for MAC vendor lookups with intelligent rate limiting"""
-    
-    def __init__(self, cache_file="app/data/oui_cache.json", max_requests_per_minute=50):
+
+    def __init__(
+        self, cache_file="app/data/oui_cache.json", max_requests_per_minute=50
+    ):
         self.cache_file = cache_file
         self.max_requests_per_minute = max_requests_per_minute
         self.request_timestamps = []
         self.cache = self._load_cache()
-        
+
         # Ensure cache directory exists
         os.makedirs(os.path.dirname(cache_file), exist_ok=True)
-    
+
     def _load_cache(self) -> dict:
         """Load cached OUI lookups from disk"""
         try:
             if os.path.exists(self.cache_file):
-                with open(self.cache_file, 'r') as f:
+                with open(self.cache_file, "r") as f:
                     data = json.load(f)
                     logger.info(f"Loaded {len(data)} cached OUI entries")
                     return data
         except Exception as e:
             logger.warning(f"Could not load cache: {e}")
         return {}
-    
+
     def _save_cache(self):
         """Save cache to disk for persistence"""
         try:
-            with open(self.cache_file, 'w') as f:
+            with open(self.cache_file, "w") as f:
                 json.dump(self.cache, f, indent=2)
         except Exception as e:
             logger.error(f"Could not save cache: {e}")
-    
+
     def _can_make_request(self) -> bool:
         """Check if we can make a request without hitting rate limits"""
         now = time.time()
         # Remove timestamps older than 1 minute
-        self.request_timestamps = [ts for ts in self.request_timestamps 
-                                 if now - ts < 60]
-        
+        self.request_timestamps = [
+            ts for ts in self.request_timestamps if now - ts < 60
+        ]
+
         return len(self.request_timestamps) < self.max_requests_per_minute
-    
+
     def _wait_for_rate_limit(self):
         """Wait until we can make another request"""
         if self.request_timestamps:
@@ -58,8 +62,10 @@ class OUILookupCache:
                 logger.info(f"Rate limiting: waiting {wait_time:.1f} seconds")
                 time.sleep(wait_time)
 
+
 # Global cache instance
 _cache_instance = OUILookupCache()
+
 
 def get_manufacturer_from_mac(mac_address: str) -> Optional[str]:
     """
@@ -74,7 +80,7 @@ def get_manufacturer_from_mac(mac_address: str) -> Optional[str]:
     custom_oui_map = {
         # Digital Menu Board Manufacturers
         "A0B1C2": "Coates",
-        "B1C2D3": "Xenial", 
+        "B1C2D3": "Xenial",
         "001F32": "Samsung",
         # POS Vendors
         "000C29": "Infor",
@@ -94,7 +100,9 @@ def get_manufacturer_from_mac(mac_address: str) -> Optional[str]:
 
     # 2. Check cache (fast)
     if oui in _cache_instance.cache:
-        logger.debug(f"Cached manufacturer found for OUI {oui}: {_cache_instance.cache[oui]}")
+        logger.debug(
+            f"Cached manufacturer found for OUI {oui}: {_cache_instance.cache[oui]}"
+        )
         return _cache_instance.cache[oui]
 
     # 3. API lookup with rate limiting (slow but automated)
@@ -105,7 +113,7 @@ def get_manufacturer_from_mac(mac_address: str) -> Optional[str]:
     try:
         _cache_instance.request_timestamps.append(time.time())
         response = requests.get(url, timeout=5)
-        
+
         if response.status_code == 200:
             manufacturer = response.text.strip()
             # Cache successful lookups
@@ -126,7 +134,7 @@ def get_manufacturer_from_mac(mac_address: str) -> Optional[str]:
         else:
             logger.error(f"HTTP {response.status_code} for OUI {oui}")
             return None
-            
+
     except requests.exceptions.RequestException as e:
         logger.error(f"Network error looking up OUI {oui}: {e}")
         return None
@@ -134,14 +142,16 @@ def get_manufacturer_from_mac(mac_address: str) -> Optional[str]:
         logger.error(f"Unexpected error looking up OUI {oui}: {e}")
         return None
 
+
 def get_cache_stats() -> dict:
     """Get automation metrics for monitoring"""
     return {
         "cached_entries": len(_cache_instance.cache),
         "cache_file": _cache_instance.cache_file,
         "requests_in_last_minute": len(_cache_instance.request_timestamps),
-        "rate_limit": _cache_instance.max_requests_per_minute
+        "rate_limit": _cache_instance.max_requests_per_minute,
     }
+
 
 def clear_cache():
     """Clear the OUI cache (useful for testing)"""

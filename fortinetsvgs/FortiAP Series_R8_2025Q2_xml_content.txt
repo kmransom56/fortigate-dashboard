@@ -1,0 +1,6 @@
+XML-like content extracted from FortiAP Series_R8_2025Q2.vss
+==================================================
+
+Fragment 1:
+.g@U/g@0g@1g@2g@U3g@4g@5g@7g@U9g@:g@<g@?g@UAg@Cg@Fg@Ig@UKg@Ng@Qg@Tg@UWg@Zg@^g@ag@Udg@hg@kg@ng@Urg@ug@yg@|g@
+

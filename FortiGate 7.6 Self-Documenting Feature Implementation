@@ -1,0 +1,362 @@
+Architecture Overview
+The Device Inventory feature in FortiGate 7.6 provides real-time visibility of all connected devices with comprehensive information including:
+
+IP/MAC addresses
+
+Hardware vendor and model
+
+Operating system details
+
+Connected interface/port (detected_interface field)
+
+Device status (online/offline)
+
+Last seen timestamp
+
+Host source (LLDP, DHCP, FortiGuard IoT, etc.)
+
+When managing FortiSwitches via FortiLink, you get granular port-level topology information directly from managed switches.
+
+Implementation Methods
+1. API Method (Recommended for Integration)
+Generate API Token:
+
+FortiGate GUI: System → API Tokens → Create New Token
+
+Set appropriate admin profile permissions
+
+Retrieve Device Inventory with Port Information:
+
+bash
+# Basic query - all connected devices
+curl -X GET "https://192.168.0.254:10443/api/v2/monitor/user/device/query?access_token=199psNw33b8bq581dNmQqNpkGH53bm" -H "accept: application/json" -k 
+
+# Filter by IP address
+curl -X GET "https://192.168.0.254:10443/api/v2/monitor/user/device/query?filter=ipv4_address==192.168.1.100&access_token=199psNw33b8bq581dNmQqNpkGH53bm" -k 
+curl -X GET "https://192.168.0.254:10443/api/v2/monitor/user/device/query?start=0&count=50&access_token=199psNw33b8bq581dNmQqNpkGH53bm" -k
+Key Response Fields for Port Mapping:
+
+json
+{
+  "results": [
+    {
+      "ipv4_address": "192.168.20.4",
+      "mac": "aa:bb:cc:dd:ee:ff",
+      "hardware_vendor": "Dell",
+      "hardware_version": "PowerEdge R750",
+      "os_name": "Windows Server",
+      "os_version": "2022",
+      "hostname": "web-server-01",
+      "detected_interface": "port2",        // ← Connected port on FortiGate
+      "is_online": true,
+      "last_seen": 1721681857,
+      "host_src": "lldp",                   // Source: lldp, dhcp, arp, etc.
+      "master_mac": "aa:bb:cc:dd:ee:ff",   // For device group members
+      "vdom": "root"
+    }
+  ],
+  "count": 1,
+  "total": 74,
+  "status": "success"
+}
+2. CLI Method (Diagnostic Commands)
+View Device Inventory from CLI:
+
+bash
+diagnose user device list
+
+# Output shows: vd, MAC, generation, request details
+# vd root/0 aa:bb:cc:dd:ee:ff gen 229201159 req OUA/34
+Query Specific Device Information:
+
+bash
+# Query by IPv4 address
+diagnose wad dev query-by ipv4 192.168.1.100
+
+# Query by MAC address
+diagnose wad dev query-by mac aa:bb:cc:dd:ee:ff
+
+# Query by UID (for FortiClient endpoints)
+diagnose wad dev query-by uid <uid> <ems-sn> <ems-tenant-id>
+FortiClient EMS Endpoint Details:
+
+bash
+# Show endpoint record list with filters
+diagnose endpoint ec-shm list 192.168.1.100 aa:bb:cc:dd:ee:ff
+
+# Force sync with EMS server
+diagnose test application fcnacd 5
+
+# Check ZTNA and route cache
+diagnose test application fcnacd 7
+3. GUI Method (Dashboards)
+Path: Dashboard → Users & Devices → Device Inventory
+
+Shows real-time table with:
+
+Device Name, IP, MAC, Hardware Vendor, OS
+
+Connected Interface (Port)
+
+Status (Online/Offline)
+
+Last Seen
+
+Host Source
+
+Python Implementation Example
+Here's a complete Python solution to continuously document and track device port connections:
+
+python
+import requests
+import json
+import sqlite3
+from datetime import datetime
+from typing import List, Dict
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class FortiGateInventory:
+    def __init__(self, fortigate_ip: str, api_token: str, vdom: str = "root"):
+        self.base_url = f"https://{fortigate_ip}/api/v2"
+        self.api_token = api_token
+        self.vdom = vdom
+        self.headers = {"Content-Type": "application/json"}
+        self.session = requests.Session()
+        self.session.verify = False  # Disable SSL verification
+        
+        # Initialize local database for self-documentation
+        self.init_database()
+    
+    def init_database(self):
+        """Create SQLite database for device inventory tracking"""
+        self.conn = sqlite3.connect('device_inventory.db')
+        cursor = self.conn.cursor()
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS devices (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                mac TEXT UNIQUE NOT NULL,
+                ipv4_address TEXT,
+                hostname TEXT,
+                hardware_vendor TEXT,
+                hardware_version TEXT,
+                hardware_family TEXT,
+                hardware_type TEXT,
+                os_name TEXT,
+                os_version TEXT,
+                detected_interface TEXT,
+                is_online BOOLEAN,
+                host_src TEXT,
+                last_seen INTEGER,
+                vdom TEXT,
+                discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS port_assignments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                device_mac TEXT NOT NULL,
+                port_name TEXT NOT NULL,
+                assignment_start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                assignment_end TIMESTAMP,
+                FOREIGN KEY(device_mac) REFERENCES devices(mac)
+            )
+        ''')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS device_changes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                device_mac TEXT NOT NULL,
+                change_type TEXT,  -- 'port_change', 'status_change', 'ip_change'
+                old_value TEXT,
+                new_value TEXT,
+                changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(device_mac) REFERENCES devices(mac)
+            )
+        ''')
+        
+        self.conn.commit()
+    
+    def get_device_inventory(self) -> List[Dict]:
+        """Fetch current device inventory from FortiGate"""
+        try:
+            url = f"{self.base_url}/monitor/user/device/query"
+            params = {
+                "access_token": self.api_token,
+                "format": "policypackage"
+            }
+            
+            response = self.session.get(url, params=params, headers=self.headers)
+            response.raise_for_status()
+            
+            data = response.json()
+            if data.get('status') == 'success':
+                return data.get('results', [])
+            else:
+                logger.error(f"API Error: {data}")
+                return []
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request failed: {e}")
+            return []
+    
+    def record_device(self, device: Dict):
+        """Record or update device in local database"""
+        cursor = self.conn.cursor()
+        
+        try:
+            cursor.execute('''
+                INSERT OR REPLACE INTO devices 
+                (mac, ipv4_address, hostname, hardware_vendor, hardware_version,
+                 hardware_family, hardware_type, os_name, os_version,
+                 detected_interface, is_online, host_src, last_seen, vdom, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ''', (
+                device.get('mac'),
+                device.get('ipv4_address'),
+                device.get('hostname'),
+                device.get('hardware_vendor'),
+                device.get('hardware_version'),
+                device.get('hardware_family'),
+                device.get('hardware_type'),
+                device.get('os_name'),
+                device.get('os_version'),
+                device.get('detected_interface'),
+                device.get('is_online'),
+                device.get('host_src'),
+                device.get('last_seen'),
+                device.get('vdom', self.vdom)
+            ))
+            
+            # Record port assignment
+            if device.get('detected_interface'):
+                cursor.execute('''
+                    SELECT port_name FROM port_assignments 
+                    WHERE device_mac = ? AND assignment_end IS NULL
+                ''', (device.get('mac'),))
+                
+                current_port = cursor.fetchone()
+                if current_port and current_port[0] != device.get('detected_interface'):
+                    # Device moved to different port
+                    cursor.execute('''
+                        UPDATE port_assignments 
+                        SET assignment_end = CURRENT_TIMESTAMP
+                        WHERE device_mac = ? AND assignment_end IS NULL
+                    ''', (device.get('mac'),))
+                    
+                    # Log change
+                    cursor.execute('''
+                        INSERT INTO device_changes 
+                        (device_mac, change_type, old_value, new_value)
+                        VALUES (?, 'port_change', ?, ?)
+                    ''', (device.get('mac'), current_port[0], device.get('detected_interface')))
+                
+                elif not current_port:
+                    # New port assignment
+                    cursor.execute('''
+                        INSERT INTO port_assignments (device_mac, port_name)
+                        VALUES (?, ?)
+                    ''', (device.get('mac'), device.get('detected_interface')))
+            
+            self.conn.commit()
+            logger.info(f"Recorded device: {device.get('hostname')} on {device.get('detected_interface')}")
+            
+        except sqlite3.Error as e:
+            logger.error(f"Database error: {e}")
+    
+    def sync_inventory(self):
+        """Sync all devices from FortiGate to local database"""
+        devices = self.get_device_inventory()
+        logger.info(f"Found {len(devices)} connected devices")
+        
+        for device in devices:
+            self.record_device(device)
+    
+    def get_device_by_port(self, port_name: str) -> Dict:
+        """Get current device connected to specific port"""
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT d.* FROM devices d
+            WHERE d.detected_interface = ? AND d.is_online = 1
+            ORDER BY d.updated_at DESC LIMIT 1
+        ''', (port_name,))
+        
+        columns = [description[0] for description in cursor.description]
+        result = cursor.fetchone()
+        
+        if result:
+            return dict(zip(columns, result))
+        return None
+    
+    def get_port_history(self, device_mac: str) -> List[Dict]:
+        """Get port assignment history for a device"""
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT port_name, assignment_start, assignment_end
+            FROM port_assignments
+            WHERE device_mac = ?
+            ORDER BY assignment_start DESC
+        ''', (device_mac,))
+        
+        columns = [description[0] for description in cursor.description]
+        return [dict(zip(columns, row)) for row in cursor.fetchall()]
+    
+    def export_documentation(self, output_file: str = "device_topology.json"):
+        """Export current device documentation to JSON"""
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT * FROM devices WHERE is_online = 1
+            ORDER BY detected_interface
+        ''')
+        
+        columns = [description[0] for description in cursor.description]
+        devices = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        
+        # Group by port
+        topology = {}
+        for device in devices:
+            port = device['detected_interface']
+            if port not in topology:
+                topology[port] = []
+            topology[port].append(device)
+        
+        documentation = {
+            "exported_at": datetime.now().isoformat(),
+            "total_devices": len(devices),
+            "topology_by_port": topology
+        }
+        
+        with open(output_file, 'w') as f:
+            json.dump(documentation, f, indent=2, default=str)
+        
+        logger.info(f"Documentation exported to {output_file}")
+        return documentation
+
+
+# Example Usage
+if __name__ == "__main__":
+    inventory = FortiGateInventory(
+        fortigate_ip="172.16.10.1",
+        api_token="YOUR_API_TOKEN",
+        vdom="root"
+    )
+    
+    # Sync device inventory
+    inventory.sync_inventory()
+    
+    # Get device on port2
+    device_on_port2 = inventory.get_device_by_port("port2")
+    if device_on_port2:
+        print(f"Device on port2: {device_on_port2['hostname']}")
+    
+    # View port assignment history
+    port_history = inventory.get_port_history("aa:bb:cc:dd:ee:ff")
+    print(f"Port history: {port_history}")
+    
+    # Export topology documentation
+    inventory.export_documentation()

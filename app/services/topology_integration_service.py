@@ -9,7 +9,9 @@ from typing import Dict, Any, Optional
 import logging
 
 # Add the integration module to path
-integration_path = Path("/media/keith/Windows Backup/projects/fortigate-visio-topology/dashboard_integration")
+integration_path = Path(
+    "/media/keith/Windows Backup/projects/fortigate-visio-topology/dashboard_integration"
+)
 sys.path.insert(0, str(integration_path))
 
 try:
@@ -17,8 +19,9 @@ try:
         FortiGateDashboardIntegration,
         get_2d_topology,
         get_3d_topology,
-        get_hybrid_topology
+        get_hybrid_topology,
     )
+
     INTEGRATION_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"FortiGate-Visio topology integration not available: {e}")
@@ -29,7 +32,9 @@ class TopologyIntegrationService:
     """Service for accessing enhanced topology data from FortiGate-Visio-Topology API."""
 
     def __init__(self):
-        self.integration = FortiGateDashboardIntegration() if INTEGRATION_AVAILABLE else None
+        self.integration = (
+            FortiGateDashboardIntegration() if INTEGRATION_AVAILABLE else None
+        )
         self.logger = logging.getLogger(__name__)
 
     def is_available(self) -> bool:
@@ -111,9 +116,13 @@ class TopologyIntegrationService:
                 "total_links": len(links),
                 "device_types": device_types,
                 "link_types": link_types,
-                "infrastructure_count": len([n for n in nodes if n.get("is_infrastructure", False)]),
-                "endpoint_count": len([n for n in nodes if not n.get("is_infrastructure", False)]),
-                "timestamp": topology.get("metadata", {}).get("timestamp")
+                "infrastructure_count": len(
+                    [n for n in nodes if n.get("is_infrastructure", False)]
+                ),
+                "endpoint_count": len(
+                    [n for n in nodes if not n.get("is_infrastructure", False)]
+                ),
+                "timestamp": topology.get("metadata", {}).get("timestamp"),
             }
         except Exception as e:
             self.logger.error(f"Error fetching statistics: {e}")

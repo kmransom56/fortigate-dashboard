@@ -25,6 +25,6 @@ if os.path.exists("app/utils/oui_lookup_enhanced.py"):
     print("")
     print("Next: Restart your Docker container to apply changes:")
     print("  docker compose restart dashboard")
-    
+
 else:
     print("Enhanced file not found. Create it first.")

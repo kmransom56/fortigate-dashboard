@@ -12,6 +12,7 @@ from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+
 class FortiGateDashboardHandler(FileSystemEventHandler):
     def __init__(self, command, restart_delay=2):
         self.command = command
@@ -19,15 +20,15 @@ class FortiGateDashboardHandler(FileSystemEventHandler):
         self.restart_delay = restart_delay
         self.last_restart = 0
         self.start_server()
-    
+
     def on_modified(self, event):
         if event.is_directory:
             return
-            
+
         # Monitor specific file types
-        file_extensions = {'.py', '.html', '.css', '.js', '.json', '.env'}
+        file_extensions = {".py", ".html", ".css", ".js", ".json", ".env"}
         file_path = Path(event.src_path)
-        
+
         if file_path.suffix.lower() in file_extensions:
             # Avoid rapid restarts
             current_time = time.time()
@@ -35,20 +36,17 @@ class FortiGateDashboardHandler(FileSystemEventHandler):
                 print(f"📝 File changed: {file_path.name}")
                 self.restart_server()
                 self.last_restart = current_time
-    
+
     def start_server(self):
         print("🚀 Starting FortiGate Dashboard server...")
         env = os.environ.copy()
-        env['PYTHONPATH'] = str(Path.cwd())
-        
+        env["PYTHONPATH"] = str(Path.cwd())
+
         self.process = subprocess.Popen(
-            self.command,
-            shell=True,
-            env=env,
-            cwd=str(Path.cwd())
+            self.command, shell=True, env=env, cwd=str(Path.cwd())
         )
         print(f"✅ Server started with PID: {self.process.pid}")
-    
+
     def restart_server(self):
         if self.process:
             print("🔄 Restarting server...")
@@ -58,9 +56,9 @@ class FortiGateDashboardHandler(FileSystemEventHandler):
             except subprocess.TimeoutExpired:
                 self.process.kill()
                 print("⚠️  Force killed server process")
-        
+
         self.start_server()
-    
+
     def stop_server(self):
         if self.process:
             print("🛑 Stopping server...")
@@ -70,10 +68,11 @@ class FortiGateDashboardHandler(FileSystemEventHandler):
             except subprocess.TimeoutExpired:
                 self.process.kill()
 
+
 def main():
     # Command to start your FastAPI server
     command = "python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload"
-    
+
     print("🔍 FortiGate Dashboard Development Watcher")
     print("=" * 50)
     print(f"📂 Watching: {Path.cwd()}")
@@ -81,14 +80,14 @@ def main():
     print("📝 Monitoring: .py, .html, .css, .js, .json, .env files")
     print("⌨️  Press Ctrl+C to stop")
     print("=" * 50)
-    
+
     handler = FortiGateDashboardHandler(command)
     observer = Observer()
-    
+
     # Watch the entire project directory recursively
-    observer.schedule(handler, path='.', recursive=True)
+    observer.schedule(handler, path=".", recursive=True)
     observer.start()
-    
+
     try:
         while True:
             time.sleep(1)
@@ -97,8 +96,9 @@ def main():
         observer.stop()
         handler.stop_server()
         print("✅ Cleanup complete")
-    
+
     observer.join()
+
 
 if __name__ == "__main__":
     # Install watchdog if not present
@@ -110,5 +110,5 @@ if __name__ == "__main__":
         subprocess.check_call([sys.executable, "-m", "pip", "install", "watchdog"])
         from watchdog.observers import Observer
         from watchdog.events import FileSystemEventHandler
-    
+
     main()

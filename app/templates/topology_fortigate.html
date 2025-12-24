@@ -10,8 +10,10 @@
       .sidebar { width: 220px; background: #3a2a4d; color: #fff; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
       .sidebar .logo { padding: 20px; font-size: 1.2em; font-weight: bold; }
       .sidebar .menu { padding: 0 20px; }
-      .sidebar .menu-item { padding: 12px 0; border-bottom: 1px solid #4b3b5a; cursor: pointer; }
+      .sidebar .menu-item { padding: 12px 0; border-bottom: 1px solid #4b3b5a; cursor: pointer; transition: background 0.2s, color 0.2s; }
+      .sidebar .menu-item:hover { background: #4b3b5a; }
       .sidebar .menu-item.active { background: #2e1f3a; color: #ffd700; }
+      .sidebar .menu-item.active:hover { background: #3a2a4d; }
       .main-content { margin-left: 220px; padding: 0; }
       .header { background: #fff; padding: 16px 32px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
       .topology-area { position: relative; min-height: 800px; background: #fff; margin: 32px; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); overflow: hidden; }
@@ -22,15 +24,15 @@
   <div class="sidebar">
     <div class="logo">FORTINET</div>
     <div class="menu">
-      <div class="menu-item">Dashboard</div>
-      <div class="menu-item">Network</div>
+      <div class="menu-item" onclick="window.location.href='/'">Dashboard</div>
+      <div class="menu-item" onclick="window.location.href='/switches'">Network</div>
       <div class="menu-item">Policy & Objects</div>
       <div class="menu-item">Security Profiles</div>
       <div class="menu-item">User & Authentication</div>
       <div class="menu-item">System</div>
       <div class="menu-item active">Security Fabric</div>
-      <div class="menu-item">Physical Topology</div>
-      <div class="menu-item">Logical Topology</div>
+      <div class="menu-item active" onclick="window.location.href='/topology-fortigate'">Physical Topology</div>
+      <div class="menu-item" onclick="window.location.href='/topology'">Logical Topology</div>
       <div class="menu-item">Fabric Connectors</div>
       <div class="menu-item">Log & Report</div>
     </div>
@@ -39,7 +41,7 @@
     <div class="header">
       <div>Security Fabric &gt; Physical Topology</div>
       <div>
-        <button id="updateBtn" style="background:#4caf50;color:#fff;border:none;padding:8px 16px;border-radius:4px;">Update Now</button>
+        <button id="updateBtn" style="background:#4caf50;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#45a049'" onmouseout="this.style.background='#4caf50'">Update Now</button>
       </div>
     </div>
     <div class="topology-area">
@@ -48,10 +50,41 @@
   </div>
   <script>
     async function renderTopology() {
-      const response = await fetch('/api/scraped_topology');
-      const data = await response.json();
       const map = document.getElementById('topologyMap');
-      map.innerHTML = '';
+      const updateBtn = document.getElementById('updateBtn');
+      
+      // Show loading state
+      if (updateBtn) {
+        updateBtn.disabled = true;
+        updateBtn.textContent = 'Updating...';
+      }
+      map.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.2em;color:#666;">Loading topology...</div>';
+      
+      try {
+        const response = await fetch('/api/scraped_topology');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        if (data && data.error) {
+          throw new Error(data.error || 'Unknown error');
+        }
+
+        const metadata = data && data.metadata ? data.metadata : {};
+        if (metadata && metadata.source === 'error') {
+          throw new Error(metadata.error || 'Topology service returned an error');
+        }
+
+        const devices = Array.isArray(data.devices) ? data.devices : [];
+        const connections = Array.isArray(data.connections) ? data.connections : [];
+
+        if (devices.length === 0 && connections.length === 0) {
+          map.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.2em;color:#666;text-align:center;">No topology data available.<br><span style="font-size:0.9em;">Verify FortiGate, FortiSwitch, and Redis connectivity.</span></div>';
+          return;
+        }
+
+        map.innerHTML = '';
 
       // Create SVG for connections
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -65,37 +98,32 @@
 
       // Map device ids to positions for connection rendering
       const devicePositions = {};
-      if (data.devices) {
-        data.devices.forEach(device => {
-          devicePositions[device.id] = {
-            x: device.position.x + 50, // center of node
-            y: device.position.y + 50
-          };
-        });
-      }
+      devices.forEach(device => {
+        devicePositions[device.id] = {
+          x: device.position.x + 50, // center of node
+          y: device.position.y + 50
+        };
+      });
 
       // Render connections as SVG lines
-      if (data.connections) {
-        data.connections.forEach(conn => {
-          const from = devicePositions[conn.from];
-          const to = devicePositions[conn.to];
-          if (from && to) {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', from.x);
-            line.setAttribute('y1', from.y);
-            line.setAttribute('x2', to.x);
-            line.setAttribute('y2', to.y);
-            line.setAttribute('stroke', '#888');
-            line.setAttribute('stroke-width', '4');
-            svg.appendChild(line);
-          }
-        });
-      }
+      connections.forEach(conn => {
+        const from = devicePositions[conn.from];
+        const to = devicePositions[conn.to];
+        if (from && to) {
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', from.x);
+          line.setAttribute('y1', from.y);
+          line.setAttribute('x2', to.x);
+          line.setAttribute('y2', to.y);
+          line.setAttribute('stroke', '#888');
+          line.setAttribute('stroke-width', '4');
+          svg.appendChild(line);
+        }
+      });
       map.appendChild(svg);
 
       // Render device nodes
-      if (data.devices) {
-        data.devices.forEach(device => {
+      devices.forEach(device => {
           const div = document.createElement('div');
           div.style.position = 'absolute';
           div.style.left = device.position.x + 'px';
@@ -147,9 +175,34 @@
           map.appendChild(div);
         });
       }
+      
+      } catch (error) {
+        console.error('Error loading topology:', error);
+        map.innerHTML = `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.2em;color:#d32f2f;text-align:center;">
+          <div style="margin-bottom:8px;">⚠️ Error loading topology</div>
+          <div style="font-size:0.9em;color:#666;">${error.message}</div>
+        </div>`;
+      } finally {
+        // Restore button state
+        if (updateBtn) {
+          updateBtn.disabled = false;
+          updateBtn.textContent = 'Update Now';
+        }
+      }
     }
-    document.addEventListener('DOMContentLoaded', renderTopology);
-    document.getElementById('updateBtn').addEventListener('click', renderTopology);
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      renderTopology();
+      
+      // Add click handler for Update button
+      const updateBtn = document.getElementById('updateBtn');
+      if (updateBtn) {
+        updateBtn.addEventListener('click', renderTopology);
+      } else {
+        console.error('Update button not found!');
+      }
+    });
   </script>
 </body>
 </html>

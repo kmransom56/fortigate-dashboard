@@ -21,8 +21,9 @@ logger = logging.getLogger(__name__)
 FORTIGATE_HOST = os.environ.get("FORTIGATE_HOST", "https://192.168.0.254")
 
 # Optimized MAC address regex pattern (compiled once for performance)
-MAC_PATTERN = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
-MAC_NORMALIZE_PATTERN = re.compile(r'[^0-9A-Fa-f]')
+MAC_PATTERN = re.compile(r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")
+MAC_NORMALIZE_PATTERN = re.compile(r"[^0-9A-Fa-f]")
+
 
 # Cache for OUI lookups to avoid repeated API calls
 @lru_cache(maxsize=1000)
@@ -42,18 +43,18 @@ def normalize_mac_optimized(mac: str) -> Optional[str]:
     """
     if not mac or not isinstance(mac, str):
         return None
-    
+
     # Remove all non-hex characters
-    clean_mac = MAC_NORMALIZE_PATTERN.sub('', mac.upper())
-    
+    clean_mac = MAC_NORMALIZE_PATTERN.sub("", mac.upper())
+
     # Validate length
     if len(clean_mac) != 12:
         logger.warning(f"Invalid MAC address length: '{mac}'")
         return mac.upper()  # Return best effort
-    
+
     # Insert colons every 2 characters
-    normalized = ':'.join(clean_mac[i:i+2] for i in range(0, 12, 2))
-    
+    normalized = ":".join(clean_mac[i : i + 2] for i in range(0, 12, 2))
+
     # Final validation
     if MAC_PATTERN.match(normalized):
         return normalized
@@ -68,28 +69,30 @@ async def get_all_fortiswitch_data() -> Dict[str, Any]:
     This replaces 4 sequential API calls (8-20 seconds) with parallel execution (2-5 seconds).
     """
     logger.info("=== Starting OPTIMIZED FortiSwitch data collection ===")
-    
+
     # Define all endpoints we need to fetch
     endpoints = [
         "monitor/switch-controller/managed-switch/status",
-        "monitor/switch-controller/detected-device", 
+        "monitor/switch-controller/detected-device",
         "monitor/system/dhcp",
-        "monitor/system/arp"
+        "monitor/system/arp",
     ]
-    
+
     # Execute all API calls in parallel
     start_time = time.time()
     results = await batch_api_calls(endpoints)
     elapsed_time = time.time() - start_time
-    
-    logger.info(f"Completed all FortiSwitch API calls in {elapsed_time:.2f}s (vs 8-20s sequential)")
-    
+
+    logger.info(
+        f"Completed all FortiSwitch API calls in {elapsed_time:.2f}s (vs 8-20s sequential)"
+    )
+
     # Return structured data
     return {
         "switches": results[0],
         "detected_devices": results[1],
         "dhcp": results[2],
-        "arp": results[3]
+        "arp": results[3],
     }
 
 
@@ -98,7 +101,7 @@ def build_dhcp_map_optimized(dhcp_data: Dict[str, Any]) -> Dict[str, Dict[str, A
     Optimized DHCP map building with better error handling and performance.
     """
     dhcp_map = {}
-    
+
     if not isinstance(dhcp_data, dict) or "results" not in dhcp_data:
         logger.warning("Invalid DHCP data format")
         return dhcp_map
@@ -108,10 +111,9 @@ def build_dhcp_map_optimized(dhcp_data: Dict[str, Any]) -> Dict[str, Dict[str, A
 
     # Use list comprehension and batch processing for better performance
     valid_entries = [
-        entry for entry in results 
-        if isinstance(entry, dict) and entry.get("mac")
+        entry for entry in results if isinstance(entry, dict) and entry.get("mac")
     ]
-    
+
     for entry in valid_entries:
         mac_raw = entry.get("mac")
         if mac_raw and isinstance(mac_raw, str):
@@ -136,7 +138,7 @@ def build_arp_map_optimized(arp_data: Dict[str, Any]) -> Dict[str, Dict[str, Any
     Optimized ARP map building with better performance.
     """
     arp_map = {}
-    
+
     if not isinstance(arp_data, dict) or "results" not in arp_data:
         logger.warning("Invalid ARP data format")
         return arp_map
@@ -146,8 +148,7 @@ def build_arp_map_optimized(arp_data: Dict[str, Any]) -> Dict[str, Dict[str, Any
 
     # Batch process valid entries
     valid_entries = [
-        entry for entry in results 
-        if isinstance(entry, dict) and entry.get("mac")
+        entry for entry in results if isinstance(entry, dict) and entry.get("mac")
     ]
 
     for entry in valid_entries:
@@ -165,12 +166,14 @@ def build_arp_map_optimized(arp_data: Dict[str, Any]) -> Dict[str, Dict[str, Any
     return arp_map
 
 
-def build_detected_device_map_optimized(detected_data: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+def build_detected_device_map_optimized(
+    detected_data: Dict[str, Any]
+) -> Dict[str, List[Dict[str, Any]]]:
     """
     Optimized detected device map building with caching and performance improvements.
     """
     detected_map = {}
-    
+
     if not isinstance(detected_data, dict) or "results" not in detected_data:
         logger.warning("Invalid detected device data format")
         return detected_map
@@ -189,30 +192,34 @@ def build_detected_device_map_optimized(detected_data: Dict[str, Any]) -> Dict[s
 
         if switch_id and port_name:
             key = f"{switch_id}:{port_name}"
-            
+
             # Add cached manufacturer lookup
             if mac and isinstance(mac, str):
                 normalized_mac = normalize_mac_optimized(mac)
                 if normalized_mac:
                     # Use cached OUI lookup for performance
-                    manufacturer = cached_oui_lookup(normalized_mac[:8])  # First 3 octets
+                    manufacturer = cached_oui_lookup(
+                        normalized_mac[:8]
+                    )  # First 3 octets
                     device["manufacturer"] = manufacturer
                     device["mac"] = normalized_mac  # Use normalized MAC
-            
+
             if key not in detected_map:
                 detected_map[key] = []
             detected_map[key].append(device)
 
-    logger.info(f"Built optimized detected device map for {len(detected_map)} port combinations")
+    logger.info(
+        f"Built optimized detected device map for {len(detected_map)} port combinations"
+    )
     return detected_map
 
 
 def aggregate_port_devices_optimized(
-    switch_serial: str, 
-    port_name: str, 
-    detected_map: Dict[str, List[Dict[str, Any]]], 
-    dhcp_map: Dict[str, Dict[str, Any]], 
-    arp_map: Dict[str, Dict[str, Any]]
+    switch_serial: str,
+    port_name: str,
+    detected_map: Dict[str, List[Dict[str, Any]]],
+    dhcp_map: Dict[str, Dict[str, Any]],
+    arp_map: Dict[str, Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
     """
     Optimized device aggregation with reduced redundant processing.
@@ -226,10 +233,12 @@ def aggregate_port_devices_optimized(
     logger.debug(f"Port {port_name}: Found {len(detected_devices)} detected devices")
 
     devices = []
-    
+
     # Process devices with optimized lookups
     for device in detected_devices:
-        mac = device.get("mac")  # Already normalized in build_detected_device_map_optimized
+        mac = device.get(
+            "mac"
+        )  # Already normalized in build_detected_device_map_optimized
         if not mac:
             continue
 
@@ -238,8 +247,10 @@ def aggregate_port_devices_optimized(
         arp_info = arp_map.get(mac, {})
 
         # Determine device name/hostname with fallback
-        hostname = (dhcp_info.get("hostname") or 
-                   f"Device-{port_name[-2:]}-{mac[-5:].replace(':', '')}")
+        hostname = (
+            dhcp_info.get("hostname")
+            or f"Device-{port_name[-2:]}-{mac[-5:].replace(':', '')}"
+        )
 
         # Determine IP address with priority
         ip_address = dhcp_info.get("ip") or arp_info.get("ip", "Unknown")
@@ -273,14 +284,14 @@ def aggregate_port_devices_optimized(
 async def get_fortiswitches_optimized() -> List[Dict[str, Any]]:
     """
     Highly optimized FortiSwitch discovery with parallel API calls and caching.
-    
+
     Performance improvements:
     - 60-75% faster API data collection (parallel vs sequential)
     - 10x faster MAC address processing (regex vs string ops)
     - 50% less memory usage (optimized data structures)
     - Cached OUI lookups (avoid repeated API calls)
     - Reduced redundant processing
-    
+
     Returns: List of FortiSwitch dictionaries with detailed port and device info.
     """
     logger.info("=== Starting OPTIMIZED FortiSwitch discovery ===")
@@ -290,22 +301,26 @@ async def get_fortiswitches_optimized() -> List[Dict[str, Any]]:
         # Step 1: Fetch all data in parallel (MAJOR PERFORMANCE GAIN)
         logger.info("--- Fetching all data in parallel ---")
         all_data = await get_all_fortiswitch_data()
-        
+
         # Step 2: Build optimized lookup maps
         logger.info("--- Building optimized lookup maps ---")
         map_start_time = time.time()
-        
+
         dhcp_map = build_dhcp_map_optimized(all_data["dhcp"])
         arp_map = build_arp_map_optimized(all_data["arp"])
         detected_map = build_detected_device_map_optimized(all_data["detected_devices"])
-        
+
         map_elapsed = time.time() - map_start_time
-        logger.info(f"Built lookup maps in {map_elapsed:.2f}s - DHCP: {len(dhcp_map)}, ARP: {len(arp_map)}, Detected: {len(detected_map)}")
+        logger.info(
+            f"Built lookup maps in {map_elapsed:.2f}s - DHCP: {len(dhcp_map)}, ARP: {len(arp_map)}, Detected: {len(detected_map)}"
+        )
 
         # Step 3: Process switches with optimized aggregation
         switches = []
         switches_data = all_data["switches"]
-        switch_results = switches_data.get("results", []) if isinstance(switches_data, dict) else []
+        switch_results = (
+            switches_data.get("results", []) if isinstance(switches_data, dict) else []
+        )
 
         if not switch_results:
             logger.error("No managed switches found in FortiGate response")
@@ -364,19 +379,23 @@ async def get_fortiswitches_optimized() -> List[Dict[str, Any]]:
                 "ports": ports,
                 "total_ports": len(ports),
                 "active_ports": len([p for p in ports if p["status"] == "up"]),
-                "connected_devices_count": sum(len(p["connected_devices"]) for p in ports),
+                "connected_devices_count": sum(
+                    len(p["connected_devices"]) for p in ports
+                ),
             }
 
             switches.append(switch_info)
 
         process_elapsed = time.time() - process_start_time
         total_elapsed = time.time() - total_start_time
-        
+
         # Performance summary
         total_devices = sum(s["connected_devices_count"] for s in switches)
         logger.info(f"=== OPTIMIZED FortiSwitch discovery completed ===")
         logger.info(f"Total time: {total_elapsed:.2f}s (vs 15-30s original)")
-        logger.info(f"Found {len(switches)} switches with {total_devices} total devices")
+        logger.info(
+            f"Found {len(switches)} switches with {total_devices} total devices"
+        )
         logger.info(f"Performance: {total_devices/total_elapsed:.1f} devices/second")
 
         return switches

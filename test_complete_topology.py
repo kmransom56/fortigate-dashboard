@@ -23,7 +23,7 @@ def test_monitor_api():
     
     token = "zpq4gHxqj8dzpGxfkzmskc54Qhbzq3"
     headers = {"Authorization": f"Bearer {token}"}
-    base_url = "https://192.168.0.254:8443/api/v2/monitor"
+    base_url = "https://192.168.0.254/api/v2/monitor"
     
     # Test detected devices endpoint
     try:
@@ -60,7 +60,7 @@ def test_switch_api():
     
     token = "zpq4gHxqj8dzpGxfkzmskc54Qhbzq3"
     headers = {"Authorization": f"Bearer {token}"}
-    base_url = "https://192.168.0.254:8443/api/v2/cmdb"
+    base_url = "https://192.168.0.254/api/v2/cmdb"
     
     # Test managed switches endpoint
     try:

@@ -131,7 +131,9 @@ if not API_TOKEN and not session_manager.password:
 
 # Rate limiting globals - Disabled for session authentication (sessions have higher limits)
 last_api_call_time = 0
-min_api_interval = 0.1  # Minimum 0.1 seconds between API calls (session auth has much higher limits)
+min_api_interval = (
+    0.1  # Minimum 0.1 seconds between API calls (session auth has much higher limits)
+)
 
 # --- Utility Functions ---
 

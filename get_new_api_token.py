@@ -17,7 +17,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class FortiGateTokenGenerator:
     def __init__(self):
-        self.host = "192.168.0.254:8443"
+        self.host = "192.168.0.254"
         self.base_url = f"https://{self.host}"
         self.session = requests.Session()
         self.session.verify = False

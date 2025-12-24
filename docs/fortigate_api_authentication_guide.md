@@ -11,7 +11,7 @@ The 401 Unauthorized error occurred because the FortiGate API requires authentic
 **Incorrect Method (Query Parameter):**
 ```bash
 curl --cacert app/certs/fortigate.pem -X 'GET' \
-  'https://192.168.0.254:443/api/v2/monitor/system/interface?access_token=hmNqQ0st7xrjnyQHt8dzpnkqm5hw5N' \
+  'https://192.168.0.254:443/api/v2/monitor/system/interface?access_token=w5r656wzh5QH7t808fgbdch109kbnk' \
   -H 'accept: application/json'
 ```
 
@@ -20,7 +20,7 @@ curl --cacert app/certs/fortigate.pem -X 'GET' \
 curl --cacert app/certs/fortigate.pem -X 'GET' \
   'https://192.168.0.254:443/api/v2/monitor/system/interface' \
   -H 'accept: application/json' \
-  -H 'Authorization: Bearer hmNqQ0st7xrjnyQHt8dzpnkqm5hw5N'
+  -H 'Authorization: Bearer fw5r656wzh5QH7t808fgbdch109kbnk'
 ```
 
 ### 2. Using Python Requests

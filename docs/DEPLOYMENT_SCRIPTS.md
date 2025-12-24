@@ -21,7 +21,7 @@ python3 tools/api_troubleshoot.py
 ```
 
 **Configuration** (edit script):
-- `host`: FortiGate IP and port (default: `192.168.0.254:8443`)
+- `host`: FortiGate IP and port (default: `192.168.0.254`)
 - `admin_user`: Admin username
 - `api_user`: API user username  
 - `password`: User password
@@ -65,7 +65,7 @@ python3 tools/api_endpoint_discovery.py
 ```
 
 **Configuration** (edit script):
-- `base_url`: FortiGate base URL (default: `https://192.168.0.254:8443`)
+- `base_url`: FortiGate base URL (default: `https://192.168.0.254`)
 - `token`: API authentication token
 
 **Endpoints Tested**:

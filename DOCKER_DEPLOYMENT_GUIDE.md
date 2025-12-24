@@ -103,7 +103,7 @@ fortigate-dashboard/
 **Core Configuration:**
 ```bash
 # FortiGate Settings
-FORTIGATE_HOST=https://192.168.0.254:8443
+FORTIGATE_HOST=https://192.168.0.254
 FORTIGATE_USERNAME=admin
 FORTIGATE_VERIFY_SSL=false
 

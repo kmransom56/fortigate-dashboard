@@ -1,4 +1,7 @@
+import logging
 import os
+import asyncio
+import time
 from datetime import datetime
 
 from dotenv import load_dotenv
@@ -8,13 +11,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.services import eraser_service
-from app.utils.icon_db import seed_default_icons
-
-# Load environment variables from .env file
-load_dotenv()
-
 from app.api import fortigate
+from app.services import eraser_service
 from app.services.brand_detection_service import get_brand_detection_service
 from app.services.fortigate_inventory_service import get_fortigate_inventory_service
 from app.services.fortigate_redis_session import get_fortigate_redis_session_manager
@@ -30,6 +28,13 @@ from app.services.redis_session_manager import (
 from app.services.restaurant_device_service import get_restaurant_device_service
 from app.services.scraped_topology_service import get_scraped_topology_service
 from app.services.topology_integration_service import get_topology_integration_service
+from app.utils.icon_db import seed_default_icons
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 def get_device_icon_fallback(manufacturer, device_type):
@@ -131,7 +136,15 @@ async def topology_3d_force_page(request: Request):
 # 📊 Route for Dashboard "/dashboard"
 @app.get("/dashboard", response_class=HTMLResponse)
 async def show_dashboard(request: Request):
-    interfaces = get_interfaces()
+    # Use async versions to avoid blocking
+    from app.services.fortigate_service_optimized import get_interfaces_async
+
+    try:
+        interfaces = await get_interfaces_async()
+    except Exception as e:
+        logger.warning(f"Failed to get interfaces async, falling back to sync: {e}")
+        interfaces = get_interfaces()
+
     device_details = get_all_device_details()
     return templates.TemplateResponse(
         "dashboard.html",
@@ -200,47 +213,94 @@ async def api_topology_data():
     logger = logging.getLogger("api_topology_data")
     logger.info("START /api/topology_data endpoint")
     # Fetch data with aggressive timeouts to avoid UI hanging
-    from concurrent.futures import ThreadPoolExecutor
-    from concurrent.futures import TimeoutError as FuturesTimeout
-
     from app.services.fortigate_service import get_interfaces
 
     interfaces = {}
     switches_data = []
     device_details = []
 
-    # Use hybrid topology service for comprehensive data
-    hybrid_service = get_hybrid_topology_service()
+    # Use optimized hybrid topology service for parallel async calls
+    from app.services.hybrid_topology_service_optimized import (
+        get_hybrid_topology_service_optimized,
+    )
+    from app.services.fortigate_service_optimized import get_interfaces_async
 
+    hybrid_service_optimized = get_hybrid_topology_service_optimized()
+
+    # Run all data fetching in parallel for better performance
     try:
-        # Get data sequentially for reliability
+        # Parallel async calls
+        interfaces_task = get_interfaces_async()
+        switches_task = hybrid_service_optimized.get_comprehensive_topology()
+        device_details_task = asyncio.get_event_loop().run_in_executor(
+            None, get_all_device_details
+        )
+
+        # Wait for all tasks to complete
+        interfaces_result, switches_result, device_details_result = (
+            await asyncio.gather(
+                interfaces_task,
+                switches_task,
+                device_details_task,
+                return_exceptions=True,
+            )
+        )
+
+        # Handle results
+        if isinstance(interfaces_result, Exception):
+            logger.warning(f"get_interfaces_async() failed: {interfaces_result}")
+            interfaces = {}
+        else:
+            interfaces = interfaces_result or {}
+            logger.info(
+                f"Successfully retrieved {len(interfaces) if interfaces else 0} interfaces"
+            )
+
+        if isinstance(switches_result, Exception):
+            logger.warning(f"hybrid topology failed: {switches_result}")
+            switches_data = {"switches": [], "source": "error"}
+        else:
+            switches_data = switches_result or {"switches": [], "source": "error"}
+            if switches_data and switches_data.get("switches"):
+                logger.info(
+                    f"Successfully retrieved {len(switches_data.get('switches', []))} switches"
+                )
+            else:
+                logger.warning("Hybrid topology returned empty switches list")
+
+        if isinstance(device_details_result, Exception):
+            logger.warning(f"get_all_device_details() failed: {device_details_result}")
+            device_details = []
+        else:
+            device_details = device_details_result or []
+            logger.info(
+                f"Successfully retrieved {len(device_details) if device_details else 0} device details"
+            )
+
+    except Exception as e:
+        logger.error(f"Parallel fetch failed: {e}")
+        # Fallback to sequential calls
         try:
+            interfaces = await get_interfaces_async()
+        except Exception:
             interfaces = get_interfaces()
-        except Exception as e:
-            logger.warning(f"get_interfaces() failed: {e}")
 
         try:
-            switches_data = hybrid_service.get_comprehensive_topology()
-        except Exception as e:
-            logger.warning(f"hybrid topology failed: {e}")
+            switches_data = await hybrid_service_optimized.get_comprehensive_topology()
+        except Exception:
+            switches_data = {"switches": [], "source": "error"}
 
         try:
             device_details = get_all_device_details()
-        except Exception as e:
-            logger.warning(f"get_all_device_details() failed: {e}")
+        except Exception:
+            device_details = []
 
-        logger.info(
-            f"Hybrid topology -> interfaces: {len(interfaces) if interfaces else 0}, "
-            f"switches: {len(switches_data.get('switches', [])) if switches_data else 0}, "
-            f"devices: {len(device_details) if device_details else 0}, "
-            f"source: {switches_data.get('source', 'unknown') if switches_data else 'none'}"
-        )
-    except Exception as e:
-        logger.warning(f"Sequential fetch failed unexpectedly: {e}")
-        # Fall back to defaults
-        interfaces = interfaces or {}
-        switches_data = switches_data or {"switches": [], "source": "error"}
-        device_details = device_details or []
+    logger.info(
+        f"Topology data -> interfaces: {len(interfaces) if interfaces else 0}, "
+        f"switches: {len(switches_data.get('switches', [])) if switches_data else 0}, "
+        f"devices: {len(device_details) if device_details else 0}, "
+        f"source: {switches_data.get('source', 'unknown') if switches_data else 'none'}"
+    )
 
     # Transform data into topology format
     topology_data = {"devices": [], "connections": []}
@@ -414,12 +474,8 @@ async def api_topology_data():
             icon_title = rest_icon_title
         elif not icon_path:
             try:
-                from app.utils.icon_db import (
-                    get_icon as _get_icon,
-                )
-                from app.utils.icon_db import (
-                    get_icon_binding as _get_binding,
-                )
+                from app.utils.icon_db import get_icon as _get_icon
+                from app.utils.icon_db import get_icon_binding as _get_binding
 
                 binding = _get_binding(
                     manufacturer=manufacturer,
@@ -474,11 +530,11 @@ async def api_topology_data():
                     "deviceCategory": restaurant_info.get("category", "general"),
                     "confidence": restaurant_info.get("confidence", "low"),
                     "restaurantBrands": restaurant_info.get("restaurant_brands", []),
-                    "securityRisk": restaurant_service.get_device_risk_assessment(
-                        restaurant_info
-                    )
-                    if restaurant_info.get("restaurant_device", False)
-                    else "unknown",
+                    "securityRisk": (
+                        restaurant_service.get_device_risk_assessment(restaurant_info)
+                        if restaurant_info.get("restaurant_device", False)
+                        else "unknown"
+                    ),
                 },
             }
         )
@@ -526,12 +582,14 @@ async def api_topology_data():
         "interfaces_count": len(interfaces) if interfaces else 0,
         "switches_count": len(switches),
         "devices_count": len(device_details) if device_details else 0,
-        "enhancement_info": switches_data.get("enhancement_info", {})
-        if isinstance(switches_data, dict)
-        else {},
-        "api_info": switches_data.get("api_info", {})
-        if isinstance(switches_data, dict)
-        else {},
+        "enhancement_info": (
+            switches_data.get("enhancement_info", {})
+            if isinstance(switches_data, dict)
+            else {}
+        ),
+        "api_info": (
+            switches_data.get("api_info", {}) if isinstance(switches_data, dict) else {}
+        ),
     }
 
     # Log final topology data being returned
@@ -553,15 +611,32 @@ async def api_topology_data():
 @app.get("/api/scraped_topology")
 async def api_scraped_topology():
     """API endpoint for scraped FortiGate topology data"""
-    try:
-        logger = logging.getLogger("api_scraped_topology")
-        logger.info("START /api/scraped_topology endpoint")
+    logger = logging.getLogger("api_scraped_topology")
 
+    try:
+        logger.info("START /api/scraped_topology endpoint")
         scraped_service = get_scraped_topology_service()
         topology_data = scraped_service.get_topology_data()
 
+        # Check if we got an error in metadata
+        metadata = topology_data.get("metadata", {})
+        if metadata.get("source") == "error":
+            error_msg = metadata.get("error", "Unknown error")
+            logger.error(f"Service returned error: {error_msg}")
+            # Return error response instead of raising exception - let frontend handle it
+            return {
+                "devices": [],
+                "connections": [],
+                "metadata": {
+                    "source": "error",
+                    "error": error_msg,
+                    "device_count": 0,
+                    "connection_count": 0,
+                },
+            }
+
         logger.info(
-            f"Scraped topology data source: {topology_data.get('metadata', {}).get('source', 'unknown')}"
+            f"Scraped topology data source: {metadata.get('source', 'unknown')}"
         )
         logger.info(f"Device count: {len(topology_data.get('devices', []))}")
         logger.info(f"Connection count: {len(topology_data.get('connections', []))}")
@@ -569,22 +644,92 @@ async def api_scraped_topology():
         return topology_data
 
     except Exception as e:
-        logger.error(f"Error in scraped topology endpoint: {e}")
+        # Ensure logger is available even if exception happened early
+        try:
+            logger.error(f"Error in scraped topology endpoint: {e}", exc_info=True)
+        except BaseException:
+            # Fallback if logger itself fails
+            import sys
+
+            print(f"ERROR in scraped_topology endpoint: {e}", file=sys.stderr)
+
+        # Try to diagnose the issue (non-blocking)
+        try:
+            await _diagnose_topology_error(str(e))
+        except BaseException:
+            pass
+
+        # Return error response instead of raising - no mock data per AGENTS.md
         return {
             "devices": [],
             "connections": [],
-            "metadata": {"source": "error", "error": str(e)},
+            "metadata": {
+                "source": "error",
+                "error": str(e),
+                "device_count": 0,
+                "connection_count": 0,
+            },
         }
+
+
+async def _diagnose_topology_error(error_msg: str):
+    """Diagnose topology errors and attempt to fix common issues"""
+    logger = logging.getLogger("topology_diagnostics")
+    logger.info(f"Diagnosing topology error: {error_msg}")
+
+    # Check FortiGate connection
+    try:
+        fortigate_host = os.getenv("FORTIGATE_HOST", "192.168.0.254")
+        logger.info(f"Checking FortiGate connection to {fortigate_host}")
+
+        from app.services.fortigate_service import get_interfaces
+
+        interfaces = get_interfaces()
+        if interfaces:
+            logger.info(
+                f"FortiGate connection successful, found {len(interfaces)} interfaces"
+            )
+        else:
+            logger.warning("FortiGate connection successful but no interfaces returned")
+    except Exception as e:
+        logger.error(f"FortiGate connection failed: {e}")
+        logger.info(
+            "Possible issues: incorrect FORTIGATE_HOST, authentication failure, or network unreachable"
+        )
+
+    # Check Redis connection
+    try:
+        import redis
+
+        redis_host = os.getenv("REDIS_HOST", "redis")
+        redis_port = int(os.getenv("REDIS_PORT", "6379"))
+        r = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)
+        r.ping()
+        logger.info("Redis connection successful")
+    except Exception as e:
+        logger.error(f"Redis connection failed: {e}")
+        logger.info(
+            "Possible issues: Redis not running or incorrect REDIS_HOST/REDIS_PORT"
+        )
+
+    # Check hybrid topology service
+    try:
+        hybrid_service = get_hybrid_topology_service()
+        topology = hybrid_service.get_comprehensive_topology()
+        if topology and topology.get("switches"):
+            logger.info(
+                f"Hybrid topology service working, found {len(topology.get('switches', []))} switches"
+            )
+        else:
+            logger.warning("Hybrid topology service working but no switches found")
+    except Exception as e:
+        logger.error(f"Hybrid topology service failed: {e}")
 
 
 @app.get("/api/debug/topology")
 async def debug_topology():
     """Debug endpoint to check topology data sources"""
     try:
-        import logging
-
-        logger = logging.getLogger("debug_topology")
-
         # Test individual services
         hybrid_service = get_hybrid_topology_service()
 
@@ -622,9 +767,11 @@ async def debug_monitor():
             "device_count": len(devices_result.get("devices", [])),
             "active_devices": devices_result.get("active_devices", 0),
             "data_source": devices_result.get("source", "unknown"),
-            "first_device": devices_result.get("devices", [{}])[0]
-            if devices_result.get("devices")
-            else None,
+            "first_device": (
+                devices_result.get("devices", [{}])[0]
+                if devices_result.get("devices")
+                else None
+            ),
             "api_info": devices_result.get("api_info", {}),
             "error": devices_result.get("error", "none"),
         }
@@ -725,9 +872,9 @@ async def get_organization_locations(org_id: str, limit: int = 100, offset: int 
                     "fortigate_model": loc.fortigate_model,
                     "switch_count": loc.switch_count,
                     "ap_count": loc.ap_count,
-                    "last_discovered": loc.last_discovered.isoformat()
-                    if loc.last_discovered
-                    else None,
+                    "last_discovered": (
+                        loc.last_discovered.isoformat() if loc.last_discovered else None
+                    ),
                 }
                 for loc in locations
             ],
@@ -823,6 +970,231 @@ async def meraki_health_check():
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Meraki health check failed: {str(e)}"
+        )
+
+
+# Scanopy Integration API Endpoints
+@app.get("/api/scanopy/status")
+async def scanopy_status():
+    """Check Scanopy server health and availability"""
+    try:
+        from app.services.scanopy_service import get_scanopy_service
+
+        scanopy_service = get_scanopy_service()
+        health_data = await scanopy_service.health_check()
+        return health_data
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Scanopy health check failed: {str(e)}"
+        )
+
+
+@app.get("/api/scanopy/hosts")
+async def get_scanopy_hosts(organization_id: str = None, network_id: str = None):
+    """Get all discovered hosts from Scanopy"""
+    try:
+        from app.services.scanopy_service import get_scanopy_service
+
+        scanopy_service = get_scanopy_service()
+        hosts_data = await scanopy_service.get_hosts(organization_id, network_id)
+        return hosts_data
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get Scanopy hosts: {str(e)}"
+        )
+
+
+@app.get("/api/scanopy/host/{ip_address}")
+async def get_scanopy_host(ip_address: str):
+    """Get specific host details from Scanopy by IP address"""
+    try:
+        from app.services.scanopy_service import get_scanopy_service
+
+        scanopy_service = get_scanopy_service()
+        host_data = await scanopy_service.get_host_by_ip(ip_address)
+        if "error" in host_data and host_data.get("error") == "Host not found":
+            raise HTTPException(status_code=404, detail=f"Host not found: {ip_address}")
+        return host_data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get Scanopy host: {str(e)}"
+        )
+
+
+@app.get("/api/scanopy/services")
+async def get_scanopy_services(organization_id: str = None):
+    """Get all detected services from Scanopy"""
+    try:
+        from app.services.scanopy_service import get_scanopy_service
+
+        scanopy_service = get_scanopy_service()
+        services_data = await scanopy_service.get_services(organization_id)
+        return services_data
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get Scanopy services: {str(e)}"
+        )
+
+
+@app.get("/api/scanopy/topology")
+async def get_scanopy_topology(organization_id: str = None, network_id: str = None):
+    """Get network topology from Scanopy"""
+    try:
+        from app.services.scanopy_service import get_scanopy_service
+
+        scanopy_service = get_scanopy_service()
+        topology_data = await scanopy_service.get_topology(organization_id, network_id)
+        return topology_data
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get Scanopy topology: {str(e)}"
+        )
+
+
+@app.post("/api/scanopy/scan")
+async def trigger_scanopy_scan(scan_request: dict):
+    """Trigger a network scan in Scanopy"""
+    try:
+        from app.services.scanopy_service import get_scanopy_service
+
+        scanopy_service = get_scanopy_service()
+        subnet = scan_request.get("subnet")
+        scan_type = scan_request.get("scan_type", "full")
+
+        if not subnet:
+            raise HTTPException(status_code=400, detail="subnet is required")
+
+        result = await scanopy_service.trigger_scan(subnet, scan_type)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to trigger scan: {str(e)}")
+
+
+@app.get("/api/scanopy/networks")
+async def get_scanopy_networks(organization_id: str = None):
+    """Get all networks from Scanopy"""
+    try:
+        from app.services.scanopy_service import get_scanopy_service
+
+        scanopy_service = get_scanopy_service()
+        networks = await scanopy_service.get_networks(organization_id)
+        return {"networks": networks, "count": len(networks)}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get Scanopy networks: {str(e)}"
+        )
+
+
+@app.get("/api/unified/topology")
+async def get_unified_topology(organization_id: str = None, network_id: str = None):
+    """
+    Get unified topology combining FortiGate, Meraki, and Scanopy data
+
+    This endpoint combines:
+    - FortiGate/FortiSwitch infrastructure (from hybrid topology)
+    - Meraki switches (if configured)
+    - Scanopy discovered hosts and services
+    """
+    try:
+        from app.services.hybrid_topology_service_optimized import (
+            get_hybrid_topology_service_optimized,
+        )
+        from app.services.meraki_service import get_meraki_service
+        from app.services.scanopy_service import get_scanopy_service
+
+        # Get data from all sources in parallel
+        hybrid_service = get_hybrid_topology_service_optimized()
+        meraki_service = get_meraki_service()
+        scanopy_service = get_scanopy_service()
+
+        # Parallel async calls
+        topology_task = hybrid_service.get_comprehensive_topology()
+        meraki_task = asyncio.get_event_loop().run_in_executor(
+            None, lambda: meraki_service.get_switch_topology_data(organization_id)
+        )
+        scanopy_hosts_task = scanopy_service.get_hosts(organization_id, network_id)
+        scanopy_services_task = scanopy_service.get_services(organization_id)
+
+        # Wait for all tasks
+        topology, meraki_data, scanopy_hosts, scanopy_services = await asyncio.gather(
+            topology_task,
+            meraki_task,
+            scanopy_hosts_task,
+            scanopy_services_task,
+            return_exceptions=True,
+        )
+
+        # Handle exceptions
+        if isinstance(topology, Exception):
+            logger.warning(f"Topology retrieval failed: {topology}")
+            topology = {"switches": [], "source": "error"}
+        if isinstance(meraki_data, Exception):
+            logger.warning(f"Meraki data retrieval failed: {meraki_data}")
+            meraki_data = {"switches": [], "error": str(meraki_data)}
+        if isinstance(scanopy_hosts, Exception):
+            logger.warning(f"Scanopy hosts retrieval failed: {scanopy_hosts}")
+            scanopy_hosts = {"hosts": [], "count": 0}
+        if isinstance(scanopy_services, Exception):
+            logger.warning(f"Scanopy services retrieval failed: {scanopy_services}")
+            scanopy_services = {"services": [], "count": 0}
+
+        # Build unified response
+        unified_data = {
+            "timestamp": datetime.now().isoformat(),
+            "infrastructure": {
+                "fortigate_switches": {
+                    "count": len(topology.get("switches", [])),
+                    "switches": topology.get("switches", []),
+                    "source": topology.get("source", "unknown"),
+                },
+                "meraki_switches": {
+                    "count": len(meraki_data.get("switches", [])),
+                    "switches": meraki_data.get("switches", []),
+                },
+            },
+            "discovered_endpoints": {
+                "count": scanopy_hosts.get("count", 0),
+                "hosts": scanopy_hosts.get("hosts", []),
+            },
+            "services_summary": {
+                "types": list(
+                    set(
+                        service.get("name")
+                        for host in scanopy_hosts.get("hosts", [])
+                        for service in host.get("services", [])
+                        if service.get("name")
+                    )
+                ),
+                "count": scanopy_services.get("count", 0),
+                "details": {},
+            },
+        }
+
+        # Group services by type
+        for host in scanopy_hosts.get("hosts", []):
+            for service in host.get("services", []):
+                service_name = service.get("name")
+                if service_name:
+                    if service_name not in unified_data["services_summary"]["details"]:
+                        unified_data["services_summary"]["details"][service_name] = []
+                    unified_data["services_summary"]["details"][service_name].append(
+                        {
+                            "ip": host.get("ip_address"),
+                            "hostname": host.get("hostname"),
+                            "port": service.get("port"),
+                            "protocol": service.get("protocol"),
+                        }
+                    )
+
+        return unified_data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get unified topology: {str(e)}"
         )
 
 
@@ -1165,11 +1537,11 @@ async def restaurant_device_summary():
             "summary": {
                 "total_devices": len(devices),
                 "restaurant_devices": len(device_analysis),
-                "restaurant_percentage": round(
-                    (len(device_analysis) / len(devices) * 100), 1
-                )
-                if devices
-                else 0,
+                "restaurant_percentage": (
+                    round((len(device_analysis) / len(devices) * 100), 1)
+                    if devices
+                    else 0
+                ),
             },
             "categories": category_counts,
             "restaurant_brands": brand_counts,
@@ -1532,9 +1904,11 @@ async def test_session_auth():
                 "message": "Session authentication working correctly",
                 "data": {
                     "endpoint": "monitor/system/status",
-                    "response_keys": list(result.keys())
-                    if isinstance(result, dict)
-                    else "non-dict response",
+                    "response_keys": (
+                        list(result.keys())
+                        if isinstance(result, dict)
+                        else "non-dict response"
+                    ),
                 },
             }
     except Exception as e:
@@ -1544,6 +1918,7 @@ async def test_session_auth():
 # ====================================================================
 # Enhanced Topology Integration Endpoints (FortiGate-Visio-Topology)
 # ====================================================================
+
 
 @app.get("/api/enhanced-topology/2d")
 async def api_enhanced_topology_2d():
@@ -1556,14 +1931,16 @@ async def api_enhanced_topology_2d():
         if not topology_service.is_available():
             raise HTTPException(
                 status_code=503,
-                detail="Enhanced topology integration not available. Ensure FortiGate-Visio-Topology API is running."
+                detail="Enhanced topology integration not available. Ensure FortiGate-Visio-Topology API is running.",
             )
 
         return topology_service.get_2d_topology_data()
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get enhanced 2D topology: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get enhanced 2D topology: {str(e)}"
+        )
 
 
 @app.get("/api/enhanced-topology/3d")
@@ -1577,14 +1954,16 @@ async def api_enhanced_topology_3d():
         if not topology_service.is_available():
             raise HTTPException(
                 status_code=503,
-                detail="Enhanced topology integration not available. Ensure FortiGate-Visio-Topology API is running."
+                detail="Enhanced topology integration not available. Ensure FortiGate-Visio-Topology API is running.",
             )
 
         return topology_service.get_3d_topology_data()
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get enhanced 3D topology: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get enhanced 3D topology: {str(e)}"
+        )
 
 
 @app.get("/api/enhanced-topology/hybrid")
@@ -1596,15 +1975,16 @@ async def api_enhanced_topology_hybrid():
         topology_service = get_topology_integration_service()
         if not topology_service.is_available():
             raise HTTPException(
-                status_code=503,
-                detail="Enhanced topology integration not available"
+                status_code=503, detail="Enhanced topology integration not available"
             )
 
         return topology_service.get_hybrid_topology_data()
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get hybrid topology: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get hybrid topology: {str(e)}"
+        )
 
 
 @app.get("/api/enhanced-topology/statistics")
@@ -1616,7 +1996,9 @@ async def api_enhanced_topology_statistics():
         topology_service = get_topology_integration_service()
         return topology_service.get_device_statistics()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get statistics: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get statistics: {str(e)}"
+        )
 
 
 @app.get("/api/enhanced-topology/health")
@@ -1628,5 +2010,88 @@ async def api_enhanced_topology_health():
     return {
         "available": topology_service.is_available(),
         "service": "FortiGate-Visio-Topology Integration",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
+
+
+# Performance Monitoring Endpoints
+@app.get("/api/performance/metrics")
+async def get_performance_metrics():
+    """Get performance metrics including cache statistics and response times"""
+    try:
+        from app.services.response_cache_service import get_response_cache_service
+
+        cache_service = get_response_cache_service()
+        cache_stats = cache_service.get_stats()
+
+        return {
+            "cache": cache_stats,
+            "timestamp": datetime.now().isoformat(),
+            "optimization_enabled": True,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get performance metrics: {str(e)}"
+        )
+
+
+@app.get("/api/performance/cache/stats")
+async def get_cache_stats():
+    """Get detailed cache statistics"""
+    try:
+        from app.services.response_cache_service import get_response_cache_service
+
+        cache_service = get_response_cache_service()
+        return cache_service.get_stats()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get cache stats: {str(e)}"
+        )
+
+
+@app.post("/api/performance/cache/clear")
+async def clear_cache():
+    """Clear all cached responses"""
+    try:
+        from app.services.response_cache_service import get_response_cache_service
+
+        cache_service = get_response_cache_service()
+        deleted_count = cache_service.clear_all()
+        return {
+            "success": True,
+            "deleted_items": deleted_count,
+            "message": f"Cleared {deleted_count} cached responses",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to clear cache: {str(e)}")
+
+
+@app.get("/api/performance/test")
+async def performance_test():
+    """Test endpoint performance with timing"""
+    start_time = time.time()
+
+    try:
+        from app.services.hybrid_topology_service_optimized import (
+            get_hybrid_topology_service_optimized,
+        )
+
+        service = get_hybrid_topology_service_optimized()
+        topology = await service.get_comprehensive_topology()
+
+        elapsed_time = time.time() - start_time
+
+        return {
+            "success": True,
+            "response_time_seconds": round(elapsed_time, 3),
+            "switches_count": len(topology.get("switches", [])),
+            "source": topology.get("source", "unknown"),
+            "optimization": "async_parallel",
+        }
+    except Exception as e:
+        elapsed_time = time.time() - start_time
+        return {
+            "success": False,
+            "error": str(e),
+            "response_time_seconds": round(elapsed_time, 3),
+        }

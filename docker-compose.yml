@@ -1,19 +1,17 @@
-version: '3.8'
-
 services:
   # Main FortiGate Dashboard Application
   fortigate-dashboard:
     build: .
     container_name: fortigate-dashboard
     ports:
-      - "8000:8000"
+      - "8001:8000"  # Changed to 8001 to avoid conflict
     environment:
       - ENVIRONMENT=development
       - DEBUG=true
       - FORTIGATE_HOST=${FORTIGATE_HOST:-192.168.0.254}
       - FORTIGATE_USERNAME=${FORTIGATE_USERNAME:-admin}
       - FORTIGATE_PASSWORD=${FORTIGATE_PASSWORD:-password}
-      - FORTIGATE_API_PORT=${FORTIGATE_API_PORT:-8443}
+      - FORTIGATE_API_PORT=${FORTIGATE_API_PORT:-443}
       - FORTIGATE_API_TOKEN_FILE=/app/secrets/fortigate_api_token.txt
       - FORTISWITCH_PASSWORD_FILE=/app/secrets/fortiswitch_password.txt
       - REDIS_HOST=redis
@@ -31,6 +29,8 @@ services:
       - NEO4J_PASSWORD=neo4j_password
       - MERAKI_API_KEY=${MERAKI_API_KEY:-your_meraki_api_key}
       - SNMP_COMMUNITY=${SNMP_COMMUNITY:-netintegrate}
+      - SCANOPY_URL=${SCANOPY_URL:-http://scanopy-server:60072}
+      - SCANOPY_API_TOKEN=${SCANOPY_API_TOKEN:-}
     volumes:
       - ./secrets:/app/secrets:ro
       - ./downloaded_files:/app/downloaded_files:ro
@@ -56,11 +56,13 @@ services:
     image: redis:7-alpine
     container_name: fortigate-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"  # Changed to 6380 to avoid conflict with existing Redis
     volumes:
       - redis_data:/data
-      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
-    command: redis-server /usr/local/etc/redis/redis.conf --appendonly yes
+      # Temporarily disabled bind mount - uncomment after fixing Docker Desktop file sharing
+      # - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    # Using default Redis config temporarily - will use custom config after file sharing is fixed
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
     networks:
       - fortigate_network
     restart: unless-stopped
@@ -80,7 +82,7 @@ services:
       - POSTGRES_PASSWORD=dashboard_pass
       - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
     ports:
-      - "5432:5432"
+      - "5433:5432"  # Changed to 5433 to avoid conflict with existing PostgreSQL
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d:ro
@@ -100,12 +102,12 @@ services:
     environment:
       - NEO4J_AUTH=neo4j/neo4j_password
       - NEO4J_PLUGINS=["graph-data-science"]
-      - NEO4J_dbms_memory_heap_initial__size=512m
-      - NEO4J_dbms_memory_heap_max__size=2G
-      - NEO4J_dbms_memory_pagecache_size=512m
+      - NEO4J_server_memory_heap_initial__size=512m
+      - NEO4J_server_memory_heap_max__size=2G
+      - NEO4J_server_memory_pagecache_size=512m
     ports:
-      - "7474:7474"  # HTTP
-      - "7687:7687"  # Bolt
+      - "7475:7474"  # HTTP (changed to 7475 to avoid conflict)
+      - "7688:7687"  # Bolt (changed to 7688 to avoid conflict)
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
@@ -119,61 +121,63 @@ services:
       retries: 3
 
   # Prometheus for metrics collection
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: fortigate-prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=15d'
-      - '--web.enable-lifecycle'
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    networks:
-      - fortigate_network
-    restart: unless-stopped
+  # TEMPORARILY COMMENTED OUT: Uncomment after Docker Desktop finishes scanning filesystem
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: fortigate-prometheus
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #     - '--storage.tsdb.retention.time=15d'
+  #     - '--web.enable-lifecycle'
+  #   ports:
+  #     - "9091:9090"  # Changed to 9091 to avoid conflict
+  #   volumes:
+  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #     - prometheus_data:/prometheus
+  #   networks:
+  #     - fortigate_network
+  #   restart: unless-stopped
 
   # Grafana for monitoring dashboard
-  grafana:
-    image: grafana/grafana:latest
-    container_name: fortigate-grafana
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin_password
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-    depends_on:
-      - prometheus
-    networks:
-      - fortigate_network
-    restart: unless-stopped
+  # TEMPORARILY COMMENTED OUT: Uncomment after Docker Desktop finishes scanning filesystem
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: fortigate-grafana
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin_password
+  #     - GF_USERS_ALLOW_SIGN_UP=false
+  #     - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+  #   ports:
+  #     - "3001:3000"  # Changed to 3001 to avoid conflict
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #     - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+  #     - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+  #   depends_on:
+  #     - prometheus
+  #   networks:
+  #     - fortigate_network
+  #   restart: unless-stopped
 
   # NGINX reverse proxy
-  nginx:
-    image: nginx:alpine
-    container_name: fortigate-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./certs:/etc/nginx/certs:ro
-      - nginx_logs:/var/log/nginx
-    depends_on:
-      - fortigate-dashboard
-    networks:
-      - fortigate_network
-    restart: unless-stopped
+  # TEMPORARILY COMMENTED OUT: Uncomment after Docker Desktop finishes scanning filesystem
+  # Access the dashboard directly at http://localhost:8001 while NGINX is disabled
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: fortigate-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./certs:/etc/nginx/certs:ro
+  #     - nginx_logs:/var/log/nginx
+  #   depends_on:
+  #     - fortigate-dashboard
+  #   networks:
+  #     - fortigate_network
+  #   restart: unless-stopped
 
 volumes:
   redis_data:
@@ -200,4 +204,4 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: 172.30.0.0/16

@@ -32,7 +32,7 @@ requests.packages.urllib3.disable_warnings(
 # ======== GENERIC API GET FUNCTION ========
 def fortigate_api_get(endpoint, params=None):
     """Perform GET request to FortiGate API and return JSON."""
-    url = f"https://{FORTIGATE_IP}:8443/api/v2/{endpoint}"
+    url = f"https://{FORTIGATE_IP}/api/v2/{endpoint}"
     headers = {"Authorization": f"Bearer {API_TOKEN}"}
     
     print(f"Making request to: {url}")

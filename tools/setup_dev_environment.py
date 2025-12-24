@@ -12,19 +12,22 @@ from pathlib import Path
 import requests
 import time
 
+
 def run_command(command, check=True, shell=True):
     """Run a command and return the result"""
     try:
-        result = subprocess.run(command, shell=shell, check=check, 
-                              capture_output=True, text=True)
+        result = subprocess.run(
+            command, shell=shell, check=check, capture_output=True, text=True
+        )
         return result.returncode == 0, result.stdout, result.stderr
     except subprocess.CalledProcessError as e:
         return False, e.stdout, e.stderr
 
+
 def install_dependencies():
     """Install Python dependencies"""
     print("📦 Installing Python dependencies...")
-    
+
     # Check if virtual environment exists
     venv_path = Path(".venv")
     if not venv_path.exists():
@@ -33,19 +36,19 @@ def install_dependencies():
         if not success:
             print(f"❌ Failed to create virtual environment: {stderr}")
             return False
-    
+
     # Activate virtual environment and install dependencies
-    if os.name == 'nt':  # Windows
+    if os.name == "nt":  # Windows
         pip_path = ".venv\\Scripts\\pip.exe"
         python_path = ".venv\\Scripts\\python.exe"
     else:  # Unix/Linux
         pip_path = ".venv/bin/pip"
         python_path = ".venv/bin/python"
-    
+
     # Upgrade pip first
     print("⬆️  Upgrading pip...")
     run_command(f"{pip_path} install --upgrade pip")
-    
+
     # Install requirements
     if Path("requirements.txt").exists():
         print("📋 Installing from requirements.txt...")
@@ -53,77 +56,80 @@ def install_dependencies():
         if not success:
             print(f"❌ Failed to install requirements: {stderr}")
             return False
-    
+
     # Install development dependencies
     dev_deps = [
-        "watchdog",      # For file watching
-        "pytest",        # For testing
+        "watchdog",  # For file watching
+        "pytest",  # For testing
         "pytest-json-report",  # For test reporting
-        "black",         # Code formatting
-        "flake8",        # Linting
-        "requests",      # HTTP requests
-        "python-dotenv", # Environment variables
+        "black",  # Code formatting
+        "flake8",  # Linting
+        "requests",  # HTTP requests
+        "python-dotenv",  # Environment variables
     ]
-    
+
     print("🔧 Installing development dependencies...")
     for dep in dev_deps:
         print(f"   Installing {dep}...")
         success, stdout, stderr = run_command(f"{pip_path} install {dep}")
         if not success:
             print(f"⚠️  Warning: Failed to install {dep}: {stderr}")
-    
+
     print("✅ Dependencies installed successfully!")
     return True
+
 
 def setup_git_hooks():
     """Setup Git hooks for automated workflows"""
     print("🪝 Setting up Git hooks...")
-    
+
     hooks_dir = Path(".git/hooks")
     if not hooks_dir.exists():
         print("❌ Git repository not found")
         return False
-    
+
     # Make pre-commit hook executable
     pre_commit_hook = hooks_dir / "pre-commit"
     if pre_commit_hook.exists():
-        if os.name != 'nt':  # Unix/Linux
+        if os.name != "nt":  # Unix/Linux
             os.chmod(pre_commit_hook, 0o755)
         print("✅ Pre-commit hook configured")
-    
+
     return True
+
 
 def create_directories():
     """Create necessary directories for the development environment"""
     print("📁 Creating directory structure...")
-    
+
     directories = [
         "automation/logs",
         "automation/logs/api_requests",
         "automation/api_exports",
         "C:/users/south/backups/fortigate-dashboard",
         "tests",
-        "docs"
+        "docs",
     ]
-    
+
     for directory in directories:
         dir_path = Path(directory)
         dir_path.mkdir(parents=True, exist_ok=True)
         print(f"   Created: {directory}")
-    
+
     print("✅ Directory structure created!")
     return True
+
 
 def setup_environment_file():
     """Setup .env file with default values"""
     env_file = Path(".env")
-    
+
     if env_file.exists():
         print("✅ .env file already exists")
         return True
-    
+
     print("🔧 Creating .env file template...")
-    
+
     env_template = """# FortiGate API Configuration
 FORTIGATE_HOST=https://192.168.0.254
 FORTIGATE_API_TOKEN=your-api-token-here
@@ -151,30 +157,33 @@ NOTIFICATION_EMAIL=your-email@domain.com
 BACKUP_RETENTION_DAYS=30
 MAX_BACKUPS=10
 """
-    
-    with open(env_file, 'w') as f:
+
+    with open(env_file, "w") as f:
         f.write(env_template)
-    
+
     print("✅ .env file created with template values")
     print("⚠️  Please update the values in .env with your actual configuration")
     return True
 
+
 def test_fortigate_connection():
     """Test connection to FortiGate API"""
     print("🔗 Testing FortiGate API connection...")
-    
+
     try:
         from fortigate_dev_helper import FortiGateDevAPI
-        
+
         api = FortiGateDevAPI()
         result = api.test_connection()
-        
-        if result['success']:
+
+        if result["success"]:
             print("✅ FortiGate API connection successful!")
             print(f"   Host: {result['host']}")
             print(f"   Response time: {result['response_time']}ms")
-            if result['system_info']:
-                print(f"   Hostname: {result['system_info'].get('hostname', 'Unknown')}")
+            if result["system_info"]:
+                print(
+                    f"   Hostname: {result['system_info'].get('hostname', 'Unknown')}"
+                )
                 print(f"   Version: {result['system_info'].get('version', 'Unknown')}")
         else:
             print(f"❌ FortiGate API connection failed: {result['error']}")
@@ -185,19 +194,20 @@ def test_fortigate_connection():
     except Exception as e:
         print(f"❌ Error testing connection: {str(e)}")
         return False
-    
+
     return True
+
 
 def create_test_files():
     """Create basic test files"""
     print("🧪 Creating test files...")
-    
+
     tests_dir = Path("tests")
     tests_dir.mkdir(exist_ok=True)
-    
+
     # Create __init__.py
     (tests_dir / "__init__.py").touch()
-    
+
     # Create basic test file
     test_content = '''"""
 Basic tests for FortiGate Dashboard
@@ -243,19 +253,20 @@ def test_api_endpoints(endpoint):
     except ImportError:
         pytest.skip("FortiGate dev helper not available")
 '''
-    
-    with open(tests_dir / "test_basic.py", 'w') as f:
+
+    with open(tests_dir / "test_basic.py", "w") as f:
         f.write(test_content)
-    
+
     print("✅ Test files created!")
     return True
+
 
 def create_development_scripts():
     """Create additional development convenience scripts"""
     print("🔧 Creating development scripts...")
-    
+
     # Create run_tests.bat
-    test_script = '''@echo off
+    test_script = """@echo off
 echo Running FortiGate Dashboard Tests
 echo ================================
 
@@ -268,13 +279,13 @@ python -m pytest tests/ -v --tb=short --json-report --json-report-file=test_resu
 echo.
 echo Test results saved to test_results.json
 pause
-'''
-    
-    with open("run_tests.bat", 'w') as f:
+"""
+
+    with open("run_tests.bat", "w") as f:
         f.write(test_script)
-    
+
     # Create format_code.bat
-    format_script = '''@echo off
+    format_script = """@echo off
 echo Formatting Python Code
 echo ======================
 
@@ -291,13 +302,13 @@ python -m flake8 app/ tests/ *.py --max-line-length=88 --ignore=E203,W503
 echo.
 echo Code formatting complete!
 pause
-'''
-    
-    with open("format_code.bat", 'w') as f:
+"""
+
+    with open("format_code.bat", "w") as f:
         f.write(format_script)
-    
+
     # Create quick_deploy.bat
-    deploy_script = '''@echo off
+    deploy_script = """@echo off
 echo Quick Deploy to Production
 echo ==========================
 
@@ -321,26 +332,27 @@ robocopy "." "G:\\My Drive\\home\\keith\\fortigate-dashboard" /E /XO /XD __pycac
 
 echo Deployment complete!
 pause
-'''
-    
-    with open("quick_deploy.bat", 'w') as f:
+"""
+
+    with open("quick_deploy.bat", "w") as f:
         f.write(deploy_script)
-    
+
     print("✅ Development scripts created!")
     return True
+
 
 def main():
     """Main setup function"""
     print("🚀 FortiGate Dashboard Development Environment Setup")
     print("=" * 60)
     print()
-    
+
     # Check if we're in the right directory
     if not Path("app/main.py").exists():
         print("❌ This doesn't appear to be the FortiGate Dashboard project directory")
         print("   Please run this script from the project root directory")
         return 1
-    
+
     setup_steps = [
         ("Creating directories", create_directories),
         ("Setting up environment file", setup_environment_file),
@@ -350,7 +362,7 @@ def main():
         ("Creating development scripts", create_development_scripts),
         ("Testing FortiGate connection", test_fortigate_connection),
     ]
-    
+
     success_count = 0
     for step_name, step_function in setup_steps:
         print(f"🔄 {step_name}...")
@@ -363,11 +375,11 @@ def main():
         except Exception as e:
             print(f"❌ {step_name} failed with error: {str(e)}")
         print()
-    
+
     print("=" * 60)
     print(f"🎉 Setup completed! {success_count}/{len(setup_steps)} steps successful")
     print()
-    
+
     if success_count == len(setup_steps):
         print("🎯 Your development environment is ready!")
         print()
@@ -387,12 +399,13 @@ def main():
         print("  C:\\users\\south\\Scripts\\backup_fortigate_dashboard.ps1")
         print("  automation\\power_automate_integration.ps1")
         print("  automation\\webhook_listener.ps1")
-        
+
         return 0
     else:
         print("⚠️  Some setup steps failed. Please check the error messages above.")
         print("   You may need to manually complete the failed steps.")
         return 1
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     exit(main())

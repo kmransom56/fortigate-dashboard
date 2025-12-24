@@ -1,7 +1,7 @@
 # FortiGate API Token Troubleshooting Guide
 
 ## Current Status ❌
-- **Network**: ✅ Connection to FortiGate working (192.168.0.254:8443)
+- **Network**: ✅ Connection to FortiGate working (192.168.0.254)
 - **SSL/TLS**: ✅ TLS 1.3 handshake successful  
 - **API Token**: ❌ Invalid token error (`www-authenticate: error="invalid_token"`)
 
@@ -25,7 +25,7 @@ This indicates the API token is either:
 
 1. **Access FortiGate WebUI**:
    ```
-   https://192.168.0.254:8443
+   https://192.168.0.254
    Username: admin
    Password: [your admin password]
    ```
@@ -100,10 +100,10 @@ After creating a new token, test it:
 
 ```bash
 # Test system status
-curl -k "https://192.168.0.254:8443/api/v2/monitor/system/status?access_token=NEW_TOKEN_HERE"
+curl -k "https://192.168.0.254/api/v2/monitor/system/status?access_token=NEW_TOKEN_HERE"
 
 # Test interface data  
-curl -k "https://192.168.0.254:8443/api/v2/cmdb/system/interface?access_token=NEW_TOKEN_HERE"
+curl -k "https://192.168.0.254/api/v2/cmdb/system/interface?access_token=NEW_TOKEN_HERE"
 ```
 
 ## Quick Fix Steps

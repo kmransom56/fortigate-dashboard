@@ -26,25 +26,25 @@ class FortiGateRedisSessionManager:
         self.session.verify = (
             False  # Disable SSL verification for self-signed certificates
         )
-        
+
         # Redis session manager
         self.redis_manager = get_redis_session_manager()
-        
+
         # Load credentials
         self._load_credentials()
 
     def _load_credentials(self) -> None:
         """Load FortiGate credentials from environment or files"""
         try:
-            # Get FortiGate IP
-            fortigate_host = os.getenv("FORTIGATE_HOST", "https://192.168.0.254:8443")
+            # Get FortiGate IP (default HTTPS on 443)
+            fortigate_host = os.getenv("FORTIGATE_HOST", "https://192.168.0.254")
             if fortigate_host.startswith("https://"):
                 self.fortigate_ip = fortigate_host[8:]
             elif fortigate_host.startswith("http://"):
                 self.fortigate_ip = fortigate_host[7:]
             else:
                 self.fortigate_ip = fortigate_host
-            
+
             # Remove port if it's the default HTTPS port
             if ":443" in self.fortigate_ip:
                 self.fortigate_ip = self.fortigate_ip.replace(":443", "")
@@ -57,9 +57,15 @@ class FortiGateRedisSessionManager:
             password_sources = [
                 os.getenv("FORTIGATE_PASSWORD"),
                 self._load_from_file(os.getenv("FORTIGATE_PASSWORD_FILE")),
-                self._load_from_file("/run/secrets/fortigate_password"),  # Docker secrets
-                self._load_from_file("/secrets/fortigate_password.txt"),  # Local development
-                self._load_from_file("./secrets/fortigate_password.txt"),  # Relative path
+                self._load_from_file(
+                    "/run/secrets/fortigate_password"
+                ),  # Docker secrets
+                self._load_from_file(
+                    "/secrets/fortigate_password.txt"
+                ),  # Local development
+                self._load_from_file(
+                    "./secrets/fortigate_password.txt"
+                ),  # Relative path
             ]
 
             for password in password_sources:
@@ -83,7 +89,7 @@ class FortiGateRedisSessionManager:
         """Load content from file if it exists"""
         if not filepath:
             return None
-            
+
         try:
             if os.path.exists(filepath):
                 with open(filepath, "r") as f:
@@ -99,26 +105,23 @@ class FortiGateRedisSessionManager:
         """Get session data from Redis if available"""
         if not self.fortigate_ip or not self.username:
             return None
-            
+
         return self.redis_manager.get_session(self.fortigate_ip, self.username)
 
     def _store_session(self, session_key: str, expires_in_minutes: int = 30) -> bool:
         """Store session data in Redis"""
         if not self.fortigate_ip or not self.username:
             return False
-            
+
         return self.redis_manager.store_session(
-            self.fortigate_ip, 
-            self.username, 
-            session_key, 
-            expires_in_minutes
+            self.fortigate_ip, self.username, session_key, expires_in_minutes
         )
 
     def _delete_session(self) -> bool:
         """Delete session data from Redis"""
         if not self.fortigate_ip or not self.username:
             return False
-            
+
         return self.redis_manager.delete_session(self.fortigate_ip, self.username)
 
     def login(self) -> bool:
@@ -155,10 +158,14 @@ class FortiGateRedisSessionManager:
 
                 # FortiGate returns different responses for successful login
                 # Usually contains session information or redirect
-                if "ret=1" in response_text or "redir=" in response_text or response_text == "":
+                if (
+                    "ret=1" in response_text
+                    or "redir=" in response_text
+                    or response_text == ""
+                ):
                     # Extract session key from cookies
                     session_key = None
-                    
+
                     # Try different cookie names that FortiGate might use
                     cookie_candidates = ["ccsrftoken", "session_key", "APSCOOKIE_"]
                     for cookie_name in cookie_candidates:
@@ -166,23 +173,31 @@ class FortiGateRedisSessionManager:
                             session_key = self.session.cookies[cookie_name]
                             logger.info(f"Found session key in cookie: {cookie_name}")
                             break
-                    
+
                     # If no specific session cookie found, try using any authentication cookie
                     if not session_key and self.session.cookies:
                         # Use the first available cookie as session key
                         cookie_items = list(self.session.cookies.items())
                         if cookie_items:
                             session_key = cookie_items[0][1]
-                            logger.info(f"Using generic cookie as session key: {cookie_items[0][0]}")
+                            logger.info(
+                                f"Using generic cookie as session key: {cookie_items[0][0]}"
+                            )
 
                     if session_key:
                         # Store session in Redis
-                        session_ttl_minutes = int(os.getenv("FORTIGATE_SESSION_TTL", 30))
+                        session_ttl_minutes = int(
+                            os.getenv("FORTIGATE_SESSION_TTL", 30)
+                        )
                         if self._store_session(session_key, session_ttl_minutes):
-                            logger.info("FortiGate session authentication successful and stored in Redis")
+                            logger.info(
+                                "FortiGate session authentication successful and stored in Redis"
+                            )
                             return True
                         else:
-                            logger.warning("FortiGate session authentication successful but failed to store in Redis")
+                            logger.warning(
+                                "FortiGate session authentication successful but failed to store in Redis"
+                            )
                             # Still return True as we have a valid session, just not stored
                             return True
                     else:
@@ -192,9 +207,7 @@ class FortiGateRedisSessionManager:
                         logger.debug(f"Available cookies: {dict(self.session.cookies)}")
                         return False
                 else:
-                    logger.error(
-                        f"Login failed - unexpected response: {response_text}"
-                    )
+                    logger.error(f"Login failed - unexpected response: {response_text}")
                     return False
 
             else:
@@ -221,10 +234,10 @@ class FortiGateRedisSessionManager:
                 logout_url = f"https://{self.fortigate_ip}/logout"
                 self.session.get(logout_url, timeout=10)
                 logger.info("FortiGate session logged out")
-            
+
             # Delete session from Redis
             self._delete_session()
-            
+
         except Exception as e:
             logger.debug(f"Error during logout: {e}")
 
@@ -241,7 +254,7 @@ class FortiGateRedisSessionManager:
                 return stored_session.session_key
 
             logger.info("No valid cached session, attempting new login")
-            
+
             # Session expired or not available, try to login
             if self.login():
                 # Get the newly created session from Redis
@@ -249,7 +262,9 @@ class FortiGateRedisSessionManager:
                 if new_session:
                     return new_session.session_key
                 else:
-                    logger.warning("Login successful but could not retrieve session from Redis")
+                    logger.warning(
+                        "Login successful but could not retrieve session from Redis"
+                    )
                     # Fallback: return session key from local session cookies
                     for cookie_name in ["ccsrftoken", "session_key", "APSCOOKIE_"]:
                         if cookie_name in self.session.cookies:
@@ -326,13 +341,10 @@ class FortiGateRedisSessionManager:
                     "last_used": stored_session.last_used.isoformat(),
                     "request_count": stored_session.request_count,
                     "fortigate_ip": stored_session.fortigate_ip,
-                    "username": stored_session.username
+                    "username": stored_session.username,
                 }
             else:
-                return {
-                    "has_session": False,
-                    "is_valid": False
-                }
+                return {"has_session": False, "is_valid": False}
         except Exception as e:
             logger.error(f"Error getting session info: {e}")
             return {"error": str(e)}
@@ -344,25 +356,22 @@ class FortiGateRedisSessionManager:
                 "fortigate_ip": self.fortigate_ip,
                 "username": self.username,
                 "has_password": bool(self.password),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
-            
+
             # Add Redis session manager health
             redis_health = self.redis_manager.health_check()
             health_status["redis"] = redis_health
-            
+
             # Add current session info
             session_info = self.get_session_info()
             health_status["session"] = session_info
-            
+
             return health_status
-            
+
         except Exception as e:
             logger.error(f"Error in health check: {e}")
-            return {
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
+            return {"error": str(e), "timestamp": datetime.now().isoformat()}
 
 
 # Global Redis-based session manager instance

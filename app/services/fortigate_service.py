@@ -26,9 +26,11 @@ logger = logging.getLogger(__name__)
 
 # Rate limiting - track last API call time
 _last_api_call = 0
-_min_interval = 0.1  # Minimum 0.1 second between API calls (session auth has much higher limits)
+_min_interval = (
+    0.1  # Minimum 0.1 second between API calls (session auth has much higher limits)
+)
 
-# Authentication mode: 'session' (preferred) or 'token' 
+# Authentication mode: 'session' (preferred) or 'token'
 _auth_mode = "session"
 
 
@@ -111,11 +113,15 @@ def fgt_api(
             )
             session_manager = get_fortigate_redis_session_manager()
             result = session_manager.make_api_request(endpoint)
-            logger.info(f"Redis session API response for {endpoint}: {result}")  # Added log
+            logger.info(
+                f"Redis session API response for {endpoint}: {result}"
+            )  # Added log
 
             # Check environment variable for fallback behavior
-            use_token_fallback = os.getenv("FORTIGATE_ALLOW_TOKEN_FALLBACK", "false").lower() == "true"
-            
+            use_token_fallback = (
+                os.getenv("FORTIGATE_ALLOW_TOKEN_FALLBACK", "false").lower() == "true"
+            )
+
             # If session auth failed, optionally fall back to token auth
             if "error" in result and result.get("error") == "authentication_failed":
                 if use_token_fallback:

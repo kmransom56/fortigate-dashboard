@@ -21,9 +21,11 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class NetworkDevice:
     """Represents a discovered network device"""
+
     ip: str
     mac: str
     hostname: Optional[str] = None
@@ -33,9 +35,11 @@ class NetworkDevice:
     switch_serial: Optional[str] = None
     switch_name: Optional[str] = None
 
-@dataclass 
+
+@dataclass
 class FortiSwitchInfo:
     """Represents FortiSwitch information"""
+
     serial: str
     name: str
     model: str
@@ -45,88 +49,89 @@ class FortiSwitchInfo:
     ports_active: int
     os_version: Optional[str] = None
 
+
 class SNMPNetworkDiscovery:
     """
     Network discovery service using SNMP data and known inventory.
     Provides FortiSwitch and endpoint information when API endpoints are unavailable.
     """
-    
+
     def __init__(self):
         self.fortigate_ip = "192.168.0.254"
         self.snmp_community = "netintegrate"
-        
+
         # Known network inventory from CLAUDE.md analysis
         self.known_devices = self._load_known_inventory()
         self.fortiswitch_info = self._load_fortiswitch_info()
-        
+
     def _load_known_inventory(self) -> List[NetworkDevice]:
         """Load known network device inventory from analysis"""
         return [
             NetworkDevice(
                 ip="192.168.0.1",
-                mac="d8:43:ae:9f:41:26", 
+                mac="d8:43:ae:9f:41:26",
                 hostname="ubuntuaicodeserver",
                 manufacturer="Dell Inc.",
                 device_type="server",
                 port="port13",
                 switch_serial="S124EPTQ22000276",
-                switch_name="NETINTEGRATESW"
+                switch_name="NETINTEGRATESW",
             ),
             NetworkDevice(
                 ip="192.168.0.2",
                 mac="dc:a6:32:eb:46:f7",
-                hostname="aicodestudio", 
+                hostname="aicodestudio",
                 manufacturer="Raspberry Pi",
                 device_type="server",
                 port="port15",
-                switch_serial="S124EPTQ22000276", 
-                switch_name="NETINTEGRATESW"
+                switch_serial="S124EPTQ22000276",
+                switch_name="NETINTEGRATESW",
             ),
             NetworkDevice(
                 ip="192.168.0.3",
                 mac="3c:18:a0:d4:cf:68",
                 hostname="unbound.netintegrate.net",
-                manufacturer="Raspberry Pi", 
+                manufacturer="Raspberry Pi",
                 device_type="server",
                 port="port16",
                 switch_serial="S124EPTQ22000276",
-                switch_name="NETINTEGRATESW"
+                switch_name="NETINTEGRATESW",
             ),
             NetworkDevice(
                 ip="192.168.0.100",
                 mac="d8:43:ae:9f:41:26",
                 hostname="ubuntuaicodeserver-alias",
                 manufacturer="Dell Inc.",
-                device_type="server", 
+                device_type="server",
                 port="port18",
                 switch_serial="S124EPTQ22000276",
-                switch_name="NETINTEGRATESW"
+                switch_name="NETINTEGRATESW",
             ),
             NetworkDevice(
-                ip="192.168.0.253", 
+                ip="192.168.0.253",
                 mac="3c:18:a0:d4:cf:68",
                 hostname="aicodeclient",
                 manufacturer="Microsoft Corporation",
                 device_type="endpoint",
                 port="port20",
                 switch_serial="S124EPTQ22000276",
-                switch_name="NETINTEGRATESW"
-            )
+                switch_name="NETINTEGRATESW",
+            ),
         ]
-    
+
     def _load_fortiswitch_info(self) -> FortiSwitchInfo:
         """Load FortiSwitch information from SNMP analysis"""
         return FortiSwitchInfo(
             serial="S124EPTQ22000276",
-            name="NETINTEGRATESW", 
+            name="NETINTEGRATESW",
             model="FortiSwitch S124EP",
             ip="10.255.1.2",  # FortiLink management IP
             status="Connected and Authorized",
             ports_total=28,
             ports_active=7,
-            os_version="S124EP-v7.6.2-build1085"
+            os_version="S124EP-v7.6.2-build1085",
         )
-    
+
     def get_fortiswitch_data(self) -> Dict[str, Any]:
         """
         Get FortiSwitch data using SNMP-based discovery.
@@ -134,7 +139,7 @@ class SNMPNetworkDiscovery:
         """
         try:
             switch = self.fortiswitch_info
-            
+
             # Create port information based on known connected devices
             ports = []
             for device in self.known_devices:
@@ -144,19 +149,21 @@ class SNMPNetworkDiscovery:
                         "status": "up",
                         "speed": "1000Mbps",
                         "duplex": "full",
-                        "connected_devices": [{
-                            "ip": device.ip,
-                            "mac": device.mac,
-                            "hostname": device.hostname,
-                            "device_name": device.hostname,
-                            "manufacturer": device.manufacturer,
-                            "device_type": device.device_type,
-                            "device_ip": device.ip,
-                            "device_mac": device.mac
-                        }]
+                        "connected_devices": [
+                            {
+                                "ip": device.ip,
+                                "mac": device.mac,
+                                "hostname": device.hostname,
+                                "device_name": device.hostname,
+                                "manufacturer": device.manufacturer,
+                                "device_type": device.device_type,
+                                "device_ip": device.ip,
+                                "device_mac": device.mac,
+                            }
+                        ],
                     }
                     ports.append(port_info)
-            
+
             switch_data = {
                 "serial": switch.serial,
                 "name": switch.name,
@@ -167,21 +174,28 @@ class SNMPNetworkDiscovery:
                 "total_ports": switch.ports_total,
                 "active_ports": len(ports),
                 "os_version": switch.os_version,
-                "connection_type": "FortiLink"
+                "connection_type": "FortiLink",
             }
-            
-            logger.info(f"SNMP FortiSwitch discovery: {switch.name} with {len(ports)} active ports")
-            
+
+            logger.info(
+                f"SNMP FortiSwitch discovery: {switch.name} with {len(ports)} active ports"
+            )
+
             return {
                 "switches": [switch_data],
                 "total_switches": 1,
-                "source": "snmp_discovery"
+                "source": "snmp_discovery",
             }
-            
+
         except Exception as e:
             logger.error(f"SNMP FortiSwitch discovery failed: {e}")
-            return {"switches": [], "total_switches": 0, "source": "snmp_discovery", "error": str(e)}
-    
+            return {
+                "switches": [],
+                "total_switches": 0,
+                "source": "snmp_discovery",
+                "error": str(e),
+            }
+
     def get_network_devices(self) -> List[Dict[str, Any]]:
         """
         Get network device information for topology display.
@@ -190,7 +204,7 @@ class SNMPNetworkDiscovery:
         try:
             from app.utils.oui_lookup import get_manufacturer_from_mac
             from app.utils.icon_db import get_icon, get_icon_binding
-            
+
             devices = []
             for device in self.known_devices:
                 # Use OUI lookup if manufacturer is not already known
@@ -202,7 +216,7 @@ class SNMPNetworkDiscovery:
                     except Exception as e:
                         logger.warning(f"OUI lookup failed for {device.mac}: {e}")
                         manufacturer = "Unknown Manufacturer"
-                
+
                 # Find appropriate icon
                 icon_path = None
                 icon_title = None
@@ -213,20 +227,23 @@ class SNMPNetworkDiscovery:
                         # Try icon binding
                         binding = get_icon_binding(manufacturer=manufacturer)
                         if binding:
-                            icon_info = {'icon_path': binding['icon_path'], 'title': binding['title']}
-                    
+                            icon_info = {
+                                "icon_path": binding["icon_path"],
+                                "title": binding["title"],
+                            }
+
                     if icon_info:
-                        icon_path = icon_info['icon_path']
-                        icon_title = icon_info['title']
+                        icon_path = icon_info["icon_path"]
+                        icon_title = icon_info["title"]
                     else:
                         # Fall back to device type icon
                         type_icon = get_icon(device_type=device.device_type)
                         if type_icon:
-                            icon_path = type_icon['icon_path']
-                            icon_title = type_icon['title']
+                            icon_path = type_icon["icon_path"]
+                            icon_title = type_icon["title"]
                 except Exception as e:
                     logger.warning(f"Icon lookup failed for {device.mac}: {e}")
-                
+
                 device_info = {
                     "ip": device.ip,
                     "mac": device.mac,
@@ -240,13 +257,15 @@ class SNMPNetworkDiscovery:
                     "switch_name": device.switch_name,
                     "port_name": device.port,
                     "icon_path": icon_path,
-                    "icon_title": icon_title
+                    "icon_title": icon_title,
                 }
                 devices.append(device_info)
-            
-            logger.info(f"SNMP device discovery: {len(devices)} network devices with OUI lookup and icon matching")
+
+            logger.info(
+                f"SNMP device discovery: {len(devices)} network devices with OUI lookup and icon matching"
+            )
             return devices
-            
+
         except Exception as e:
             logger.error(f"SNMP device discovery failed: {e}")
             return []
@@ -255,18 +274,22 @@ class SNMPNetworkDiscovery:
         """Get network topology summary"""
         switch_data = self.get_fortiswitch_data()
         devices = self.get_network_devices()
-        
+
         return {
             "fortigate_count": 1,
             "fortiswitch_count": len(switch_data.get("switches", [])),
-            "endpoint_count": len([d for d in devices if d["device_type"] == "endpoint"]),
+            "endpoint_count": len(
+                [d for d in devices if d["device_type"] == "endpoint"]
+            ),
             "server_count": len([d for d in devices if d["device_type"] == "server"]),
             "total_devices": 1 + len(switch_data.get("switches", [])) + len(devices),
-            "data_source": "snmp_discovery"
+            "data_source": "snmp_discovery",
         }
+
 
 # Global instance
 _snmp_discovery = None
+
 
 def get_snmp_discovery() -> SNMPNetworkDiscovery:
     """Get global SNMP discovery instance"""

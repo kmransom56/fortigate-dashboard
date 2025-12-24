@@ -1,0 +1,6 @@
+XML-like content extracted from FortiProxy_Series_R1_2024Q2.vss
+==================================================
+
+Fragment 1:
+ ;K0<G0=C0?
+

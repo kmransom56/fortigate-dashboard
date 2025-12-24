@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 
 
 def get_manufacturer_from_mac(mac_address):
-
     """
     Looks up the manufacturer of a device based on its MAC address using custom mappings and an external API.
     """

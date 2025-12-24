@@ -1,0 +1,6 @@
+XML-like content extracted from FortiDeceptor_Series_R1_2024Q2.vss
+==================================================
+
+Fragment 1:
+g`Eg`@g`<g`7
+

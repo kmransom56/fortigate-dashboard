@@ -37,7 +37,7 @@ def test_connectivity():
     print("🔍 Testing connectivity...")
     
     try:
-        response = requests.get(f"https://{FORTIGATE_IP}:8443/login", verify=False, timeout=10)
+        response = requests.get(f"https://{FORTIGATE_IP}/login", verify=False, timeout=10)
         if response.status_code == 200:
             print("✅ FortiGate is reachable")
             return True
@@ -60,7 +60,7 @@ def test_api_token():
     print(f"Token: {API_TOKEN[:10]}...")
     
     try:
-        url = f"https://{FORTIGATE_IP}:8443/api/v2/monitor/system/status"
+        url = f"https://{FORTIGATE_IP}/api/v2/monitor/system/status"
         headers = {"Authorization": f"Bearer {API_TOKEN}"}
         
         response = requests.get(url, headers=headers, verify=False, timeout=10)
@@ -97,7 +97,7 @@ def test_switch_endpoints():
     for endpoint, description in endpoints:
         print(f"\n📍 {description}")
         try:
-            url = f"https://{FORTIGATE_IP}:8443/api/v2/{endpoint}"
+            url = f"https://{FORTIGATE_IP}/api/v2/{endpoint}"
             params = {"switch-id": SWITCH_ID} if "status" in endpoint or "interface" in endpoint else None
             
             response = requests.get(url, headers=headers, params=params, verify=False, timeout=15)

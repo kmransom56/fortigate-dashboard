@@ -10,6 +10,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 logger = logging.getLogger(__name__)
 
+
 class FortiSwitchSessionManager:
     """
     Manages FortiSwitch API session authentication using basic auth.
@@ -36,9 +37,15 @@ class FortiSwitchSessionManager:
             # Try to load password from various sources
             password_sources = [
                 os.getenv("FORTISWITCH_PASSWORD"),
-                self._load_from_file("/run/secrets/fortiswitch_password"),  # Docker secrets
-                self._load_from_file("/secrets/fortiswitch_password.txt"),  # Local development
-                self._load_from_file("./secrets/fortiswitch_password.txt"),  # Relative path
+                self._load_from_file(
+                    "/run/secrets/fortiswitch_password"
+                ),  # Docker secrets
+                self._load_from_file(
+                    "/secrets/fortiswitch_password.txt"
+                ),  # Local development
+                self._load_from_file(
+                    "./secrets/fortiswitch_password.txt"
+                ),  # Relative path
             ]
 
             for password in password_sources:
@@ -47,9 +54,13 @@ class FortiSwitchSessionManager:
                     break
 
             if not self.fortiswitch_host:
-                logger.warning("FORTISWITCH_HOST not set. FortiSwitch API calls will be skipped.")
+                logger.warning(
+                    "FORTISWITCH_HOST not set. FortiSwitch API calls will be skipped."
+                )
             if not self.username or not self.password:
-                logger.warning("No FortiSwitch username or password found. FortiSwitch API calls will be skipped.")
+                logger.warning(
+                    "No FortiSwitch username or password found. FortiSwitch API calls will be skipped."
+                )
 
             logger.info(
                 f"FortiSwitch credentials loaded: Host={self.fortiswitch_host}, Username={self.username}, Password={'***' if self.password else 'None'}"
@@ -138,11 +149,19 @@ class FortiSwitchSessionManager:
                 )
                 return {"error": "unauthorized", "message": "Authentication failed."}
             elif res.status_code == 404:
-                logger.error(f"FortiSwitch API Error 404: Not Found. Endpoint {endpoint} may be incorrect for this FortiSwitchOS version.")
+                logger.error(
+                    f"FortiSwitch API Error 404: Not Found. Endpoint {endpoint} may be incorrect for this FortiSwitchOS version."
+                )
                 return {"error": "not_found", "message": "API endpoint not found."}
             elif res.status_code >= 400:
-                logger.error(f"FortiSwitch API error {res.status_code} for {endpoint}: {res.text[:512]}")
-                return {"error": "api_error", "status_code": res.status_code, "message": res.text[:512]}
+                logger.error(
+                    f"FortiSwitch API error {res.status_code} for {endpoint}: {res.text[:512]}"
+                )
+                return {
+                    "error": "api_error",
+                    "status_code": res.status_code,
+                    "message": res.text[:512],
+                }
 
             return res.json()
 
@@ -150,21 +169,29 @@ class FortiSwitchSessionManager:
             logger.error(f"FSW API request timeout for {endpoint} after 20 seconds.")
             return {"error": "timeout", "message": "FortiSwitch API request timed out."}
         except requests.exceptions.SSLError as e:
-            logger.error(f"FSW API SSL error for {endpoint}: {e}. If using self-signed certs, ensure FORTISWITCH_VERIFY_SSL is false.")
+            logger.error(
+                f"FSW API SSL error for {endpoint}: {e}. If using self-signed certs, ensure FORTISWITCH_VERIFY_SSL is false."
+            )
             return {"error": "ssl_error", "message": str(e)}
         except requests.exceptions.ConnectionError as e:
-            logger.error(f"FSW API connection error for {endpoint}: {e}. Check hostname/IP and network connectivity.")
+            logger.error(
+                f"FSW API connection error for {endpoint}: {e}. Check hostname/IP and network connectivity."
+            )
             return {"error": "connection_error", "message": str(e)}
         except requests.exceptions.RequestException as e:
             logger.error(f"FSW API request exception for {endpoint}: {e}")
             return {"error": "request_exception", "message": str(e)}
         except Exception as e:
-            logger.error(f"Unexpected error during FSW API call for {endpoint}: {e}", exc_info=True)
+            logger.error(
+                f"Unexpected error during FSW API call for {endpoint}: {e}",
+                exc_info=True,
+            )
             return {"error": "unexpected_error", "message": str(e)}
 
 
 # Global session manager instance
 _fortiswitch_session_manager = None
+
 
 def get_fortiswitch_session_manager() -> FortiSwitchSessionManager:
     """Get the global FortiSwitch session manager instance"""

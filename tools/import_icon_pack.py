@@ -6,7 +6,8 @@ from typing import Optional
 
 # Allow running from repo root
 import sys
-sys.path.append(os.path.abspath('.'))
+
+sys.path.append(os.path.abspath("."))
 
 from app.utils.icon_db import init_db, insert_icon
 
@@ -32,10 +33,10 @@ DEVICE_TYPE_MAP = [
 # Affinity style prioritization: allow selecting color/shape
 AFFINITY_STYLE_HINTS = {
     # e.g., 'square/red', 'circle/blue', etc.
-    'square/red': ('square', 'red'),
-    'square/blue': ('square', 'blue'),
-    'circle/red': ('circle', 'red'),
-    'circle/blue': ('circle', 'blue'),
+    "square/red": ("square", "red"),
+    "square/blue": ("square", "blue"),
+    "circle/red": ("circle", "red"),
+    "circle/blue": ("circle", "blue"),
 }
 
 STATIC_PREFIX = os.path.join("app", "static")
@@ -56,10 +57,21 @@ def to_slug(name: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Import icon pack into icons.db")
-    parser.add_argument("directory", help="Path under app/static to the icon pack directory (e.g., app/static/icons/packs/ntwrk-clean-and-flat)")
-    parser.add_argument("--pack", default=None, help="Pack name tag (default: directory name)")
-    parser.add_argument("--manufacturer", default=None, help="Manufacturer to assign (optional)")
-    parser.add_argument("--affinity-style", default=None, help="Affinity style hint like 'square/red' to prioritize those files")
+    parser.add_argument(
+        "directory",
+        help="Path under app/static to the icon pack directory (e.g., app/static/icons/packs/ntwrk-clean-and-flat)",
+    )
+    parser.add_argument(
+        "--pack", default=None, help="Pack name tag (default: directory name)"
+    )
+    parser.add_argument(
+        "--manufacturer", default=None, help="Manufacturer to assign (optional)"
+    )
+    parser.add_argument(
+        "--affinity-style",
+        default=None,
+        help="Affinity style hint like 'square/red' to prioritize those files",
+    )
     args = parser.parse_args()
 
     directory = args.directory
@@ -82,11 +94,11 @@ def main():
     inserted = 0
     # If affinity style hint provided, walk that subdir first
     walk_dirs = []
-    if args.affinity_style and 'affinity' in os.path.basename(dir_abs).lower():
+    if args.affinity_style and "affinity" in os.path.basename(dir_abs).lower():
         style = AFFINITY_STYLE_HINTS.get(args.affinity_style)
         if style:
             shape, color = style
-            pref = os.path.join(dir_abs, 'svg', shape, color)
+            pref = os.path.join(dir_abs, "svg", shape, color)
             if os.path.isdir(pref):
                 walk_dirs.append(pref)
     walk_dirs.append(dir_abs)

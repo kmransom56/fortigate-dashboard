@@ -1,0 +1,21 @@
+XML-like content extracted from FortiGate_Series_R22_2025Q2.vss
+==================================================
+
+Fragment 1:
+*o<gff*ALo
+
+Fragment 2:
+<G&_8_J_\_n_
+
+Fragment 3:
+`U<g`>c`?_`E[`UHW`LS`
+
+Fragment 4:
+G`wG`jG`^G`USG`JG`BG`<G`U7G`4G`3G`1G`
+
+Fragment 5:
+&9XqRXq<G1-p>
+
+Fragment 6:
+ZUU<cP<gP;kP:oPU8sP6wP4{P2
+

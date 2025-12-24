@@ -32,38 +32,41 @@ _session = None
 
 def cache_response(ttl_seconds: int = 60):
     """Decorator for caching API responses with TTL."""
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             # Create cache key from function name and arguments
             cache_key = f"{func.__name__}:{hash(str(args) + str(kwargs))}"
-            
+
             # Check cache
             if cache_key in _cache:
                 cached_data, cached_time = _cache[cache_key]
                 if datetime.now() - cached_time < timedelta(seconds=ttl_seconds):
                     logger.debug(f"Cache hit for {cache_key}")
                     return cached_data
-            
+
             # Execute function and cache result
             result = await func(*args, **kwargs)
             _cache[cache_key] = (result, datetime.now())
-            
+
             # Cleanup old cache entries (simple LRU)
             if len(_cache) > 100:
                 oldest_key = min(_cache.keys(), key=lambda k: _cache[k][1])
                 del _cache[oldest_key]
-            
+
             logger.debug(f"Cache miss for {cache_key}, cached result")
             return result
+
         return wrapper
+
     return decorator
 
 
 async def get_connection_pool():
     """Get or create the aiohttp connection pool."""
     global _connector, _session
-    
+
     if _connector is None:
         # Create optimized connector with connection pooling
         _connector = aiohttp.TCPConnector(
@@ -72,39 +75,39 @@ async def get_connection_pool():
             ttl_dns_cache=300,  # DNS cache TTL
             use_dns_cache=True,
             keepalive_timeout=30,  # Keep connections alive
-            enable_cleanup_closed=True
+            enable_cleanup_closed=True,
         )
-        
+
         # Create session with optimized timeouts
         timeout = aiohttp.ClientTimeout(
             total=30,  # Total timeout
             connect=10,  # Connection timeout
-            sock_read=10  # Socket read timeout
+            sock_read=10,  # Socket read timeout
         )
-        
+
         _session = aiohttp.ClientSession(
             connector=_connector,
             timeout=timeout,
-            headers={'User-Agent': 'FortiSwitch-Monitor/1.0'}
+            headers={"User-Agent": "FortiSwitch-Monitor/1.0"},
         )
-        
+
         logger.info("Created optimized aiohttp connection pool")
-    
+
     return _session
 
 
 async def close_connection_pool():
     """Close the connection pool properly."""
     global _connector, _session
-    
+
     if _session:
         await _session.close()
         _session = None
-    
+
     if _connector:
         await _connector.close()
         _connector = None
-    
+
     logger.info("Closed aiohttp connection pool")
 
 
@@ -150,23 +153,21 @@ def load_api_token() -> Optional[str]:
 async def rate_limit():
     """Async rate limiting function."""
     global _last_api_call
-    
+
     current_time = time.time()
     time_since_last = current_time - _last_api_call
-    
+
     if time_since_last < _min_interval:
         sleep_time = _min_interval - time_since_last
         logger.debug(f"Rate limiting: sleeping {sleep_time:.1f}s before API call")
         await asyncio.sleep(sleep_time)
-    
+
     _last_api_call = time.time()
 
 
 @cache_response(ttl_seconds=60)
 async def fgt_api_async(
-    endpoint: str, 
-    api_token: Optional[str] = None, 
-    fortigate_ip: Optional[str] = None
+    endpoint: str, api_token: Optional[str] = None, fortigate_ip: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Async FortiGate API helper with connection pooling and caching.
@@ -175,7 +176,7 @@ async def fgt_api_async(
     try:
         # Apply rate limiting
         await rate_limit()
-        
+
         # Determine FortiGate IP
         if fortigate_ip is None:
             fortigate_host = os.getenv("FORTIGATE_HOST", "https://192.168.0.254")
@@ -226,13 +227,11 @@ async def _fgt_api_with_token_async(
         # Use aiohttp session with connection pooling
         if session is None:
             session = await get_connection_pool()
-        
+
         async with session.get(
-            url, 
-            headers=headers, 
-            ssl=False  # Equivalent to verify=False
+            url, headers=headers, ssl=False  # Equivalent to verify=False
         ) as response:
-            
+
             # Handle specific HTTP status codes
             if response.status == 401:
                 logger.error("FortiGate API authentication failed (401)")
@@ -244,12 +243,16 @@ async def _fgt_api_with_token_async(
                 logger.error(f"FortiGate API endpoint not found (404): {endpoint}")
                 return {"error": "endpoint_not_found", "status_code": 404}
             elif response.status == 429:
-                logger.warning(f"FortiGate API rate limit exceeded (429) for {endpoint}")
+                logger.warning(
+                    f"FortiGate API rate limit exceeded (429) for {endpoint}"
+                )
                 await asyncio.sleep(30)  # Wait before retry
                 return {"error": "rate_limit_exceeded", "status_code": 429}
             elif response.status >= 400:
                 error_text = await response.text()
-                logger.error(f"FortiGate API error {response.status}: {error_text[:200]}")
+                logger.error(
+                    f"FortiGate API error {response.status}: {error_text[:200]}"
+                )
                 return {"error": "api_error", "status_code": response.status}
 
             # Success case
@@ -283,13 +286,13 @@ async def batch_api_calls(endpoints: List[str]) -> List[Dict[str, Any]]:
     """
     logger.info(f"Executing {len(endpoints)} API calls in parallel")
     start_time = time.time()
-    
+
     # Create tasks for parallel execution
     tasks = [fgt_api_async(endpoint) for endpoint in endpoints]
-    
+
     # Execute all tasks concurrently
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    
+
     # Process results and handle exceptions
     processed_results = []
     for i, result in enumerate(results):
@@ -298,10 +301,10 @@ async def batch_api_calls(endpoints: List[str]) -> List[Dict[str, Any]]:
             processed_results.append({"error": "exception", "details": str(result)})
         else:
             processed_results.append(result)
-    
+
     elapsed_time = time.time() - start_time
     logger.info(f"Completed {len(endpoints)} parallel API calls in {elapsed_time:.2f}s")
-    
+
     return processed_results
 
 
@@ -356,7 +359,9 @@ async def get_interfaces_async() -> Dict[str, Any]:
 
 
 # Backward compatibility functions
-def fgt_api(endpoint: str, api_token: Optional[str] = None, fortigate_ip: Optional[str] = None) -> Dict[str, Any]:
+def fgt_api(
+    endpoint: str, api_token: Optional[str] = None, fortigate_ip: Optional[str] = None
+) -> Dict[str, Any]:
     """Synchronous wrapper for backward compatibility."""
     return asyncio.run(fgt_api_async(endpoint, api_token, fortigate_ip))
 
