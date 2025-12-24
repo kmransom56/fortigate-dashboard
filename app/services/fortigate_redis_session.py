@@ -45,9 +45,12 @@ class FortiGateRedisSessionManager:
             else:
                 self.fortigate_ip = fortigate_host
 
-            # Remove port if it's the default HTTPS port
-            if ":443" in self.fortigate_ip:
+            # Remove port if it's the default HTTPS port (443) or old port (10443)
+            # But keep custom ports like 8443 (for socat forwarder)
+            if ":443" in self.fortigate_ip and "host.docker.internal" not in self.fortigate_ip:
                 self.fortigate_ip = self.fortigate_ip.replace(":443", "")
+            if ":10443" in self.fortigate_ip:
+                self.fortigate_ip = self.fortigate_ip.replace(":10443", "")
 
             # Load username and password - use admin for session authentication
             # API users may not support session auth, only token auth

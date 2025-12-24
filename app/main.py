@@ -2049,6 +2049,60 @@ async def get_cache_stats():
         )
 
 
+@app.post("/api/teach")
+async def teach_recovery_agent(
+    error_pattern: str,
+    fix_description: str,
+    category: str = "general",
+    severity: str = "medium",
+    auto_remediable: bool = False,
+    context: str = None,
+):
+    """
+    Teach the recovery agent a new error fix.
+
+    External agents can use this endpoint to add new error patterns and fixes
+    to the knowledge base. This enables the system to learn from new errors
+    and improve its self-healing capabilities.
+
+    Args:
+        error_pattern: The error pattern to match (e.g., "SSL certificate error")
+        fix_description: How to fix this error (e.g., "Regenerate certificate")
+        category: Error category (e.g., 'ssl_errors', 'api_errors', 'docker_errors')
+        severity: 'low', 'medium', 'high', or 'critical'
+        auto_remediable: Whether this can be auto-fixed
+        context: Optional additional context about when this fix applies
+
+    Returns:
+        Confirmation with knowledge base statistics
+    """
+    try:
+        from extras.magentic_one_integration import NetworkPlatformTools
+
+        tools = NetworkPlatformTools()
+        result = tools.train_recovery_agent(
+            error_pattern=error_pattern,
+            fix_description=fix_description,
+            category=category,
+            severity=severity,
+            auto_remediable=auto_remediable,
+            context=context,
+        )
+
+        if result.get("success"):
+            return result
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=result.get("error", "Failed to teach recovery agent"),
+            )
+    except Exception as e:
+        logger.error(f"Error teaching recovery agent: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to teach recovery agent: {str(e)}"
+        )
+
+
 @app.post("/api/performance/cache/clear")
 async def clear_cache():
     """Clear all cached responses"""

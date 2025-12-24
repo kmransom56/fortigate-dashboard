@@ -3,28 +3,31 @@ services:
   fortigate-dashboard:
     build: .
     container_name: fortigate-dashboard
+    # network_mode: host  # Disabled - Docker Desktop on Linux doesn't fully support host networking
     ports:
-      - "8001:8000"  # Changed to 8001 to avoid conflict
+      - "11039:11039"
     environment:
       - ENVIRONMENT=development
       - DEBUG=true
-      - FORTIGATE_HOST=${FORTIGATE_HOST:-192.168.0.254}
+      - PORT=11039
+      - FORTIGATE_HOST=https://host.docker.internal:8443
       - FORTIGATE_USERNAME=${FORTIGATE_USERNAME:-admin}
       - FORTIGATE_PASSWORD=${FORTIGATE_PASSWORD:-password}
       - FORTIGATE_API_PORT=${FORTIGATE_API_PORT:-443}
       - FORTIGATE_API_TOKEN_FILE=/app/secrets/fortigate_api_token.txt
       - FORTISWITCH_PASSWORD_FILE=/app/secrets/fortiswitch_password.txt
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_HOST=localhost
+      - REDIS_PORT=6380
       - REDIS_DB=0
-      - POSTGRES_HOST=postgres
+      - POSTGRES_HOST=localhost
+      - POSTGRES_PORT=5433
       - POSTGRES_DB=fortigate_dashboard
       - POSTGRES_USER=dashboard_user
       - POSTGRES_PASSWORD=dashboard_pass
       - ERASER_ENABLED=${ERASER_ENABLED:-true}
       - ERASER_API_URL=${ERASER_API_URL:-https://app.eraser.io}
       - ERASER_API_KEY_FILE=/app/secrets/eraser_api_token.txt
-      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_URI=bolt://localhost:7688
       - NEO4J_USERNAME=neo4j
       - NEO4J_PASSWORD=neo4j_password
       - MERAKI_API_KEY=${MERAKI_API_KEY:-your_meraki_api_key}
@@ -46,7 +49,7 @@ services:
       - fortigate_network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:${PORT:-11039}/"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -10,7 +10,7 @@ Uses FortiGate Monitor API endpoints to discover real-time device information:
 import logging
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from .fortigate_service import fgt_api
 
@@ -170,6 +170,293 @@ class FortiGateMonitorService:
             return {
                 "devices": [],
                 "total_devices": 0,
+                "source": "monitor_api",
+                "error": str(e),
+            }
+
+    def get_lldp_state(self) -> Dict[str, Any]:
+        """
+        Get LLDP (Link Layer Discovery Protocol) state for topology discovery.
+        Returns neighbor information for building network topology maps.
+        """
+        try:
+            # Use FortiSwitch Monitor API endpoint
+            data = fgt_api("switch/lldp-state/")
+
+            if "error" in data:
+                logger.error(f"API error getting LLDP state: {data}")
+                return {
+                    "neighbors": [],
+                    "total_neighbors": 0,
+                    "source": "monitor_api",
+                    "error": data.get("error"),
+                }
+
+            # Process LLDP neighbors
+            neighbors = []
+            if "results" in data and isinstance(data["results"], list):
+                for switch_entry in data["results"]:
+                    if isinstance(switch_entry, dict):
+                        switch_id = switch_entry.get("switch_id", "")
+                        switch_serial = switch_entry.get("serial", "")
+                        lldp_neighbors = switch_entry.get("neighbors", [])
+
+                        for neighbor in lldp_neighbors:
+                            neighbor_info = {
+                                "switch_id": switch_id,
+                                "switch_serial": switch_serial,
+                                "local_port": neighbor.get("local_port", ""),
+                                "remote_system_name": neighbor.get(
+                                    "remote_system_name", ""
+                                ),
+                                "remote_port": neighbor.get("remote_port", ""),
+                                "remote_mac": neighbor.get("remote_mac", ""),
+                                "remote_chassis_id": neighbor.get(
+                                    "remote_chassis_id", ""
+                                ),
+                                "remote_port_description": neighbor.get(
+                                    "remote_port_description", ""
+                                ),
+                                "remote_system_description": neighbor.get(
+                                    "remote_system_description", ""
+                                ),
+                            }
+                            neighbors.append(neighbor_info)
+
+            logger.info(f"Retrieved {len(neighbors)} LLDP neighbor relationships")
+
+            return {
+                "neighbors": neighbors,
+                "total_neighbors": len(neighbors),
+                "source": "monitor_api",
+                "timestamp": datetime.now().isoformat(),
+                "api_info": {
+                    "endpoint": "switch/lldp-state/",
+                    "serial": data.get("serial"),
+                    "version": data.get("version"),
+                    "build": data.get("build"),
+                },
+            }
+
+        except Exception as e:
+            logger.error(f"Exception getting LLDP state: {e}")
+            return {
+                "neighbors": [],
+                "total_neighbors": 0,
+                "source": "monitor_api",
+                "error": str(e),
+            }
+
+    def get_security_fabric_topology(self) -> Dict[str, Any]:
+        """
+        Get Security Fabric topology tree from FortiGate.
+        Returns the full Security Fabric device tree with relationships.
+        """
+        try:
+            # Use Monitor API endpoint for Security Fabric
+            data = fgt_api("system/fortiguard/security-fabric")
+
+            if "error" in data:
+                logger.error(f"API error getting Security Fabric: {data}")
+                return {
+                    "devices": [],
+                    "connections": [],
+                    "source": "monitor_api",
+                    "error": data.get("error"),
+                }
+
+            # Process Security Fabric data
+            devices = []
+            connections = []
+
+            if isinstance(data, dict):
+                # Extract device tree
+                fabric_data = data.get("results", {})
+                if isinstance(fabric_data, dict):
+                    # Process root device
+                    root_device = fabric_data.get("root", {})
+                    if root_device:
+                        devices.append(
+                            {
+                                "id": root_device.get("serial", "root"),
+                                "name": root_device.get("name", "Root FortiGate"),
+                                "type": "fortigate",
+                                "serial": root_device.get("serial", ""),
+                                "version": root_device.get("version", ""),
+                                "status": root_device.get("status", "unknown"),
+                            }
+                        )
+
+                    # Process downstream devices
+                    downstream = fabric_data.get("downstream", [])
+                    for device in downstream:
+                        if isinstance(device, dict):
+                            devices.append(
+                                {
+                                    "id": device.get("serial", ""),
+                                    "name": device.get("name", ""),
+                                    "type": device.get("type", "unknown"),
+                                    "serial": device.get("serial", ""),
+                                    "version": device.get("version", ""),
+                                    "status": device.get("status", "unknown"),
+                                    "parent": root_device.get("serial", "root"),
+                                }
+                            )
+                            # Create connection to parent
+                            connections.append(
+                                {
+                                    "from": root_device.get("serial", "root"),
+                                    "to": device.get("serial", ""),
+                                    "type": "fabric",
+                                }
+                            )
+
+            logger.info(
+                f"Retrieved Security Fabric topology: {len(devices)} devices, {len(connections)} connections"
+            )
+
+            return {
+                "devices": devices,
+                "connections": connections,
+                "total_devices": len(devices),
+                "total_connections": len(connections),
+                "source": "monitor_api",
+                "timestamp": datetime.now().isoformat(),
+                "api_info": {
+                    "endpoint": "system/fortiguard/security-fabric",
+                    "serial": data.get("serial"),
+                    "version": data.get("version"),
+                    "build": data.get("build"),
+                },
+            }
+
+        except Exception as e:
+            logger.error(f"Exception getting Security Fabric topology: {e}")
+            return {
+                "devices": [],
+                "connections": [],
+                "source": "monitor_api",
+                "error": str(e),
+            }
+
+    def get_mac_address_table(self, switch_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get MAC address table from FortiSwitch for device discovery.
+
+        Args:
+            switch_id: Optional switch ID to filter results.
+
+        Returns:
+            Dictionary with MAC address table entries including port mappings.
+        """
+        try:
+            # Use FortiSwitch Monitor API endpoint
+            endpoint = "switch/mac-address/"
+            if switch_id:
+                endpoint += f"?mkey={switch_id}"
+
+            data = fgt_api(endpoint)
+
+            if "error" in data:
+                logger.error(f"API error getting MAC address table: {data}")
+                return {
+                    "mac_entries": [],
+                    "total_entries": 0,
+                    "source": "monitor_api",
+                    "error": data.get("error"),
+                }
+
+            # Process MAC address entries
+            mac_entries = []
+            if "results" in data and isinstance(data["results"], list):
+                for switch_entry in data["results"]:
+                    if isinstance(switch_entry, dict):
+                        switch_id = switch_entry.get("switch_id", "")
+                        entries = switch_entry.get("entries", [])
+
+                        for entry in entries:
+                            mac = entry.get("mac", "")
+                            # Get manufacturer from OUI lookup
+                            manufacturer = "Unknown Manufacturer"
+                            try:
+                                from app.utils.oui_lookup import (
+                                    get_manufacturer_from_mac,
+                                )
+
+                                manufacturer = get_manufacturer_from_mac(mac)
+                            except Exception as e:
+                                logger.warning(f"OUI lookup failed for {mac}: {e}")
+
+                            mac_entry = {
+                                "mac": mac,
+                                "switch_id": switch_id,
+                                "port": entry.get("port", ""),
+                                "vlan": entry.get("vlan", ""),
+                                "type": entry.get("type", ""),
+                                "age": entry.get("age", 0),
+                                "manufacturer": manufacturer,
+                            }
+                            mac_entries.append(mac_entry)
+
+            logger.info(f"Retrieved {len(mac_entries)} MAC address table entries")
+
+            return {
+                "mac_entries": mac_entries,
+                "total_entries": len(mac_entries),
+                "source": "monitor_api",
+                "timestamp": datetime.now().isoformat(),
+                "api_info": {
+                    "endpoint": endpoint,
+                    "serial": data.get("serial"),
+                    "version": data.get("version"),
+                    "build": data.get("build"),
+                },
+            }
+
+        except Exception as e:
+            logger.error(f"Exception getting MAC address table: {e}")
+            return {
+                "mac_entries": [],
+                "total_entries": 0,
+                "source": "monitor_api",
+                "error": str(e),
+            }
+
+    def get_network_monitor_l2db(self) -> Dict[str, Any]:
+        """
+        Get L2 network monitor database for topology discovery.
+        Returns Layer 2 topology information including device connections.
+        """
+        try:
+            # Use FortiSwitch Monitor API endpoint
+            data = fgt_api("switch/network-monitor-l2db/")
+
+            if "error" in data:
+                logger.error(f"API error getting L2 monitor DB: {data}")
+                return {
+                    "topology": {},
+                    "source": "monitor_api",
+                    "error": data.get("error"),
+                }
+
+            logger.info("Retrieved L2 network monitor database")
+
+            return {
+                "topology": data.get("results", {}),
+                "source": "monitor_api",
+                "timestamp": datetime.now().isoformat(),
+                "api_info": {
+                    "endpoint": "switch/network-monitor-l2db/",
+                    "serial": data.get("serial"),
+                    "version": data.get("version"),
+                    "build": data.get("build"),
+                },
+            }
+
+        except Exception as e:
+            logger.error(f"Exception getting L2 monitor DB: {e}")
+            return {
+                "topology": {},
                 "source": "monitor_api",
                 "error": str(e),
             }

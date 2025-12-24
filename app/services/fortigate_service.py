@@ -95,6 +95,13 @@ def fgt_api(
                 fortigate_ip = fortigate_host[7:]  # Remove "http://"
             else:
                 fortigate_ip = fortigate_host
+            
+            # Remove old port 10443 if present (no longer used)
+            if ":10443" in fortigate_ip:
+                fortigate_ip = fortigate_ip.replace(":10443", "")
+            # Remove default HTTPS port 443 if present (not needed in URL)
+            if ":443" in fortigate_ip:
+                fortigate_ip = fortigate_ip.replace(":443", "")
 
         # Rate limiting - ensure minimum interval between calls
         current_time = time.time()

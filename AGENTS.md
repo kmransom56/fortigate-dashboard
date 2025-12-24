@@ -346,11 +346,13 @@ port-manager list
 - Hardcoding JSON blobs representing "demo" scenarios is prohibited.
 
 # AI Agent Integration
-
+## Docker CA Agent
+  **Skills File**: `extras/cagent_tools.py`
+- **Capabilities**: Coordinate and create agents
 ## AutoGen Studio
 - **Skills File**: `extras/autogen_skills.py`
 - **Capabilities**: Diagnose, Heal, Teach.
-- **Internal Agent**: The platform hosts an internal "System Doctor" (`services/ai_healer.py`) that uses AutoGen to analyze issues locally.
+- **Internal Agent**: The platform hosts an internal "System Doctor" (`app/services/ai_healer.py`) that uses the knowledge base to analyze issues locally and suggest fixes.
 
 ## Microsoft Magentic-One
 - **Integration File**: `extras/magentic_one_integration.py`
@@ -358,16 +360,18 @@ port-manager list
 - **Usage**: Import this class and map its methods (`check_platform_health`, `execute_self_healing`, `train_recovery_agent`) to your Magentic-One Orchestrator. 
 
 ## Teachable Architecture
-The platform maintains a persistent knowledge base of error fixes in `data/healer_knowledge_base.json`. 
-- **Read**: The internal heuristic healer reads this database to suggest fixes.
-- **Write**: External agents (you) can write to this database using the `/api/teach` endpoint or the `train_recovery_agent` tool.
+The platform maintains a persistent knowledge base of error fixes in `app/data/healer_knowledge_base.json`. 
+- **Read**: The internal AI healer (`app/services/ai_healer.py`) reads this database to suggest fixes.
+- **Write**: External agents can write to this database using:
+  - The `/api/teach` HTTP endpoint (POST request with error_pattern, fix_description, etc.)
+  - The `train_recovery_agent()` method from `extras/magentic_one_integration.py`
 
 ## Agent Factory Protocols
 This platform is designed to be a launchpad for **building new agents**. 
 Both **AutoGen Studio** and **Magentic-One** are fully supported for creating novel agentic workflows.
 
 ### 1. AutoGen Agent Creation
-- **Workspace**: Use the `work_dir/` or create dedicated directories under `agents/`.
+- **Workspace**: Use the `work_dir/` or create dedicated directories under `agents/`. (These directories are created automatically if they don't exist)
 - **Integration**: New agents can import `extras/autogen_skills.py` to inherit platform awareness immediately.
 - **Workflow**: 
   1. Define the agent config in AutoGen Studio.

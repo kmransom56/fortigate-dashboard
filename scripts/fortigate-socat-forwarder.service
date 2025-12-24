@@ -1,0 +1,16 @@
+[Unit]
+Description=FortiGate SOCAT TCP Forwarder (8443 -> 192.168.0.254:443)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=keith
+ExecStart=/usr/bin/socat TCP-LISTEN:8443,fork,reuseaddr TCP:192.168.0.254:443
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -6,14 +6,12 @@ from urllib3.exceptions import InsecureRequestWarning
 import urllib3
 from app.utils import oui_lookup
 from app.utils.restaurant_device_classifier import enhance_device_info
+from app.services.fortigate_session import FortiGateSessionManager
 
 # Suppress only the InsecureRequestWarning from urllib3
 urllib3.disable_warnings(InsecureRequestWarning)
 
 logger = logging.getLogger(__name__)
-
-# Import session management
-from app.services.fortigate_session import FortiGateSessionManager
 
 # Environment/defaults
 FORTIGATE_HOST = os.environ.get("FORTIGATE_HOST", "https://192.168.0.254")
@@ -224,7 +222,7 @@ def fgt_api(endpoint, params=None):
 def get_managed_switches():
     """Fetch managed switch status from FortiGate."""
     logger.info("Fetching managed switch status...")
-    data = fgt_api("/api/v2/monitor/switch-controller/managed-switch/status")
+    data = fgt_api("monitor/switch-controller/managed-switch/status")
     logger.info("Finished fetching managed switch status.")
     return data
 
@@ -232,7 +230,7 @@ def get_managed_switches():
 def get_detected_devices():
     """Fetch detected devices from FortiGate switch controller."""
     logger.info("Fetching detected devices...")
-    data = fgt_api("/api/v2/monitor/switch-controller/detected-device")
+    data = fgt_api("monitor/switch-controller/detected-device")
 
     if data and "results" in data:
         logger.info(f"Found {len(data['results'])} detected devices")
@@ -248,7 +246,7 @@ def get_detected_devices():
 def get_fgt_dhcp():
     """Fetch DHCP lease info from FortiGate."""
     logger.info("Fetching FortiGate DHCP leases...")
-    data = fgt_api("/api/v2/monitor/system/dhcp")
+    data = fgt_api("monitor/system/dhcp")
     logger.info("Finished fetching FortiGate DHCP leases.")
     return data
 
@@ -256,8 +254,120 @@ def get_fgt_dhcp():
 def get_system_arp():
     """Fetch ARP table from FortiGate for additional device discovery."""
     logger.info("Fetching FortiGate ARP table...")
-    data = fgt_api("/api/v2/monitor/system/arp")
+    data = fgt_api("monitor/system/arp")
     logger.info("Finished fetching FortiGate ARP table.")
+    return data
+
+
+def get_lldp_state():
+    """
+    Fetch LLDP (Link Layer Discovery Protocol) state for topology discovery.
+    Returns neighbor information for building network topology maps.
+    """
+    logger.info("Fetching LLDP state for topology discovery...")
+    data = fgt_api("monitor/switch/lldp-state/")
+
+    if data and "results" in data:
+        logger.info(f"Found LLDP data for {len(data['results'])} switches")
+
+    logger.info("Finished fetching LLDP state.")
+    return data
+
+
+def get_security_fabric_topology():
+    """
+    Fetch Security Fabric topology tree from FortiGate.
+    Returns the full Security Fabric device tree with relationships.
+    """
+    logger.info("Fetching Security Fabric topology...")
+    data = fgt_api("monitor/system/fortiguard/security-fabric")
+
+    if data and "error" in data:
+        logger.warning(f"Security Fabric API error: {data.get('error')}")
+    elif data:
+        logger.info("Successfully retrieved Security Fabric topology")
+
+    logger.info("Finished fetching Security Fabric topology.")
+    return data
+
+
+def get_mac_address_table(switch_id=None):
+    """
+    Fetch MAC address table from FortiSwitch for device discovery.
+
+    Args:
+        switch_id: Optional switch ID to filter results. If None, returns all switches.
+
+    Returns:
+        Dictionary with MAC address table entries including port mappings.
+    """
+    logger.info("Fetching MAC address table...")
+
+    endpoint = "monitor/switch/mac-address/"
+    if switch_id:
+        endpoint += f"?mkey={switch_id}"
+
+    data = fgt_api(endpoint)
+
+    if data and "results" in data:
+        logger.info(f"Found MAC address entries for {len(data['results'])} switches")
+        # Enhance with manufacturer lookup
+        for switch_entry in data.get("results", []):
+            if isinstance(switch_entry, dict) and "entries" in switch_entry:
+                for entry in switch_entry.get("entries", []):
+                    if "mac" in entry:
+                        mac = entry.get("mac")
+                        manufacturer = oui_lookup.get_manufacturer_from_mac(mac)
+                        entry["manufacturer"] = manufacturer
+
+    logger.info("Finished fetching MAC address table.")
+    return data
+
+
+def get_mac_address_summary():
+    """
+    Fetch MAC address summary from FortiSwitch.
+    Returns aggregated MAC address statistics.
+    """
+    logger.info("Fetching MAC address summary...")
+    data = fgt_api("monitor/switch/mac-address-summary/")
+
+    if data and "results" in data:
+        logger.info(
+            f"Retrieved MAC address summary for {len(data['results'])} switches"
+        )
+
+    logger.info("Finished fetching MAC address summary.")
+    return data
+
+
+def get_network_monitor_l2db():
+    """
+    Fetch L2 network monitor database for topology discovery.
+    Returns Layer 2 topology information including device connections.
+    """
+    logger.info("Fetching L2 network monitor database...")
+    data = fgt_api("monitor/switch/network-monitor-l2db/")
+
+    if data and "results" in data:
+        logger.info(f"Retrieved L2 topology data for {len(data['results'])} entries")
+
+    logger.info("Finished fetching L2 network monitor database.")
+    return data
+
+
+def get_network_monitor_l3db():
+    """
+    Fetch L3 network monitor database for topology discovery.
+    Returns Layer 3 topology information including routing relationships.
+    """
+    logger.info("Fetching L3 network monitor database...")
+    data = fgt_api("monitor/switch/network-monitor-l3db/")
+
+    if data and "results" in data:
+        logger.info(f"Retrieved L3 topology data for {len(data['results'])} entries")
+
+    logger.info("Finished fetching L3 network monitor database.")
     return data
 
 
