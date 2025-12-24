@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <title>FortiGate Topology</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/static/styles.css">
     <style>
       body { font-family: Lato, Helvetica, Arial, sans-serif; margin: 0; background: #f5f7fa; }
       .sidebar { width: 220px; background: #3a2a4d; color: #fff; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
@@ -24,24 +23,24 @@
   <div class="sidebar">
     <div class="logo">FORTINET</div>
     <div class="menu">
-      <div class="menu-item" onclick="window.location.href='/'">Dashboard</div>
-      <div class="menu-item" onclick="window.location.href='/switches'">Network</div>
-      <div class="menu-item">Policy & Objects</div>
-      <div class="menu-item">Security Profiles</div>
-      <div class="menu-item">User & Authentication</div>
-      <div class="menu-item">System</div>
-      <div class="menu-item active">Security Fabric</div>
-      <div class="menu-item active" onclick="window.location.href='/topology-fortigate'">Physical Topology</div>
-      <div class="menu-item" onclick="window.location.href='/topology'">Logical Topology</div>
-      <div class="menu-item">Fabric Connectors</div>
-      <div class="menu-item">Log & Report</div>
+      <div class="menu-item" data-href="/">Dashboard</div>
+      <div class="menu-item" data-href="/switches">Network</div>
+      <div class="menu-item" data-placeholder="Policy & Objects">Policy & Objects</div>
+      <div class="menu-item" data-placeholder="Security Profiles">Security Profiles</div>
+      <div class="menu-item" data-placeholder="User & Authentication">User & Authentication</div>
+      <div class="menu-item" data-placeholder="System">System</div>
+      <div class="menu-item active" data-no-action="true">Security Fabric</div>
+      <div class="menu-item active" data-href="/topology-fortigate">Physical Topology</div>
+      <div class="menu-item" data-href="/topology">Logical Topology</div>
+      <div class="menu-item" data-placeholder="Fabric Connectors">Fabric Connectors</div>
+      <div class="menu-item" data-placeholder="Log & Report">Log & Report</div>
     </div>
   </div>
   <div class="main-content">
     <div class="header">
       <div>Security Fabric &gt; Physical Topology</div>
       <div>
-        <button id="updateBtn" style="background:#4caf50;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#45a049'" onmouseout="this.style.background='#4caf50'">Update Now</button>
+        <button id="updateBtn" type="button" style="background:#4caf50;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#45a049'" onmouseout="this.style.background='#4caf50'">Update Now</button>
       </div>
     </div>
     <div class="topology-area">
@@ -49,6 +48,15 @@
     </div>
   </div>
   <script>
+    // Global error handler
+    window.addEventListener('error', function(e) {
+      console.error('Global error:', e.error, e.message, e.filename, e.lineno);
+    });
+    
+    window.addEventListener('unhandledrejection', function(e) {
+      console.error('Unhandled promise rejection:', e.reason);
+    });
+    
     async function renderTopology() {
       const map = document.getElementById('topologyMap');
       const updateBtn = document.getElementById('updateBtn');
@@ -61,29 +69,35 @@
       map.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.2em;color:#666;">Loading topology...</div>';
       
       try {
+        console.log('Fetching topology data from /api/scraped_topology...');
         const response = await fetch('/api/scraped_topology');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+        console.log('Received topology data:', data);
         
         if (data && data.error) {
           throw new Error(data.error || 'Unknown error');
         }
 
         const metadata = data && data.metadata ? data.metadata : {};
+        console.log('Metadata:', metadata);
         if (metadata && metadata.source === 'error') {
           throw new Error(metadata.error || 'Topology service returned an error');
         }
 
         const devices = Array.isArray(data.devices) ? data.devices : [];
         const connections = Array.isArray(data.connections) ? data.connections : [];
+        console.log(`Found ${devices.length} devices and ${connections.length} connections`);
 
         if (devices.length === 0 && connections.length === 0) {
+          console.warn('No topology data available');
           map.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.2em;color:#666;text-align:center;">No topology data available.<br><span style="font-size:0.9em;">Verify FortiGate, FortiSwitch, and Redis connectivity.</span></div>';
           return;
         }
 
+        console.log('Rendering topology with', devices.length, 'devices');
         map.innerHTML = '';
 
       // Create SVG for connections
@@ -123,7 +137,12 @@
       map.appendChild(svg);
 
       // Render device nodes
-      devices.forEach(device => {
+      devices.forEach((device, index) => {
+          console.log(`Rendering device ${index + 1}:`, device);
+          if (!device.position || typeof device.position.x === 'undefined' || typeof device.position.y === 'undefined') {
+            console.error('Device missing position:', device);
+            return;
+          }
           const div = document.createElement('div');
           div.style.position = 'absolute';
           div.style.left = device.position.x + 'px';
@@ -174,8 +193,6 @@
 
           map.appendChild(div);
         });
-      }
-      
       } catch (error) {
         console.error('Error loading topology:', error);
         map.innerHTML = `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.2em;color:#d32f2f;text-align:center;">
@@ -193,15 +210,52 @@
     
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-      renderTopology();
+      console.log('Page loaded, initializing topology...');
       
       // Add click handler for Update button
       const updateBtn = document.getElementById('updateBtn');
       if (updateBtn) {
-        updateBtn.addEventListener('click', renderTopology);
+        console.log('Update button found, attaching click handler');
+        updateBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Update button clicked');
+          renderTopology();
+        });
       } else {
         console.error('Update button not found!');
       }
+      
+      // Add click handlers for all menu items
+      document.querySelectorAll('.menu-item').forEach(function(item) {
+        // Skip items that shouldn't be clickable
+        if (item.dataset.noAction === 'true') {
+          return;
+        }
+        
+        item.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const href = item.dataset.href;
+          const placeholder = item.dataset.placeholder;
+          
+          console.log('Menu item clicked:', item.textContent.trim(), {href, placeholder});
+          
+          if (href) {
+            console.log('Navigating to:', href);
+            window.location.href = href;
+          } else if (placeholder) {
+            console.log('Placeholder feature clicked:', placeholder);
+            alert('This feature is not yet implemented: ' + placeholder);
+          } else {
+            console.warn('Menu item has no action:', item.textContent.trim());
+          }
+        });
+      });
+      
+      // Initial render
+      renderTopology();
     });
   </script>
 </body>
