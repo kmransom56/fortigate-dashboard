@@ -2103,6 +2103,63 @@ async def teach_recovery_agent(
         )
 
 
+@app.post("/api/report-error")
+async def report_error(
+    error: str,
+    category: str = "general",
+    device: str = None,
+    icon_path: str = None,
+    device_type: str = None,
+    model: str = None,
+):
+    """
+    Report an error to the AI healer for diagnosis and potential auto-fix.
+
+    This endpoint allows the frontend and other services to report errors
+    so the AI healer can detect patterns and suggest or apply fixes.
+
+    Args:
+        error: Error message or description
+        category: Error category (e.g., 'icon_loading', 'icon_missing', 'api_error')
+        device: Device name (if applicable)
+        icon_path: Icon path that failed (if applicable)
+        device_type: Device type (if applicable)
+        model: Device model (if applicable)
+
+    Returns:
+        Diagnosis result from AI healer
+    """
+    try:
+        from app.services.ai_healer import get_ai_healer
+
+        healer = get_ai_healer()
+        diagnosis = healer.diagnose(error)
+
+        # Log the error for monitoring
+        logger.error(
+            f"Error reported: {error} (category: {category}, device: {device})"
+        )
+
+        return {
+            "reported": True,
+            "error": error,
+            "category": category,
+            "diagnosis": diagnosis,
+            "suggested_fix": (
+                diagnosis["matches_found"][0]["fix"]
+                if diagnosis["matches_found"]
+                else None
+            ),
+            "auto_remediable": diagnosis.get("auto_remediable", False),
+        }
+    except Exception as e:
+        logger.error(f"Failed to report error to AI healer: {e}")
+        return {
+            "reported": False,
+            "error": f"Failed to report error: {str(e)}",
+        }
+
+
 @app.post("/api/performance/cache/clear")
 async def clear_cache():
     """Clear all cached responses"""

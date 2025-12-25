@@ -1,0 +1,59 @@
+name: Server CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/src/server.rs'
+      - 'backend/src/server/**'
+      - 'backend/src/*.rs'
+      - 'backend/*'
+      - '.github/workflows/server-ci.yml'
+  pull_request:
+    paths:
+      - 'backend/src/server.rs'
+      - 'backend/src/server/**'
+      - 'backend/src/*.rs'
+      - 'backend/*'
+      - '.github/workflows/server-ci.yml'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: ./backend
+
+jobs:
+  test:
+    name: server-lint-and-test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          components: rustfmt, clippy
+      
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+      
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+      
+      - name: Check formatting
+        run: cargo fmt -- --check
+      
+      - name: Clippy server
+        run: cargo clippy --bin server --all-features -- -D warnings
+      
+      - name: Test server binary
+        run: cargo test --lib
+      
+      - name: Build server (release)
+        run: cargo build --release --bin server

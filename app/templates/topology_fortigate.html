@@ -70,8 +70,8 @@
       
       try {
         // Load icon manifest (optional)
-        // This file may not exist in all deployments; if missing we fallback to
-        // iconPath values returned by the API or to the default circle node.
+        // This file may not exist in all deployments; if missing we use
+        // iconPath values returned by the API. Errors are reported to AI healer.
         let iconManifest = null;
         try {
           const manifestResponse = await fetch('/static/icons/manifest.json');
@@ -165,27 +165,31 @@
           div.style.width = '100px';
           div.style.height = '100px';
 
-          // Icon logic
+          // Icon logic - NO FALLBACKS - AI Healer will fix errors
           // Priority:
           //  1) API-provided iconPath (details.iconPath)
           //  2) Model-to-icon mapping via manifest.json (if present)
-          //  3) Fallback circle
           let iconUrl = null;
           const model = device.model || (device.details && device.details.model) || '';
           const detailsIconPath = device.details && device.details.iconPath;
 
+          console.log(`Device ${device.name}: iconPath=${detailsIconPath}, model=${model}`);
+
           if (detailsIconPath) {
-            // iconPath is stored relative to app/static, e.g. "icons/FG-100F_101F.svg"
+            // iconPath is stored relative to app/static, e.g. "icons/FG-100F_101F.svg" or "icons/fortinet/fortigate/FG-100F_101F.svg"
             iconUrl = '/static/' + detailsIconPath.replace(/^\//, '');
+            console.log(`  Using API iconPath: ${iconUrl}`);
           } else if (model && iconManifest) {
             const upperModel = model.toUpperCase();
             if (iconManifest[upperModel]) {
               iconUrl = '/static/icons/' + iconManifest[upperModel];
+              console.log(`  Using manifest match for ${upperModel}: ${iconUrl}`);
             } else {
               const parts = upperModel.split(/[-_ ]/);
               for (const part of parts) {
                 if (part.length > 3 && iconManifest[part]) {
                   iconUrl = '/static/icons/' + iconManifest[part];
+                  console.log(`  Using manifest partial match for ${part}: ${iconUrl}`);
                   break;
                 }
               }
@@ -193,12 +197,54 @@
           }
 
           if (iconUrl) {
-            div.style.backgroundImage = `url('${iconUrl}')`;
-            div.style.backgroundSize = 'contain';
-            div.style.backgroundRepeat = 'no-repeat';
-            div.style.backgroundPosition = 'center';
+            // Use <img> tag for icon display - errors will be logged for AI healer
+            const img = document.createElement('img');
+            img.src = iconUrl;
+            img.alt = device.details?.iconTitle || device.name || device.type;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'contain';
+            img.style.objectPosition = 'center';
+            img.style.cursor = 'pointer';
+            
+            // Error handler - report to AI healer, no fallback
+            img.onerror = function() {
+              const errorMsg = `Failed to load icon: ${iconUrl} for device ${device.name} (type: ${device.type}, model: ${model})`;
+              console.error(errorMsg);
+              
+              // Report error to AI healer via API
+              fetch('/api/report-error', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                  error: errorMsg,
+                  category: 'icon_loading',
+                  device: device.name,
+                  icon_path: iconUrl,
+                  device_type: device.type,
+                  model: model
+                })
+              }).catch(err => console.error('Failed to report error to AI healer:', err));
+              
+              // Show error indicator instead of fallback
+              div.style.border = '2px solid #d32f2f';
+              div.style.background = '#ffebee';
+              div.style.color = '#d32f2f';
+              div.style.display = 'flex';
+              div.style.alignItems = 'center';
+              div.style.justifyContent = 'center';
+              div.style.fontSize = '0.9em';
+              div.style.textAlign = 'center';
+              div.style.padding = '4px';
+              div.innerHTML = `<div>⚠️<br>Icon Error<br><small>${device.name}</small></div>`;
+            };
+            
+            img.onload = function() {
+              console.log(`Successfully loaded icon: ${iconUrl} for device ${device.name}`);
+            };
+            
+            div.appendChild(img);
             div.style.cursor = 'pointer';
-            div.innerHTML = '';
 
             const label = document.createElement('div');
             label.style.position = 'absolute';
@@ -212,16 +258,48 @@
             label.textContent = device.name;
             div.appendChild(label);
           } else {
-            div.style.borderRadius = '50%';
-            div.style.background = device.details && device.details.color ? device.details.color : '#2196f3';
-            div.style.color = '#fff';
+            // No icon found - report to AI healer, show error indicator
+            const errorMsg = `No icon found for device ${device.name} (type: ${device.type}, model: ${model})`;
+            console.error(errorMsg);
+            
+            // Report error to AI healer via API
+            fetch('/api/report-error', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                error: errorMsg,
+                category: 'icon_missing',
+                device: device.name,
+                device_type: device.type,
+                model: model
+              })
+            }).catch(err => console.error('Failed to report error to AI healer:', err));
+            
+            // Show error indicator instead of fallback circle
+            div.style.border = '2px solid #d32f2f';
+            div.style.borderRadius = '8px';
+            div.style.background = '#ffebee';
+            div.style.color = '#d32f2f';
             div.style.display = 'flex';
             div.style.alignItems = 'center';
             div.style.justifyContent = 'center';
-            div.style.fontSize = '1.2em';
-            div.style.boxShadow = '0 2px 12px rgba(0,0,0,0.12)';
+            div.style.fontSize = '0.9em';
+            div.style.textAlign = 'center';
+            div.style.padding = '4px';
             div.style.cursor = 'pointer';
-            div.innerHTML = `<div><strong>${device.name}</strong><br>${device.details && device.details.deviceCount ? device.details.deviceCount + ' Devices' : ''}</div>`;
+            div.innerHTML = `<div>⚠️<br>No Icon<br><small>${device.name}</small></div>`;
+            
+            const label = document.createElement('div');
+            label.style.position = 'absolute';
+            label.style.top = '105px';
+            label.style.width = '120px';
+            label.style.left = '-10px';
+            label.style.textAlign = 'center';
+            label.style.fontWeight = 'bold';
+            label.style.fontSize = '12px';
+            label.style.color = '#333';
+            label.textContent = device.name;
+            div.appendChild(label);
           }
 
           // Advanced tooltip (popover)

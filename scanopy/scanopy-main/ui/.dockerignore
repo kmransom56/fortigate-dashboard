@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.npm/
+.pnpm-store/
+
+# Build artifacts
+dist/
+build/
+.svelte-kit/
+
+# Development files
+.env*
+*.log
+npm-debug.log*
+
+# Git and version control
+.git/
+.gitignore
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Docker file
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Temporary files
+tmp/
+temp/

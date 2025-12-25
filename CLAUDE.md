@@ -403,7 +403,7 @@ python tools/import_icon_pack.py             # Import icon packs
 python tools/test_topology_icons.py          # Test icon rendering
 python simple_Icons.py                       # Icon utilities
 python simple_svg_optimize.py                # Optimize SVG files
-python scrape_icons.py                       # Scrape web icons
+python tools/icons/scrape_icons.py          # Scrape web icons
 python extract_visio_stencils.py             # Convert Visio stencils to SVG
 ```
 

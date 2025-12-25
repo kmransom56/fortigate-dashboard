@@ -1,0 +1,14 @@
+node_modules
+
+.output
+.wrangler
+/.svelte-kit
+/.vscode
+/build
+
+.DS_Store
+Thumbs.db
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*

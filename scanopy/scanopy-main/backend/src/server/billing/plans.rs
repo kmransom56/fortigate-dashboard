@@ -1,0 +1,112 @@
+use super::types::base::{BillingPlan, BillingRate, PlanConfig};
+
+pub const YEARLY_DISCOUNT: f32 = 0.2;
+
+/// Returns the canonical list of billing plans for Scanopy.
+/// This is the single source of truth for plan definitions.
+fn get_default_plans() -> Vec<BillingPlan> {
+    vec![
+        BillingPlan::Starter(PlanConfig {
+            base_cents: 999,
+            rate: BillingRate::Month,
+            trial_days: 7,
+            seat_cents: None,
+            network_cents: None,
+            included_seats: Some(1),
+            included_networks: Some(1),
+        }),
+        BillingPlan::Pro(PlanConfig {
+            base_cents: 1999,
+            rate: BillingRate::Month,
+            trial_days: 7,
+            seat_cents: None,
+            network_cents: None,
+            included_seats: Some(1),
+            included_networks: Some(3),
+        }),
+        BillingPlan::Team(PlanConfig {
+            base_cents: 3999,
+            rate: BillingRate::Month,
+            trial_days: 7,
+            seat_cents: Some(1000),
+            network_cents: Some(800),
+            included_seats: Some(5),
+            included_networks: Some(5),
+        }),
+        BillingPlan::Business(PlanConfig {
+            base_cents: 5999,
+            rate: BillingRate::Month,
+            trial_days: 14,
+            seat_cents: Some(800),
+            network_cents: Some(500),
+            included_seats: Some(10),
+            included_networks: Some(25),
+        }),
+    ]
+}
+
+pub fn get_enterprise_plan() -> BillingPlan {
+    BillingPlan::Enterprise(PlanConfig {
+        base_cents: 0,
+        rate: BillingRate::Month,
+        trial_days: 0,
+        seat_cents: None,
+        network_cents: None,
+        included_seats: None,
+        included_networks: None,
+    })
+}
+
+fn get_community_plan() -> BillingPlan {
+    BillingPlan::Community(PlanConfig {
+        base_cents: 0,
+        rate: BillingRate::Month,
+        trial_days: 0,
+        seat_cents: None,
+        network_cents: None,
+        included_seats: None,
+        included_networks: None,
+    })
+}
+
+fn get_commercial_self_hosted_plan() -> BillingPlan {
+    BillingPlan::CommercialSelfHosted(PlanConfig {
+        base_cents: 0,
+        rate: BillingRate::Month,
+        trial_days: 0,
+        seat_cents: None,
+        network_cents: None,
+        included_seats: None,
+        included_networks: None,
+    })
+}
+
+pub fn get_website_fixture_plans() -> Vec<BillingPlan> {
+    let non_saas_plans = [
+        get_enterprise_plan(),
+        get_community_plan(),
+        get_commercial_self_hosted_plan(),
+    ];
+
+    let non_saas_yearly = non_saas_plans.iter().map(|p| p.to_yearly(YEARLY_DISCOUNT));
+
+    let mut all_plans = get_purchasable_plans();
+    all_plans.extend(non_saas_plans);
+    all_plans.extend(non_saas_yearly);
+
+    all_plans
+}
+
+/// Returns both monthly and yearly versions of all plans.
+/// Yearly plans get a 20% discount.
+pub fn get_purchasable_plans() -> Vec<BillingPlan> {
+    let monthly_plans = get_default_plans();
+    let mut all_plans = monthly_plans.clone();
+
+    // Add yearly versions with 20% discount
+    for plan in monthly_plans {
+        all_plans.push(plan.to_yearly(YEARLY_DISCOUNT));
+    }
+
+    all_plans
+}

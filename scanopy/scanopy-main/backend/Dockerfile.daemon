@@ -1,0 +1,24 @@
+FROM debian:bookworm-slim
+
+ARG TARGETARCH
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    iproute2 \
+    iputils-ping \
+    net-tools \
+    procps \
+    tcpdump \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pre-built binary copied in during build (named by architecture)
+COPY scanopy-daemon-linux-${TARGETARCH} /usr/local/bin/scanopy-daemon
+RUN chmod +x /usr/local/bin/scanopy-daemon
+
+EXPOSE 60073
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD curl -f http://localhost:60073/api/health || exit 1
+
+CMD ["scanopy-daemon"]

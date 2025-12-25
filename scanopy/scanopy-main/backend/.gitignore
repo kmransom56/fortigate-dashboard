@@ -1,0 +1,11 @@
+/target/
+/releases/
+/.vscode/
+/static/
+.DS_STORE
+.env
+
+# Ignore all .db files
+*.db
+
+src/tests/words.json

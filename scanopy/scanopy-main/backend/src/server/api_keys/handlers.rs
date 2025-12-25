@@ -1,0 +1,148 @@
+use crate::server::{
+    api_keys::{
+        r#impl::{api::ApiKeyResponse, base::ApiKey},
+        service::generate_api_key_for_storage,
+    },
+    auth::middleware::{
+        features::{BlockedInDemoMode, RequireFeature},
+        permissions::RequireMember,
+    },
+    config::AppState,
+    shared::{
+        events::types::{TelemetryEvent, TelemetryOperation},
+        handlers::traits::{
+            CrudHandlers, bulk_delete_handler, delete_handler, get_all_handler, get_by_id_handler,
+            update_handler,
+        },
+        services::traits::{CrudService, EventBusService},
+        types::api::{ApiError, ApiResponse, ApiResult},
+    },
+};
+use axum::{
+    Json, Router,
+    extract::{Path, State},
+    routing::{delete, get, post, put},
+};
+use axum_client_ip::ClientIp;
+use axum_extra::{TypedHeader, headers::UserAgent};
+use chrono::Utc;
+use std::sync::Arc;
+use uuid::Uuid;
+
+pub fn create_router() -> Router<Arc<AppState>> {
+    Router::new()
+        .route("/", get(get_all_handler::<ApiKey>))
+        .route("/", post(create_api_key))
+        .route("/{id}/rotate", post(rotate_key_handler))
+        .route("/{id}", put(update_api_key))
+        .route("/{id}", delete(delete_handler::<ApiKey>))
+        .route("/{id}", get(get_by_id_handler::<ApiKey>))
+        .route("/bulk-delete", post(bulk_delete_handler::<ApiKey>))
+}
+
+/// Create a new API key with generated key pair
+pub async fn create_api_key(
+    State(state): State<Arc<AppState>>,
+    RequireMember(user): RequireMember,
+    _demo_check: RequireFeature<BlockedInDemoMode>,
+    Json(mut api_key): Json<ApiKey>,
+) -> ApiResult<Json<ApiResponse<ApiKeyResponse>>> {
+    tracing::debug!(
+        api_key_name = %api_key.base.name,
+        network_id = %api_key.base.network_id,
+        user_id = %user.user_id,
+        "API key create request received"
+    );
+
+    let (plaintext, hashed) = generate_api_key_for_storage();
+
+    let service = ApiKey::get_service(&state);
+    api_key.base.key = hashed;
+    let api_key = service
+        .create(api_key, user.clone().into())
+        .await
+        .map_err(|e| {
+            tracing::error!(
+                error = %e,
+                user_id = %user.user_id,
+                "Failed to create API key"
+            );
+            ApiError::internal_error(&e.to_string())
+        })?;
+
+    let organization = state
+        .services
+        .organization_service
+        .get_by_id(&user.organization_id)
+        .await?;
+
+    if let Some(organization) = organization
+        && organization.not_onboarded(&TelemetryOperation::FirstApiKeyCreated)
+    {
+        service
+            .event_bus()
+            .publish_telemetry(TelemetryEvent {
+                id: Uuid::new_v4(),
+                authentication: user.clone().into(),
+                organization_id: user.organization_id,
+                operation: TelemetryOperation::FirstApiKeyCreated,
+                timestamp: Utc::now(),
+                metadata: serde_json::json!({
+                    "is_onboarding_step": true
+                }),
+            })
+            .await?;
+    }
+
+    Ok(Json(ApiResponse::success(ApiKeyResponse {
+        key: plaintext,
+        api_key,
+    })))
+}
+
+pub async fn rotate_key_handler(
+    State(state): State<Arc<AppState>>,
+    RequireMember(user): RequireMember,
+    _demo_check: RequireFeature<BlockedInDemoMode>,
+    ClientIp(ip): ClientIp,
+    user_agent: Option<TypedHeader<UserAgent>>,
+    Path(api_key_id): Path<Uuid>,
+) -> ApiResult<Json<ApiResponse<String>>> {
+    let user_agent = user_agent.map(|u| u.to_string());
+
+    let service = ApiKey::get_service(&state);
+    let key = service
+        .rotate_key(api_key_id, ip, user_agent, user.clone())
+        .await
+        .map_err(|e| {
+            tracing::error!(
+                api_key_id = %api_key_id,
+                user_id = %user.user_id,
+                error = %e,
+                "Failed to rotate API key"
+            );
+            ApiError::internal_error(&e.to_string())
+        })?;
+
+    Ok(Json(ApiResponse::success(key)))
+}
+
+/// Update an API key, preserving the key hash
+pub async fn update_api_key(
+    State(state): State<Arc<AppState>>,
+    user: RequireMember,
+    Path(id): Path<Uuid>,
+    Json(mut request): Json<ApiKey>,
+) -> ApiResult<Json<ApiResponse<ApiKey>>> {
+    // Fetch existing to preserve immutable fields
+    let existing = ApiKey::get_service(&state)
+        .get_by_id(&id)
+        .await?
+        .ok_or_else(|| ApiError::not_found(format!("Api Key '{}' not found", id)))?;
+
+    // Preserve the key hash - don't allow it to be changed via update
+    request.base.key = existing.base.key;
+
+    // Delegate to generic handler (handles validation, auth checks, update)
+    update_handler::<ApiKey>(State(state), user, Path(id), Json(request)).await
+}

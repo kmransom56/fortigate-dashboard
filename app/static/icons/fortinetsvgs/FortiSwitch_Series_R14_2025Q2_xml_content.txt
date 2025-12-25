@@ -1,0 +1,6 @@
+XML-like content extracted from FortiSwitch_Series_R14_2025Q2.vss
+==================================================
+
+Fragment 1:
+gp!gp&gpU*gp-gp1gp4gpU6gp9gp;gp<gpU=gp>gp?gp@gp_A
+

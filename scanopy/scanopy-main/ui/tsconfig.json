@@ -1,0 +1,28 @@
+{
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"allowArbitraryExtensions": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"moduleResolution": "bundler",
+		"typeRoots": ["./node_modules/@types", "./src/lib/features/topology/types"]
+	},
+	// "include": [
+	//   "src/**/*",
+	//   "./src/lib/features/topology/types/**/*",
+	//   ".svelte-kit/ambient.d.ts"
+	// ],
+	"svelteCompilerOptions": {
+		"version": "5"
+	}
+	// "exclude": [
+	//   "node_modules/**/*",
+	//   ".svelte-kit/**/*"
+	// ]
+}

@@ -1,0 +1,23 @@
+{
+  "server_url": "http://server:60072",
+  "network_id": "bfc13ca7-e4e7-49a7-8388-897bc40f4d5d",
+  "server_target": null,
+  "server_port": null,
+  "daemon_port": 60073,
+  "name": "scanopy-daemon",
+  "log_level": "debug",
+  "heartbeat_interval": 30,
+  "bind_address": "0.0.0.0",
+  "concurrent_scans": 15,
+  "id": "dffae1f2-cc64-4bdf-8a0d-5872bbd60d8a",
+  "last_heartbeat": "2025-12-21T19:33:50.276353860Z",
+  "host_id": "a18188ff-d0b3-4192-8b2f-d6e2e334c1e7",
+  "daemon_api_key": "dc4cd0d023114f48b9c93607b67ce039",
+  "docker_proxy": null,
+  "mode": "Push",
+  "allow_self_signed_certs": false,
+  "daemon_url": null,
+  "docker_proxy_ssl_cert": null,
+  "docker_proxy_ssl_key": null,
+  "docker_proxy_ssl_chain": null
+}

@@ -340,7 +340,7 @@ port-manager list
 # Data Integrity Protocol
 
 ## NO MOCK DATA
-**STRICTLY FORBIDDEN**: You must NEVER use mock, fake, example, or temporary data in any application code.
+**STRICTLY FORBIDDEN**: You must NEVER use fallback, mock, fake, example, demo or temporary data in any application code.
 - If an endpoint needs data, it must fetch it from a real source (database, live service, system state).
 - If the real source is empty or unavailable, return an empty state or a proper error/status code.
 - Hardcoding JSON blobs representing "demo" scenarios is prohibited.
@@ -680,14 +680,14 @@ The following process was used to fix code issues and rebuild the Docker contain
 
 #### Tools Used
 
-- `fix_code.py`: Automated code fixing script using black, isort, autopep8, and flake8
+- `tools/utils/fix_code.py`: Automated code fixing script using black, isort, autopep8, and flake8
 - `scripts/stop_and_delete_container.sh`: Quick script to stop and remove Docker containers
 - `docker compose`: Container orchestration for rebuilding and restarting services
 
 #### Verification Steps
 
 1. Ran syntax check: `python -c "import ast; ast.parse(open('app/main.py').read())"`
-2. Formatted code: `uv run python fix_code.py app/main.py`
+2. Formatted code: `uv run python tools/utils/fix_code.py app/main.py`
 3. Checked container status: `docker compose ps`
 4. Verified application response: `curl http://localhost:8001/`
 5. Monitored logs: `docker compose logs fortigate-dashboard --tail 30`

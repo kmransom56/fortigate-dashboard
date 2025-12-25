@@ -1,0 +1,31 @@
+# Data directory
+/data/
+.env
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+node_modules/
+*/node_modules/
+package-lock.json
+*.zip
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+/target
+
+# Environment
+.env
+oidc.toml
+icons/
+/media/keith/Windows Backup/projects/fortigate-dashboard/libvisio2svg
+/media/keith/Windows Backup/projects/fortigate-dashboard/downloaded_files
+secrets/
+/media/keith/Windows Backup/projects/fortigate-dashboard/app/static
+/media/keith/Windows Backup/projects/fortigate-dashboard/fortinet_visio_stencil/
+/media/keith/Windows Backup/projects/fortigate-dashboard/fortinetsvgs/
+/media/keith/Windows Backup/projects/fortigate-dashboard/merakisvgs/

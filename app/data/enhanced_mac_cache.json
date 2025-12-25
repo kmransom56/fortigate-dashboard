@@ -1,0 +1,11 @@
+{
+  "DCA632": {
+    "manufacturer": "Raspberry Pi Trading Ltd",
+    "device_types": [
+      "endpoint"
+    ],
+    "source": "macvendors.com",
+    "cached": false,
+    "timestamp": "2025-12-25T07:11:11.629584"
+  }
+}

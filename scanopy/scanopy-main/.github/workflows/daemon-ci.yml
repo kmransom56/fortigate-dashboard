@@ -1,0 +1,59 @@
+name: Daemon CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/src/daemon.rs'
+      - 'backend/src/daemon/**'
+      - 'backend/src/*.rs'
+      - 'backend/*'
+      - '.github/workflows/daemon-ci.yml'
+  pull_request:
+    paths:
+      - 'backend/src/daemon.rs'
+      - 'backend/src/daemon/**'
+      - 'backend/src/*.rs'
+      - 'backend/*'
+      - '.github/workflows/daemon-ci.yml'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: ./backend
+
+jobs:
+  test:
+    name: daemon-lint-and-test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          components: rustfmt, clippy
+      
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+      
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+      
+      - name: Check formatting
+        run: cargo fmt -- --check
+      
+      - name: Clippy daemon
+        run: cargo clippy --bin daemon --all-features -- -D warnings
+      
+      - name: Test daemon binary
+        run: cargo test --lib
+      
+      - name: Build daemon (release)
+        run: cargo build --release --bin daemon

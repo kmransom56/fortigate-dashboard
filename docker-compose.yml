@@ -45,6 +45,7 @@ services:
       - redis
       - postgres
       - neo4j
+      - scanopy-server
     networks:
       - fortigate_network
     restart: unless-stopped
@@ -182,6 +183,76 @@ services:
   #     - fortigate_network
   #   restart: unless-stopped
 
+  # Scanopy Server - Network Discovery and Visualization
+  scanopy-server:
+    image: ghcr.io/scanopy/scanopy/server:latest
+    container_name: scanopy-server
+    ports:
+      - "60072:60072"
+    environment:
+      - SCANOPY_DATABASE_URL=postgresql://postgres:${SCANOPY_POSTGRES_PASSWORD:-scanopy_password}@scanopy-postgres:5432/scanopy
+      - SCANOPY_SERVER_PORT=60072
+      - SCANOPY_PUBLIC_URL=http://localhost:60072
+      - SCANOPY_INTEGRATED_DAEMON_URL=http://host.docker.internal:60073
+      - SCANOPY_LOG_LEVEL=${SCANOPY_LOG_LEVEL:-info}
+    depends_on:
+      scanopy-postgres:
+        condition: service_healthy
+    networks:
+      - fortigate_network
+      - scanopy_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:60072/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Scanopy Daemon - Network Scanner
+  scanopy-daemon:
+    image: ghcr.io/scanopy/scanopy/daemon:latest
+    container_name: scanopy-daemon
+    network_mode: host  # Required for network scanning
+    privileged: true     # Required for network scanning
+    ports:
+      - "60073:60073"
+    environment:
+      - SCANOPY_SERVER_URL=http://host.docker.internal:60072
+      - SCANOPY_PORT=60073
+      - SCANOPY_BIND_ADDRESS=0.0.0.0
+      - SCANOPY_NAME=fortigate-dashboard-daemon
+      - SCANOPY_HEARTBEAT_INTERVAL=30
+      - SCANOPY_MODE=Push
+      - SCANOPY_LOG_LEVEL=${SCANOPY_LOG_LEVEL:-info}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # For Docker discovery
+      - scanopy_daemon_config:/root/.config/daemon
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:60073/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Scanopy PostgreSQL Database
+  scanopy-postgres:
+    image: postgres:17-alpine
+    container_name: scanopy-postgres
+    environment:
+      - POSTGRES_DB=scanopy
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${SCANOPY_POSTGRES_PASSWORD:-scanopy_password}
+    volumes:
+      - scanopy_postgres_data:/var/lib/postgresql/data
+    networks:
+      - scanopy_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   redis_data:
     driver: local
@@ -201,6 +272,10 @@ volumes:
     driver: local
   nginx_logs:
     driver: local
+  scanopy_postgres_data:
+    driver: local
+  scanopy_daemon_config:
+    driver: local
 
 networks:
   fortigate_network:
@@ -208,3 +283,9 @@ networks:
     ipam:
       config:
         - subnet: 172.30.0.0/16
+  scanopy_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.0.0/16
+          gateway: 172.31.0.1
