@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoGen Teachable Agent - FortiGate Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        .main-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        h2 {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .status-available {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-unavailable {
+            background: #f44336;
+            color: white;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            max-height: calc(100vh - 300px);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.agent {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #e0e0e0;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-action-btn {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-action-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-right: 5px;
+            margin-top: 5px;
+        }
+
+        .category-syntax { background: #ffebee; color: #c62828; }
+        .category-quality { background: #e3f2fd; color: #1565c0; }
+        .category-network { background: #f3e5f5; color: #6a1b9a; }
+        .category-general { background: #e8f5e9; color: #2e7d32; }
+
+        .knowledge-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .knowledge-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .knowledge-item strong {
+            color: #667eea;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .sidebar {
+                order: -1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-panel">
+            <h1>🤖 AutoGen Teachable Agent</h1>
+            <div id="status-badge" class="status-badge status-unavailable">Checking availability...</div>
+
+            <div class="chat-container">
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="sendQuickMessage('Check platform health')">Check Health</button>
+                    <button class="quick-action-btn" onclick="sendQuickMessage('Run code quality checks on app/')">Check Code Quality</button>
+                    <button class="quick-action-btn" onclick="sendQuickMessage('List all learned fixes')">List Knowledge</button>
+                    <button class="quick-action-btn" onclick="sendQuickMessage('Diagnose recent errors')">Diagnose Errors</button>
+                </div>
+
+                <div id="chat-messages" class="chat-messages">
+                    <div class="message agent">
+                        <div>👋 Hello! I'm your AutoGen Teachable Agent. I can help you:</div>
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li>Diagnose network and code issues</li>
+                            <li>Check code quality and fix problems</li>
+                            <li>Learn from new errors and improve over time</li>
+                            <li>Provide platform diagnostics</li>
+                        </ul>
+                        <div class="message-time" id="welcome-time"></div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <input 
+                        type="text" 
+                        id="chat-input" 
+                        class="chat-input" 
+                        placeholder="Ask me anything... (e.g., 'Check syntax of app/main.py')"
+                        onkeypress="handleChatKeyPress(event)"
+                    >
+                    <button class="btn btn-primary" onclick="sendMessage()" id="send-btn">
+                        Send
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearHistory()" title="Clear conversation history">
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-panel">
+                <h2>📚 Knowledge Stats</h2>
+                <div id="knowledge-stats">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-fixes">-</div>
+                            <div class="stat-label">Total Fixes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-categories">-</div>
+                            <div class="stat-label">Categories</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="auto-remediable">-</div>
+                            <div class="stat-label">Auto-Fixable</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="memory-entries">-</div>
+                            <div class="stat-label">Memory Entries</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="refreshStats()" style="width: 100%; margin-top: 10px;">
+                    Refresh Stats
+                </button>
+            </div>
+
+            <div class="sidebar-panel">
+                <h2>🎓 Teach Agent</h2>
+                <form id="teach-form" onsubmit="teachAgent(event)">
+                    <div class="form-group">
+                        <label>Error Pattern</label>
+                        <input type="text" id="error-pattern" placeholder="e.g., Connection timeout" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fix Description</label>
+                        <textarea id="fix-description" placeholder="How to fix this error..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="teach-category">
+                            <option value="general">General</option>
+                            <option value="syntax_errors">Syntax Errors</option>
+                            <option value="code_quality">Code Quality</option>
+                            <option value="network_errors">Network Errors</option>
+                            <option value="api_errors">API Errors</option>
+                            <option value="docker_errors">Docker Errors</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Severity</label>
+                        <select id="teach-severity">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="auto-remediable"> Auto-remediable
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        Teach Agent
+                    </button>
+                </form>
+            </div>
+
+            <div class="sidebar-panel">
+                <h2>⚙️ Agent Controls</h2>
+                <button class="btn btn-secondary" onclick="resetAgent(false)" style="width: 100%; margin-bottom: 10px;">
+                    Reset Memory
+                </button>
+                <button class="btn btn-secondary" onclick="resetAgent(true)" style="width: 100%;">
+                    Reset Everything
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set welcome time
+        document.getElementById('welcome-time').textContent = new Date().toLocaleTimeString();
+
+        // Check agent availability on load
+        checkAvailability();
+
+        // Refresh stats on load
+        refreshStats();
+
+        // Auto-refresh stats every 30 seconds
+        setInterval(refreshStats, 30000);
+
+        async function checkAvailability() {
+            try {
+                const response = await fetch('/api/autogen/knowledge');
+                if (response.ok) {
+                    document.getElementById('status-badge').textContent = '✅ Agent Available';
+                    document.getElementById('status-badge').className = 'status-badge status-available';
+                } else {
+                    throw new Error('Agent not available');
+                }
+            } catch (error) {
+                document.getElementById('status-badge').textContent = '❌ Agent Unavailable';
+                document.getElementById('status-badge').className = 'status-badge status-unavailable';
+                addMessage('agent', '⚠️ AutoGen agent is not available. Please install pyautogen==0.2.18 and set OPENAI_API_KEY environment variable.');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage('user', message);
+            input.value = '';
+
+            // Disable send button
+            const sendBtn = document.getElementById('send-btn');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = 'Sending<span class="loading"></span>';
+
+            try {
+                const response = await fetch('/api/autogen/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        clear_history: false
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    addMessage('agent', data.response || 'No response');
+                    // Refresh stats after interaction
+                    refreshStats();
+                } else {
+                    addMessage('error', `Error: ${data.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                addMessage('error', `Failed to send message: ${error.message}`);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+            }
+        }
+
+        function sendQuickMessage(message) {
+            document.getElementById('chat-input').value = message;
+            sendMessage();
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function addMessage(type, content) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = `
+                <div>${escapeHtml(content)}</div>
+                <div class="message-time">${new Date().toLocaleTimeString()}</div>
+            `;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearHistory() {
+            if (confirm('Clear conversation history? This will reset the agent\'s memory.')) {
+                fetch('/api/autogen/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'Hello',
+                        clear_history: true
+                    })
+                }).then(() => {
+                    document.getElementById('chat-messages').innerHTML = `
+                        <div class="message agent">
+                            <div>👋 Conversation history cleared. How can I help you?</div>
+                            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        async function refreshStats() {
+            try {
+                const response = await fetch('/api/autogen/knowledge');
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById('total-fixes').textContent = stats.total_fixes || 0;
+                    document.getElementById('total-categories').textContent = stats.total_categories || 0;
+                    document.getElementById('auto-remediable').textContent = stats.auto_remediable_count || 0;
+                    document.getElementById('memory-entries').textContent = stats.agent_memory_entries || 0;
+                }
+            } catch (error) {
+                console.error('Failed to refresh stats:', error);
+            }
+        }
+
+        async function teachAgent(event) {
+            event.preventDefault();
+
+            const errorPattern = document.getElementById('error-pattern').value;
+            const fixDescription = document.getElementById('fix-description').value;
+            const category = document.getElementById('teach-category').value;
+            const severity = document.getElementById('teach-severity').value;
+            const autoRemediable = document.getElementById('auto-remediable').checked;
+
+            try {
+                const response = await fetch('/api/autogen/teach', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        error_pattern: errorPattern,
+                        fix_description: fixDescription,
+                        category: category,
+                        severity: severity,
+                        auto_remediable: autoRemediable
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    addMessage('agent', `✅ Learned new fix: "${errorPattern}" → "${fixDescription}"`);
+                    document.getElementById('teach-form').reset();
+                    refreshStats();
+                } else {
+                    addMessage('error', `Failed to teach agent: ${data.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                addMessage('error', `Failed to teach agent: ${error.message}`);
+            }
+        }
+
+        async function resetAgent(keepKnowledgeBase) {
+            const message = keepKnowledgeBase 
+                ? 'Reset agent memory (keep knowledge base)?'
+                : 'Reset agent memory and knowledge base? This cannot be undone!';
+            
+            if (!confirm(message)) return;
+
+            try {
+                const response = await fetch('/api/autogen/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        keep_knowledge_base: keepKnowledgeBase
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    addMessage('agent', '✅ Agent memory reset successfully');
+                    refreshStats();
+                } else {
+                    addMessage('error', `Failed to reset agent: ${data.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                addMessage('error', `Failed to reset agent: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -18,6 +18,7 @@ from app.services.fortigate_inventory_service import get_fortigate_inventory_ser
 from app.services.fortigate_redis_session import get_fortigate_redis_session_manager
 from app.services.fortigate_service import get_cloud_status, get_interfaces
 from app.services.fortiswitch_service import get_fortiswitches
+from app.services.fortiswitch_service_optimized import get_fortiswitches_optimized
 from app.services.hybrid_topology_service import get_hybrid_topology_service
 from app.services.icon_3d_service import get_3d_icon_service
 from app.services.organization_service import get_organization_service
@@ -65,9 +66,18 @@ def get_device_icon_fallback(manufacturer, device_type):
 
 
 # Helper to aggregate device details for dashboard using hybrid topology
-def get_all_device_details():
-    hybrid_service = get_hybrid_topology_service()
-    devices = hybrid_service.get_network_devices()
+async def get_all_device_details():
+    from app.services.hybrid_topology_service_optimized import (
+        get_hybrid_topology_service_optimized,
+    )
+    hybrid_service = get_hybrid_topology_service_optimized()
+    topology = await hybrid_service.get_comprehensive_topology()
+    # Extract devices from topology
+    devices = []
+    for switch in topology.get("switches", []):
+        devices.append(switch)
+        for port in switch.get("ports", []):
+            devices.extend(port.get("devices", []))
 
     # Enrich with icon information
     enriched_devices = []
@@ -166,10 +176,17 @@ async def api_cloud_status():
 # 🔄 Route for FortiSwitch Dashboard "/switches"
 @app.get("/switches", response_class=HTMLResponse)
 async def switches_page(request: Request):
-    switches = get_fortiswitches()  # Pulls live data
+    switches = await get_fortiswitches_optimized()  # Optimized async version
     return templates.TemplateResponse(
         "switches.html", {"request": request, "switches": switches}
     )
+
+
+# 🤖 Route for AutoGen Teachable Agent Interface "/autogen"
+@app.get("/autogen", response_class=HTMLResponse)
+async def autogen_agent_page(request: Request):
+    """Web interface for interacting with the AutoGen teachable agent"""
+    return templates.TemplateResponse("autogen_agent.html", {"request": request})
 
 
 # 🌐 Route for Network Topology "/topology"
@@ -712,7 +729,7 @@ async def _diagnose_topology_error(error_msg: str):
             "Possible issues: Redis not running or incorrect REDIS_HOST/REDIS_PORT"
         )
 
-    # Check hybrid topology service
+    # Check hybrid topology service (using non-optimized for sync health check)
     try:
         hybrid_service = get_hybrid_topology_service()
         topology = hybrid_service.get_comprehensive_topology()
@@ -730,11 +747,14 @@ async def _diagnose_topology_error(error_msg: str):
 async def debug_topology():
     """Debug endpoint to check topology data sources"""
     try:
-        # Test individual services
-        hybrid_service = get_hybrid_topology_service()
+        # Test individual services (use optimized async version)
+        from app.services.hybrid_topology_service_optimized import (
+            get_hybrid_topology_service_optimized,
+        )
+        hybrid_service = get_hybrid_topology_service_optimized()
 
-        # Test hybrid topology
-        topo_data = hybrid_service.get_comprehensive_topology()
+        # Test hybrid topology (async)
+        topo_data = await hybrid_service.get_comprehensive_topology()
 
         # Test device aggregation
         devices = get_all_device_details()
@@ -949,8 +969,20 @@ async def start_organization_discovery(org_id: str, location_limit: int = None):
 async def get_enterprise_topology(org_filter: str = None):
     """Get enterprise-wide topology including FortiSwitch and Meraki switches"""
     try:
-        hybrid_service = get_hybrid_topology_service()
-        topology_data = hybrid_service.get_enterprise_topology(org_filter)
+        from app.services.hybrid_topology_service_optimized import (
+            get_hybrid_topology_service_optimized,
+        )
+        hybrid_service = get_hybrid_topology_service_optimized()
+        # Note: get_enterprise_topology may need async version
+        # For now, use sync version if async not available
+        if hasattr(hybrid_service, 'get_enterprise_topology_async'):
+            topology_data = await hybrid_service.get_enterprise_topology_async(org_filter)
+        else:
+            # Fallback to sync version in executor
+            loop = asyncio.get_event_loop()
+            topology_data = await loop.run_in_executor(
+                None, hybrid_service.get_enterprise_topology, org_filter
+            )
         return topology_data
     except Exception as e:
         raise HTTPException(
@@ -2101,6 +2133,178 @@ async def teach_recovery_agent(
         raise HTTPException(
             status_code=500, detail=f"Failed to teach recovery agent: {str(e)}"
         )
+
+
+# AutoGen Teachable Agent Endpoints
+@app.post("/api/autogen/chat")
+async def autogen_chat(message: str = None, clear_history: bool = False):
+    """
+    Chat with the AutoGen teachable agent.
+
+    Args:
+        message: User message to send to the agent
+        clear_history: Whether to clear conversation history
+
+    Returns:
+        Response from the agent
+    """
+    try:
+        from app.services.autogen_teachable_agent import (
+            get_autogen_teachable_agent_service,
+        )
+
+        agent_service = get_autogen_teachable_agent_service()
+        if not agent_service:
+            raise HTTPException(
+                status_code=503,
+                detail="AutoGen teachable agent not available. Install pyautogen==0.2.18",
+            )
+
+        result = agent_service.chat(message, clear_history=clear_history)
+        return result
+    except ImportError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"AutoGen not available: {str(e)}. Install with: pip install 'pyautogen==0.2.18'",
+        )
+    except Exception as e:
+        logger.error(f"Error in autogen chat: {e}")
+        raise HTTPException(status_code=500, detail=f"Agent chat failed: {str(e)}")
+
+
+@app.post("/api/autogen/teach")
+async def autogen_teach(request: Request):
+    """
+    Teach the AutoGen agent a new error fix.
+
+    Request body:
+        {
+            "error_pattern": "Pattern to match in errors",
+            "fix_description": "How to fix this error",
+            "category": "general",  // Optional
+            "severity": "medium",  // Optional: low, medium, high, critical
+            "auto_remediable": false  // Optional
+        }
+
+    Returns:
+        Confirmation of the learning
+    """
+    try:
+        from app.services.autogen_teachable_agent import (
+            get_autogen_teachable_agent_service,
+        )
+
+        # Parse request body
+        body = await request.json()
+        error_pattern = body.get("error_pattern")
+        fix_description = body.get("fix_description")
+        category = body.get("category", "general")
+        severity = body.get("severity", "medium")
+        auto_remediable = body.get("auto_remediable", False)
+
+        if not error_pattern or not fix_description:
+            raise HTTPException(
+                status_code=400, detail="error_pattern and fix_description are required"
+            )
+
+        agent_service = get_autogen_teachable_agent_service()
+        if not agent_service:
+            raise HTTPException(
+                status_code=503,
+                detail="AutoGen teachable agent not available. Install pyautogen==0.2.18",
+            )
+
+        result = agent_service.teach(
+            error_pattern=error_pattern,
+            fix_description=fix_description,
+            category=category,
+            severity=severity,
+            auto_remediable=auto_remediable,
+        )
+        return result
+    except ImportError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"AutoGen not available: {str(e)}. Install with: pip install 'pyautogen==0.2.18'",
+        )
+    except Exception as e:
+        logger.error(f"Error teaching agent: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to teach agent: {str(e)}")
+
+
+@app.get("/api/autogen/knowledge")
+async def autogen_knowledge_stats():
+    """Get statistics about the agent's learned knowledge"""
+    try:
+        from app.services.autogen_teachable_agent import (
+            get_autogen_teachable_agent_service,
+        )
+
+        agent_service = get_autogen_teachable_agent_service()
+        if not agent_service:
+            raise HTTPException(
+                status_code=503,
+                detail="AutoGen teachable agent not available. Install pyautogen==0.2.18",
+            )
+
+        stats = agent_service.get_knowledge_stats()
+        return stats
+    except ImportError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"AutoGen not available: {str(e)}. Install with: pip install 'pyautogen==0.2.18'",
+        )
+    except Exception as e:
+        logger.error(f"Error getting knowledge stats: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get knowledge stats: {str(e)}"
+        )
+
+
+@app.post("/api/autogen/reset")
+async def autogen_reset(request: Request = None):
+    """
+    Reset the agent's memory.
+
+    Request body (optional):
+        {
+            "keep_knowledge_base": true  // Whether to keep the knowledge base file
+        }
+
+    Returns:
+        Confirmation of reset
+    """
+    try:
+        from app.services.autogen_teachable_agent import (
+            get_autogen_teachable_agent_service,
+        )
+
+        # Parse request body if provided
+        keep_knowledge_base = True
+        if request:
+            try:
+                body = await request.json()
+                keep_knowledge_base = body.get("keep_knowledge_base", True)
+            except Exception:
+                pass  # Use default if body parsing fails
+
+        agent_service = get_autogen_teachable_agent_service()
+        if not agent_service:
+            raise HTTPException(
+                status_code=503,
+                detail="AutoGen teachable agent not available. Install pyautogen==0.2.18",
+            )
+
+        result = agent_service.reset_memory(keep_knowledge_base=keep_knowledge_base)
+        return result
+    except ImportError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"AutoGen not available: {str(e)}. Install with: pip install 'pyautogen==0.2.18'",
+        )
+    except Exception as e:
+        logger.error(f"Error resetting agent: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to reset agent: {str(e)}")
 
 
 @app.post("/api/report-error")

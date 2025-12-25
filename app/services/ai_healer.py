@@ -11,7 +11,9 @@ FortiGate Dashboard platform.
 import os
 import json
 import logging
-from typing import Dict, Any, Optional
+import subprocess
+from pathlib import Path
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -202,6 +204,302 @@ class AIHealer:
         except Exception as e:
             result["error"] = f"Failed to analyze log: {e}"
             logger.error(f"Error analyzing log {log_path}: {e}")
+
+        return result
+
+    def check_syntax(self, file_paths: List[str] = None) -> Dict[str, Any]:
+        """
+        Check Python files for syntax errors using the syntax checker.
+
+        Args:
+            file_paths: List of file paths or directories to check. Defaults to app/
+
+        Returns:
+            Results of syntax check with any errors found
+        """
+        if file_paths is None:
+            file_paths = ["app/"]
+
+        result = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "command": "syntax_check",
+            "files_checked": [],
+            "errors_found": [],
+            "passed": True,
+        }
+
+        try:
+            # Get project root
+            project_root = Path(__file__).parent.parent.parent
+            syntax_checker = project_root / "tools" / "utils" / "check_syntax.py"
+
+            if not syntax_checker.exists():
+                result["error"] = f"Syntax checker not found at {syntax_checker}"
+                result["passed"] = False
+                return result
+
+            # Build command
+            cmd = ["python3", str(syntax_checker)] + file_paths
+
+            # Run syntax check
+            process = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                cwd=str(project_root),
+                timeout=60,
+            )
+
+            result["returncode"] = process.returncode
+            result["stdout"] = process.stdout
+            result["stderr"] = process.stderr
+            result["passed"] = process.returncode == 0
+
+            # Parse output for errors
+            if not result["passed"]:
+                lines = process.stdout.split("\n") + process.stderr.split("\n")
+                for line in lines:
+                    if "❌" in line or "SyntaxError" in line or "IndentationError" in line:
+                        result["errors_found"].append(line.strip())
+
+        except subprocess.TimeoutExpired:
+            result["error"] = "Syntax check timed out after 60 seconds"
+            result["passed"] = False
+        except Exception as e:
+            result["error"] = f"Failed to run syntax check: {e}"
+            result["passed"] = False
+            logger.error(f"Error running syntax check: {e}")
+
+        return result
+
+    def format_code(self, file_paths: List[str] = None) -> Dict[str, Any]:
+        """
+        Format code using Black.
+
+        Args:
+            file_paths: List of file paths or directories to format. Defaults to app/
+
+        Returns:
+            Results of formatting operation
+        """
+        if file_paths is None:
+            file_paths = ["app/"]
+
+        result = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "command": "format_code",
+            "files_formatted": [],
+            "passed": True,
+        }
+
+        try:
+            # Get project root
+            project_root = Path(__file__).parent.parent.parent
+
+            # Build command
+            cmd = ["python3", "-m", "black"] + file_paths
+
+            # Run black
+            process = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                cwd=str(project_root),
+                timeout=120,
+            )
+
+            result["returncode"] = process.returncode
+            result["stdout"] = process.stdout
+            result["stderr"] = process.stderr
+            result["passed"] = process.returncode == 0
+
+            # Parse files that were reformatted
+            for line in process.stdout.split("\n"):
+                if "reformatted" in line.lower():
+                    result["files_formatted"].append(line.strip())
+
+        except subprocess.TimeoutExpired:
+            result["error"] = "Code formatting timed out after 120 seconds"
+            result["passed"] = False
+        except Exception as e:
+            result["error"] = f"Failed to format code: {e}"
+            result["passed"] = False
+            logger.error(f"Error formatting code: {e}")
+
+        return result
+
+    def lint_code(self, file_paths: List[str] = None) -> Dict[str, Any]:
+        """
+        Lint code using Flake8.
+
+        Args:
+            file_paths: List of file paths or directories to lint. Defaults to app/
+
+        Returns:
+            Results of linting with any issues found
+        """
+        if file_paths is None:
+            file_paths = ["app/"]
+
+        result = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "command": "lint_code",
+            "issues_found": [],
+            "passed": True,
+        }
+
+        try:
+            # Get project root
+            project_root = Path(__file__).parent.parent.parent
+
+            # Build command
+            cmd = [
+                "python3",
+                "-m",
+                "flake8",
+            ] + file_paths + [
+                "--max-line-length=88",
+                "--ignore=E203,W503,E501",
+            ]
+
+            # Run flake8
+            process = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                cwd=str(project_root),
+                timeout=120,
+            )
+
+            result["returncode"] = process.returncode
+            result["stdout"] = process.stdout
+            result["stderr"] = process.stderr
+            result["passed"] = process.returncode == 0
+
+            # Parse linting issues
+            if not result["passed"]:
+                for line in process.stdout.split("\n"):
+                    if line.strip():
+                        result["issues_found"].append(line.strip())
+
+        except subprocess.TimeoutExpired:
+            result["error"] = "Linting timed out after 120 seconds"
+            result["passed"] = False
+        except Exception as e:
+            result["error"] = f"Failed to lint code: {e}"
+            result["passed"] = False
+            logger.error(f"Error linting code: {e}")
+
+        return result
+
+    def run_code_quality_checks(
+        self, file_paths: List[str] = None, auto_fix: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Run comprehensive code quality checks (syntax, format, lint).
+
+        Args:
+            file_paths: List of file paths or directories to check. Defaults to app/
+            auto_fix: Whether to auto-fix formatting issues
+
+        Returns:
+            Combined results from all checks
+        """
+        if file_paths is None:
+            file_paths = ["app/"]
+
+        result = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "command": "code_quality_checks",
+            "syntax_check": {},
+            "format_check": {},
+            "lint_check": {},
+            "all_passed": False,
+        }
+
+        # Step 1: Check syntax (most important)
+        logger.info("Running syntax check...")
+        syntax_result = self.check_syntax(file_paths)
+        result["syntax_check"] = syntax_result
+
+        if not syntax_result["passed"]:
+            result["all_passed"] = False
+            logger.warning("Syntax errors found. Fix these before formatting/linting.")
+            return result
+
+        # Step 2: Format code (if auto_fix enabled)
+        if auto_fix:
+            logger.info("Formatting code with Black...")
+            format_result = self.format_code(file_paths)
+            result["format_check"] = format_result
+
+        # Step 3: Lint code
+        logger.info("Linting code with Flake8...")
+        lint_result = self.lint_code(file_paths)
+        result["lint_check"] = lint_result
+
+        # All checks passed if syntax passed and lint passed
+        result["all_passed"] = syntax_result["passed"] and lint_result["passed"]
+
+        return result
+
+    def auto_fix_code_issues(self, file_paths: List[str] = None) -> Dict[str, Any]:
+        """
+        Automatically fix code issues that can be auto-fixed.
+
+        This runs:
+        1. Syntax check (to identify issues)
+        2. Code formatting (auto-fixes formatting)
+        3. Reports issues that need manual fixing
+
+        Args:
+            file_paths: List of file paths or directories to fix. Defaults to app/
+
+        Returns:
+            Results of auto-fix operation
+        """
+        if file_paths is None:
+            file_paths = ["app/"]
+
+        result = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "command": "auto_fix_code_issues",
+            "fixed": [],
+            "needs_manual_fix": [],
+            "passed": False,
+        }
+
+        # Run comprehensive checks with auto-fix
+        quality_result = self.run_code_quality_checks(file_paths, auto_fix=True)
+
+        # Report what was fixed
+        if quality_result["format_check"].get("files_formatted"):
+            result["fixed"].extend(
+                [
+                    f"Formatted: {f}"
+                    for f in quality_result["format_check"]["files_formatted"]
+                ]
+            )
+
+        # Report what needs manual fixing
+        if not quality_result["syntax_check"]["passed"]:
+            result["needs_manual_fix"].extend(
+                [
+                    f"Syntax error: {e}"
+                    for e in quality_result["syntax_check"].get("errors_found", [])
+                ]
+            )
+
+        if not quality_result["lint_check"]["passed"]:
+            result["needs_manual_fix"].extend(
+                [
+                    f"Linting issue: {issue}"
+                    for issue in quality_result["lint_check"].get("issues_found", [])
+                ]
+            )
+
+        result["passed"] = quality_result["all_passed"]
+        result["quality_check_results"] = quality_result
 
         return result
 

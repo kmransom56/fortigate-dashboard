@@ -43,8 +43,8 @@ def _get_device_icon(
                 if not device_type or device_type == "endpoint":
                     device_type_hints = mac_info.get("device_types", [])
                     if device_type_hints:
-                        # Prefer more specific device types
-                        preferred_types = [
+                        # Prefer more specific device types (use set for O(1) lookup)
+                        preferred_types = {
                             "laptop",
                             "phone",
                             "tablet",
@@ -59,7 +59,7 @@ def _get_device_icon(
                             "fire-cube",
                             "server",
                             "desktop",
-                        ]
+                        }
                         for preferred in preferred_types:
                             if preferred in device_type_hints:
                                 device_type = preferred
@@ -79,104 +79,112 @@ def _get_device_icon(
         from app.utils.icon_db import get_icon_binding as _get_binding
 
         # Special handling for Fortinet devices (FortiGate, FortiSwitch, FortiAP) - try model-based lookup first
-        if device_type in ["fortigate", "fortiswitch", "fortiap"] and model:
-            # Try to match model in manifest.json
+        # Use set for O(1) lookup instead of list
+        if device_type in {"fortigate", "fortiswitch", "fortiap"} and model:
+            # Try to match model in manifest.json (cached)
             try:
                 import json
                 import os
+                from functools import lru_cache
 
-                manifest_path = os.path.join(
-                    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                    "app",
-                    "static",
-                    "icons",
-                    "manifest.json",
-                )
-                if os.path.exists(manifest_path):
-                    with open(manifest_path, "r") as f:
-                        manifest = json.load(f)
+                @lru_cache(maxsize=1)
+                def _load_icon_manifest():
+                    """Load and cache manifest.json to avoid repeated file I/O"""
+                    manifest_path = os.path.join(
+                        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                        "app",
+                        "static",
+                        "icons",
+                        "manifest.json",
+                    )
+                    if os.path.exists(manifest_path):
+                        with open(manifest_path, "r") as f:
+                            return json.load(f)
+                    return {}
 
-                    # Determine device prefix and directory
-                    device_prefix = {
-                        "fortigate": "FG-",
-                        "fortiswitch": "FSW-",
-                        "fortiap": "FAP-",
-                    }.get(device_type, "")
-                    device_dir = {
-                        "fortigate": "fortinet/fortigate",
-                        "fortiswitch": "fortinet/fortiswitch",
-                        "fortiap": "fortiap",
-                    }.get(device_type, "")
-                    device_name = {
-                        "fortigate": "FortiGate",
-                        "fortiswitch": "FortiSwitch",
-                        "fortiap": "FortiAP",
-                    }.get(device_type, "Device")
+                manifest = _load_icon_manifest()
 
-                    # Try exact model match (e.g., "FG-100F", "FSW-124E", "FAP-231F")
-                    model_upper = model.upper().replace("-", "-")
-                    if model_upper in manifest:
-                        icon_file = manifest[model_upper]
-                        # Check if it's in device-specific subdirectory
-                        if icon_file.startswith(
-                            device_dir + "/"
-                        ) or icon_file.startswith(device_dir.replace("/", "-") + "/"):
-                            icon_path = f"icons/{icon_file}"
-                        else:
-                            # Check if specific model icon exists in device directory
-                            device_icon_dir = os.path.join(
-                                os.path.dirname(
-                                    os.path.dirname(os.path.dirname(__file__))
-                                ),
-                                "app",
-                                "static",
-                                "icons",
-                                device_dir,
-                            )
-                            # Try to find model-specific icon
-                            model_clean = model_upper.replace(
-                                device_prefix, ""
-                            ).replace("_", "-")
-                            possible_icons = [
-                                f"{model_upper}.svg",
-                                f"{device_prefix}{model_clean}.svg",
-                                f"{model_upper}-restaurant.svg",
-                                f"{model_upper}-rugged.svg",
-                            ]
-                            for icon_file_name in possible_icons:
-                                if os.path.exists(
-                                    os.path.join(device_icon_dir, icon_file_name)
-                                ):
-                                    icon_path = f"icons/{device_dir}/{icon_file_name}"
-                                    icon_title = f"{device_name} {model}"
-                                    break
-                            # If no specific icon found, use manifest mapping
-                            if not icon_path and model_upper in manifest:
-                                icon_file = manifest[model_upper]
-                                # Check if manifest points to device directory
-                                if icon_file.startswith(device_dir):
-                                    icon_path = f"icons/{icon_file}"
-                                else:
-                                    icon_path = f"icons/{icon_file}"
-                                icon_title = f"{device_name} {model}"
+                # Determine device prefix and directory
+                device_prefix = {
+                    "fortigate": "FG-",
+                    "fortiswitch": "FSW-",
+                    "fortiap": "FAP-",
+                }.get(device_type, "")
+                device_dir = {
+                    "fortigate": "fortinet/fortigate",
+                    "fortiswitch": "fortinet/fortiswitch",
+                    "fortiap": "fortiap",
+                }.get(device_type, "")
+                device_name = {
+                    "fortigate": "FortiGate",
+                    "fortiswitch": "FortiSwitch",
+                    "fortiap": "FortiAP",
+                }.get(device_type, "Device")
+
+                # Try exact model match (e.g., "FG-100F", "FSW-124E", "FAP-231F")
+                model_upper = model.upper().replace("-", "-")
+                if model_upper in manifest:
+                    icon_file = manifest[model_upper]
+                    # Check if it's in device-specific subdirectory
+                    if icon_file.startswith(
+                        device_dir + "/"
+                    ) or icon_file.startswith(device_dir.replace("/", "-") + "/"):
+                        icon_path = f"icons/{icon_file}"
                     else:
-                        # Try partial model match (e.g., "100F" from "FG-100F")
-                        model_parts = model_upper.replace(device_prefix, "").split("-")[
-                            0
+                        # Check if specific model icon exists in device directory
+                        device_icon_dir = os.path.join(
+                            os.path.dirname(
+                                os.path.dirname(os.path.dirname(__file__))
+                            ),
+                            "app",
+                            "static",
+                            "icons",
+                            device_dir,
+                        )
+                        # Try to find model-specific icon
+                        model_clean = model_upper.replace(
+                            device_prefix, ""
+                        ).replace("_", "-")
+                        possible_icons = [
+                            f"{model_upper}.svg",
+                            f"{device_prefix}{model_clean}.svg",
+                            f"{model_upper}-restaurant.svg",
+                            f"{model_upper}-rugged.svg",
                         ]
-                        for key, value in manifest.items():
-                            if model_parts in key or key in model_upper:
-                                icon_file = value
-                                if icon_file.startswith(
-                                    device_dir + "/"
-                                ) or icon_file.startswith(
-                                    device_dir.replace("/", "-") + "/"
-                                ):
-                                    icon_path = f"icons/{icon_file}"
-                                else:
-                                    icon_path = f"icons/{icon_file}"
+                        for icon_file_name in possible_icons:
+                            if os.path.exists(
+                                os.path.join(device_icon_dir, icon_file_name)
+                            ):
+                                icon_path = f"icons/{device_dir}/{icon_file_name}"
                                 icon_title = f"{device_name} {model}"
                                 break
+                        # If no specific icon found, use manifest mapping
+                        if not icon_path and model_upper in manifest:
+                            icon_file = manifest[model_upper]
+                            # Check if manifest points to device directory
+                            if icon_file.startswith(device_dir):
+                                icon_path = f"icons/{icon_file}"
+                            else:
+                                icon_path = f"icons/{icon_file}"
+                            icon_title = f"{device_name} {model}"
+                else:
+                    # Try partial model match (e.g., "100F" from "FG-100F")
+                    model_parts = model_upper.replace(device_prefix, "").split("-")[
+                        0
+                    ]
+                    for key, value in manifest.items():
+                        if model_parts in key or key in model_upper:
+                            icon_file = value
+                            if icon_file.startswith(
+                                device_dir + "/"
+                            ) or icon_file.startswith(
+                                device_dir.replace("/", "-") + "/"
+                            ):
+                                icon_path = f"icons/{icon_file}"
+                            else:
+                                icon_path = f"icons/{icon_file}"
+                            icon_title = f"{device_name} {model}"
+                            break
             except Exception as e:
                 logger.debug(f"Model-based icon lookup failed: {e}")
 
@@ -905,11 +913,13 @@ class ScrapedTopologyService:
                     logger.debug(f"Security Fabric API not available: {e}")
 
                 # Also check detected devices for FortiAP MAC addresses (Fortinet OUI: 00:09:0f, 70:4c:a5, etc.)
-                fortinet_ouis = ["00:09:0f", "70:4c:a5", "00:0c:29", "fc:ec:da"]
-                for device_id, device_data in (
-                    list(arp_devices.items())
-                    + list(mac_address_devices.items())
-                    + list(detected_devices_map.items())
+                fortinet_ouis = {"00:09:0f", "70:4c:a5", "00:0c:29", "fc:ec:da"}  # Set for O(1) lookup
+                # Use itertools.chain for memory-efficient iteration
+                from itertools import chain
+                for device_id, device_data in chain(
+                    arp_devices.items(),
+                    mac_address_devices.items(),
+                    detected_devices_map.items()
                 ):
                     mac = device_data.get("mac", "").upper()
                     if mac and any(mac.startswith(oui) for oui in fortinet_ouis):
@@ -1051,17 +1061,13 @@ class ScrapedTopologyService:
                                 }
                             )
 
-            # Add all ARP devices to devices list
-            devices.extend(arp_devices.values())
-
-            # Add MAC address table devices that weren't in ARP
-            devices.extend(mac_address_devices.values())
-
-            # Add detected devices that weren't in ARP or MAC table
-            devices.extend(detected_devices_map.values())
-
-            # Add FortiAPs to devices list
-            devices.extend(fortiap_devices.values())
+            # Add all devices - optimized single extend with unpacking
+            devices.extend([
+                *arp_devices.values(),
+                *mac_address_devices.values(),
+                *detected_devices_map.values(),
+                *fortiap_devices.values()
+            ])
 
             # Connect detected devices to their switches
             for device_id, device_data in detected_devices_map.items():

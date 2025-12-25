@@ -1,8 +1,61 @@
 {
-  "fixes": {},
+  "fixes": {
+    "syntax_errors": [
+      {
+        "pattern": "SyntaxError",
+        "fix": "Run syntax check: python3 tools/utils/check_syntax.py <file_path>. Fix indentation, missing colons, or unmatched brackets.",
+        "severity": "critical",
+        "auto_remediable": false,
+        "context": "Python syntax errors prevent code from running"
+      },
+      {
+        "pattern": "IndentationError",
+        "fix": "Fix indentation. Use consistent spaces (4 spaces per level). Run: python3 tools/utils/check_syntax.py <file_path> to see exact line.",
+        "severity": "critical",
+        "auto_remediable": false,
+        "context": "Indentation errors are common after code edits"
+      },
+      {
+        "pattern": "unexpected indent",
+        "fix": "Fix indentation at the reported line. Check that code blocks are properly aligned. Run syntax checker for exact location.",
+        "severity": "critical",
+        "auto_remediable": false,
+        "context": "Usually caused by incorrect indentation after if/for/try blocks"
+      }
+    ],
+    "code_quality": [
+      {
+        "pattern": "code quality",
+        "fix": "Run comprehensive code quality checks: ./scripts/check_code_quality.sh or use AI healer: healer.run_code_quality_checks()",
+        "severity": "medium",
+        "auto_remediable": true,
+        "context": "Code quality issues can be auto-fixed with formatting"
+      },
+      {
+        "pattern": "formatting",
+        "fix": "Auto-format code: python3 -m black app/ or use AI healer: healer.format_code(['app/'])",
+        "severity": "low",
+        "auto_remediable": true,
+        "context": "Black can auto-fix most formatting issues"
+      },
+      {
+        "pattern": "linting",
+        "fix": "Check linting issues: python3 -m flake8 app/ --max-line-length=88 --ignore=E203,W503,E501 or use AI healer: healer.lint_code(['app/'])",
+        "severity": "low",
+        "auto_remediable": false,
+        "context": "Linting issues need manual review and fixing"
+      }
+    ]
+  },
   "metadata": {
     "version": "1.0",
-    "last_updated": null,
-    "description": "Knowledge base of error patterns and their fixes for the AI healer system"
+    "last_updated": "2025-01-XX",
+    "description": "Knowledge base of error patterns and their fixes for the AI healer system",
+    "commands": {
+      "syntax_check": "python3 tools/utils/check_syntax.py <paths>",
+      "format_code": "python3 -m black <paths>",
+      "lint_code": "python3 -m flake8 <paths> --max-line-length=88 --ignore=E203,W503,E501",
+      "comprehensive_check": "./scripts/check_code_quality.sh <paths>"
+    }
   }
 }

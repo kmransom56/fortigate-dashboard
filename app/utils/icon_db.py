@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from functools import lru_cache
 
 # Resolve DB path relative to this file, so it works regardless of CWD
 _UTILS_DIR = os.path.dirname(__file__)
@@ -64,6 +65,7 @@ def insert_icon(manufacturer, device_type, slug, title, icon_path, source_url, t
         conn.commit()
 
 
+@lru_cache(maxsize=500)
 def get_icon(manufacturer=None, device_type=None):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -157,6 +159,7 @@ def add_icon_binding(
         conn.commit()
 
 
+@lru_cache(maxsize=500)
 def get_icon_binding(
     manufacturer: Optional[str] = None,
     serial: Optional[str] = None,
