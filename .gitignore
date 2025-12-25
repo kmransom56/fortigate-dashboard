@@ -57,3 +57,4 @@ test_*.py
 !test_requirements.txt
 
 local_settings.py
+app/services/archive/
