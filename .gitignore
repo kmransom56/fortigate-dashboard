@@ -58,3 +58,5 @@ test_*.py
 
 local_settings.py
 app/services/archive/
+
+*.code-workspace
