@@ -69,6 +69,21 @@
       map.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.2em;color:#666;">Loading topology...</div>';
       
       try {
+        // Load icon manifest (optional)
+        // This file may not exist in all deployments; if missing we fallback to
+        // iconPath values returned by the API or to the default circle node.
+        let iconManifest = null;
+        try {
+          const manifestResponse = await fetch('/static/icons/manifest.json');
+          if (manifestResponse.ok) {
+            iconManifest = await manifestResponse.json();
+          } else {
+            console.info('Icon manifest not available:', manifestResponse.status);
+          }
+        } catch (e) {
+          console.info('Icon manifest not available (fetch failed):', e);
+        }
+
         console.log('Fetching topology data from /api/scraped_topology...');
         const response = await fetch('/api/scraped_topology');
         if (!response.ok) {
@@ -149,16 +164,65 @@
           div.style.top = device.position.y + 'px';
           div.style.width = '100px';
           div.style.height = '100px';
-          div.style.borderRadius = '50%';
-          div.style.background = device.details && device.details.color ? device.details.color : '#2196f3';
-          div.style.color = '#fff';
-          div.style.display = 'flex';
-          div.style.alignItems = 'center';
-          div.style.justifyContent = 'center';
-          div.style.fontSize = '1.2em';
-          div.style.boxShadow = '0 2px 12px rgba(0,0,0,0.12)';
-          div.style.cursor = 'pointer';
-          div.innerHTML = `<div><strong>${device.name}</strong><br>${device.details && device.details.deviceCount ? device.details.deviceCount + ' Devices' : ''}</div>`;
+
+          // Icon logic
+          // Priority:
+          //  1) API-provided iconPath (details.iconPath)
+          //  2) Model-to-icon mapping via manifest.json (if present)
+          //  3) Fallback circle
+          let iconUrl = null;
+          const model = device.model || (device.details && device.details.model) || '';
+          const detailsIconPath = device.details && device.details.iconPath;
+
+          if (detailsIconPath) {
+            // iconPath is stored relative to app/static, e.g. "icons/FG-100F_101F.svg"
+            iconUrl = '/static/' + detailsIconPath.replace(/^\//, '');
+          } else if (model && iconManifest) {
+            const upperModel = model.toUpperCase();
+            if (iconManifest[upperModel]) {
+              iconUrl = '/static/icons/' + iconManifest[upperModel];
+            } else {
+              const parts = upperModel.split(/[-_ ]/);
+              for (const part of parts) {
+                if (part.length > 3 && iconManifest[part]) {
+                  iconUrl = '/static/icons/' + iconManifest[part];
+                  break;
+                }
+              }
+            }
+          }
+
+          if (iconUrl) {
+            div.style.backgroundImage = `url('${iconUrl}')`;
+            div.style.backgroundSize = 'contain';
+            div.style.backgroundRepeat = 'no-repeat';
+            div.style.backgroundPosition = 'center';
+            div.style.cursor = 'pointer';
+            div.innerHTML = '';
+
+            const label = document.createElement('div');
+            label.style.position = 'absolute';
+            label.style.top = '105px';
+            label.style.width = '120px';
+            label.style.left = '-10px';
+            label.style.textAlign = 'center';
+            label.style.fontWeight = 'bold';
+            label.style.fontSize = '12px';
+            label.style.color = '#333';
+            label.textContent = device.name;
+            div.appendChild(label);
+          } else {
+            div.style.borderRadius = '50%';
+            div.style.background = device.details && device.details.color ? device.details.color : '#2196f3';
+            div.style.color = '#fff';
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.justifyContent = 'center';
+            div.style.fontSize = '1.2em';
+            div.style.boxShadow = '0 2px 12px rgba(0,0,0,0.12)';
+            div.style.cursor = 'pointer';
+            div.innerHTML = `<div><strong>${device.name}</strong><br>${device.details && device.details.deviceCount ? device.details.deviceCount + ' Devices' : ''}</div>`;
+          }
 
           // Advanced tooltip (popover)
           const tooltip = document.createElement('div');
@@ -177,6 +241,7 @@
           tooltip.innerHTML = `
             <div style="font-weight:bold;font-size:1.1em;margin-bottom:4px;">${device.name}</div>
             <div>Type: <span style="color:${device.details && device.details.color ? device.details.color : '#2196f3'};font-weight:bold;">${device.type}</span></div>
+            <div>Model: ${model || 'Unknown'}</div>
             <div>Count: ${device.details && device.details.deviceCount ? device.details.deviceCount : 1}</div>
             <div>Position: (${device.position.x}, ${device.position.y})</div>
             <div>Status: ${device.status ? device.status : 'unknown'}</div>
