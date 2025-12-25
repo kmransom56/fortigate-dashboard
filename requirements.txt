@@ -62,7 +62,7 @@ typing-extensions==4.14.1
 typing-inspection==0.4.1
 markupsafe==3.0.2
 certifi==2025.8.3
-urllib3==2.5.0
+urllib3==2.6.0
 idna==3.10
 uvloop==0.21.0
 
