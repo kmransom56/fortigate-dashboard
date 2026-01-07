@@ -1,0 +1,19 @@
+# Ignore Python caches and virtual environments
+__pycache__/
+*.pyc
+.venv/
+# Ignore database and output files
+*.db
+*.csv
+*.xlsx
+port6_devices_report.csv
+port2_devices_report.csv
+# Ignore VS Code workspace settings
+.vscode/
+.crt
+.log*
+# Ignore Docker files
+.Dockerfile
+.dockerignore
+fortinet_data.txt
+fortinet_data.xlsx

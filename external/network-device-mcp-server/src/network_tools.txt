@@ -1,0 +1,260 @@
+Part 1: Correcting the Server Startup Error
+The ExceptionGroup traceback you're seeing, culminating in TypeError: 'async for' requires an object with __aiter__ method, got Server, indicates a misconfiguration in how your server communicates over standard input/output (stdio).
+The mcp.server.stdio.stdio_server context manager is designed to create and manage the communication streams (reading from stdin, writing to stdout). Your code incorrectly passes the Server object itself into this function. The correct pattern is to call stdio_server() without arguments and then pass the streams it provides to your server.run() method. 
+The Fix
+You need to modify the main execution block at the end of your src/main.py file.
+Original Code (in main.py)
+python
+# This is the problematic structure from the first traceback
+# (A similar structure exists in the second traceback's main() function)
+
+# ... inside NetworkDeviceMCPServer class ...
+async def run(self):
+    async with stdio_server(self.server) as (read_stream, write_stream):
+        await self.server.run(read_stream, write_stream)
+
+# ... at the end of the file ...
+if __name__ == "__main__":
+    server = NetworkDeviceMCPServer()
+    asyncio.run(server.run())
+
+Use code with caution.
+
+Corrected Code
+Rewrite the end of your src/main.py to separate the server instance creation from the run logic. This corrected pattern correctly uses the stdio_server context manager.
+python
+# ... (all your class code remains the same) ...
+
+async def main():
+    """Main execution function."""
+    # 1. Create an instance of your server class
+    network_server = NetworkDeviceMCPServer()
+    logger.info("Starting Network Device MCP Server")
+    
+    # 2. Use stdio_server to get the communication streams
+    async with stdio_server() as (read_stream, write_stream):
+        # 3. Pass the streams to the server's run method
+        await network_server.server.run(read_stream, write_stream)
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Server shut down by user.")
+    except Exception as e:
+        logger.error(f"A top-level error occurred: {e}", exc_info=True)
+
+Use code with caution.
+
+With this change, your MCP server will start correctly and wait for a client (like Claude Desktop or a custom script) to connect.
+Part 2: Implementing Your Network Operations with MCP Tools
+Now that the server can run, here is a roadmap for implementing the network management capabilities you described. This involves using your existing tools and creating new ones.
+Listing Devices and Infrastructure
+Goal: List all managed devices from FortiManager, FortiGate, and Meraki.
+Status: You are already well-equipped for this. The tools you have defined are perfect for discovering the scope of your managed infrastructure.
+list_fortimanager_instances
+get_fortimanager_devices
+list_fortigate_devices (if configured)
+get_meraki_organizations (if configured)
+get_meraki_networks (if configured)
+get_meraki_devices (if configured)
+An LLM agent can use these tools to build a complete picture of the network.
+Checking Policies and Web Filters
+Goal: Inspect firewall policies and URL filter configurations.
+Status: Your get_policy_packages tool is a good first step, but to truly "check" a policy, an agent needs to see the rules inside. You will need to add more granular tools.
+New Tool 1: Get Policy Package Rules
+This tool will allow an agent to retrieve the specific rules (sources, destinations, services, action) from a named policy package.
+Tool Definition (add to setup_tools):
+python
+Tool(
+    name="get_policy_package_rules",
+    description="Get the specific rules from a policy package on a FortiManager instance.",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "fortimanager_name": {"type": "string", "description": "FortiManager name (Arbys, BWW, or Sonic)"},
+            "adom": {"type": "string", "default": "root"},
+            "package_name": {"type": "string", "description": "The name of the policy package."}
+        },
+        "required": ["fortimanager_name", "package_name"]
+    }
+),
+Use code with caution.
+
+Backend Function (add to NetworkDeviceMCPServer):
+python
+@self.server.call_tool()
+async def get_policy_package_rules(self, arguments: dict) -> list[TextContent]:
+    try:
+        # Your logic to call the FortiManager API to get rules for a specific package
+        # This is a placeholder for your actual implementation
+        result = await self.fortimanager.get_rules(
+            instance_name=arguments['fortimanager_name'],
+            adom=arguments['adom'],
+            package=arguments['package_name']
+        )
+        return [TextContent(type="text", text=json.dumps(result, indent=2))]
+    except Exception as e:
+        logger.error(f"Error getting policy rules: {e}")
+        return [TextContent(type="text", text=f"Error: {str(e)}")]
+Use code with caution.
+
+New Tool 2: Get Web Filter Profile
+Similarly, for web filters, you need a tool to fetch the contents of a specific profile, including the status of URL filters.
+Tool Definition (add to setup_tools):
+python
+Tool(
+    name="get_webfilter_profile",
+    description="Get details of a web filter profile from a FortiGate, including URL filters.",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "fortigate_name": {"type": "string", "description": "The name of the target FortiGate device."},
+            "profile_name": {"type": "string", "description": "The name of the web filter profile."}
+        },
+        "required": ["fortigate_name", "profile_name"]
+    }
+),
+Use code with caution.
+
+Backend Function (add to NetworkDeviceMCPServer):
+python
+@self.server.call_tool()
+async def get_webfilter_profile(self, arguments: dict) -> list[TextContent]:
+    try:
+        # Your logic to call the FortiGate API to get web filter profile details
+        # This is a placeholder for your actual implementation
+        result = await self.fortigate.get_webfilter(
+            device_name=arguments['fortigate_name'],
+            profile=arguments['profile_name']
+        )
+        return [TextContent(type="text", text=json.dumps(result, indent=2))]
+    except Exception as e:
+        logger.error(f"Error getting webfilter profile: {e}")
+        return [TextContent(type="text", text=f"Error: {str(e)}")]
+Use code with caution.
+
+Checking Routes and Viewing Logs
+Goal: Inspect device routing tables and view traffic or event logs.
+Status: These critical troubleshooting functions require new tools.
+New Tool 3: Get Device Routing Table
+Tool Definition (add to setup_tools):
+python
+Tool(
+    name="get_device_routing_table",
+    description="Get the active routing table from a network device.",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "device_name": {"type": "string", "description": "The name of the target device (e.g., a FortiGate name)."},
+            "device_platform": {"type": "string", "enum": ["fortigate", "meraki"], "description": "The platform of the device."}
+        },
+        "required": ["device_name", "device_platform"]
+    }
+),
+Use code with caution.
+
+Backend Function (add to NetworkDeviceMCPServer):
+python
+@self.server.call_tool()
+async def get_device_routing_table(self, arguments: dict) -> list[TextContent]:
+    try:
+        # Logic to dispatch to the correct platform manager
+        # Placeholder for your actual implementation
+        if arguments['device_platform'] == 'fortigate':
+            result = await self.fortigate.get_routes(device_name=arguments['device_name'])
+        # elif arguments['device_platform'] == 'meraki':
+        #     result = await self.meraki.get_routes(...)
+        else:
+            raise ValueError("Unsupported platform")
+
+        return [TextContent(type="text", text=json.dumps(result, indent=2))]
+    except Exception as e:
+        logger.error(f"Error getting routing table: {e}")
+        return [TextContent(type="text", text=f"Error: {str(e)}")]
+Use code with caution.
+
+New Tool 4: Get Device Logs
+This is one of the most important tools. It should allow for flexible filtering.
+Tool Definition (add to setup_tools):
+python
+Tool(
+    name="get_device_logs",
+    description="Search for traffic, event, or threat logs on a device. All filters are optional.",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "device_name": {"type": "string", "description": "The name of the target device."},
+            "log_type": {"type": "string", "enum": ["traffic", "event", "utm"], "default": "traffic"},
+            "duration_minutes": {"type": "integer", "default": 60, "description": "How many minutes back to search."},
+            "max_results": {"type": "integer", "default": 100},
+            "filter_string": {"type": "string", "description": "A free-text filter string, e.g., 'srcip=10.1.1.5 and dstport=443'"}
+        },
+        "required": ["device_name"]
+    }
+),
+Use code with caution.
+
+Backend Function (add to NetworkDeviceMCPServer):
+python
+@self.server.call_tool()
+async def get_device_logs(self, arguments: dict) -> list[TextContent]:
+    try:
+        # Your logic to call the FortiGate/FortiManager API for logs
+        # Placeholder for your actual implementation
+        result = await self.fortigate.get_logs(
+            device_name=arguments['device_name'],
+            log_type=arguments.get('log_type', 'traffic'),
+            duration=arguments.get('duration_minutes', 60),
+            limit=arguments.get('max_results', 100),
+            filter_str=arguments.get('filter_string')
+        )
+        return [TextContent(type="text", text=json.dumps(result, indent=2))]
+    except Exception as e:
+        logger.error(f"Error getting logs: {e}")
+        return [TextContent(type="text", text=f"Error: {str(e)}")]
+Use code with caution.
+
+Troubleshooting End-to-End Connectivity
+Goal: Diagnose connectivity issues from a store to the Internet, a VPN, or another VLAN.
+Status: This is not a single tool but a workflow that combines other tools. An AI agent, when asked to troubleshoot, would perform a series of steps like this:
+Identify Source and Destination: The agent would first clarify the source IP (e.g., a POS terminal at 192.168.10.50) and the destination IP (e.g., 8.8.8.8 for the internet).
+Check Routing: It would call get_device_routing_table on the store's gateway FortiGate to see if a route to the destination exists.
+Check Policy: It would then call get_policy_package_rules to find the policy that applies to that traffic and check if the action is accept. It might need to check multiple policies.
+Check Logs for Denies: If the policy seems correct, the agent would call get_device_logs with a filter like srcip=192.168.10.50 and dstip=8.8.8.8 and action=deny to see if the traffic is being explicitly blocked for another reason (e.g., failing a security profile).
+Check Logs for Accepts: If no denies are found, it would search for action=accept to confirm the traffic is being processed and to see which NAT IP is being used.
+To make this process even more powerful, you could add a final tool for active testing.
+New Tool 5: Execute Connectivity Test
+Tool Definition (add to setup_tools):
+python
+Tool(
+    name="execute_connectivity_test",
+    description="Executes a ping or traceroute from a network device to a target destination.",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "device_name": {"type": "string", "description": "The device to run the test from."},
+            "test_type": {"type": "string", "enum": ["ping", "traceroute"], "default": "ping"},
+            "destination": {"type": "string", "description": "The IP address or hostname to test connectivity to."}
+        },
+        "required": ["device_name", "destination"]
+    }
+),
+Use code with caution.
+
+Backend Function (add to NetworkDeviceMCPServer):
+python
+@self.server.call_tool()
+async def execute_connectivity_test(self, arguments: dict) -> list[TextContent]:
+    try:
+        # Your logic to SSH or API call into the device to run 'execute ping' or 'execute traceroute'
+        # This is a placeholder for your actual implementation
+        result = await self.fortigate.run_diagnostic(
+            device_name=arguments['device_name'],
+            test=arguments.get('test_type', 'ping'),
+            target=arguments['destination']
+        )
+        return [TextContent(type="text", text=result)] # Result is often raw text
+    except Exception as e:
+        logger.error(f"Error running connectivity test: {e}")
+        return [TextContent(type="text", text=f"Error: {str(e)}")]

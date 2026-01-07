@@ -1,0 +1,208 @@
+# LTM Network Intelligence Platform - .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+ltm-venv/
+venv/
+env/
+ENV/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Data and temporary files
+data/
+temp/
+tmp/
+*.tmp
+*.temp
+
+# Security and secrets
+security/*.key
+security/*.pem
+security/*.crt
+config/*.key
+config/*_password*
+config/*_secret*
+.secrets/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache
+.cache/
+*.cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node modules (if any frontend components)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Docker
+.docker/
+*.dockerignore
+
+# Backup files
+*.bak
+*.backup
+*_backup_*
+backups/
+
+# Generated files
+*.pid
+*.seed
+*.pid.lock
+
+# Runtime data
+pids/
+*.pid
+*.pid.lock
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# API keys and credentials
+*_api_key*
+*_password*
+*_secret*
+credentials.json
+auth_tokens.json
+
+# Platform specific
+config/platform_initialized
+config/*_enhanced.json
+config/integration_config.json
+
+# Monitoring data
+monitoring/data/
+prometheus_data/
+grafana_data/
+
+# Neo4j data
+neo4j_data/
+neo4j_logs/
+neo4j_plugins/
+
+# Milvus data
+milvus_data/
+etcd_data/
+minio_data/
+
+# Redis data  
+redis_data/
+dump.rdb
+
+# PostgreSQL data
+postgres_data/
+*.sql.backup
+
+# Test artifacts
+.pytest_cache/
+test-results/
+coverage.xml
+
+# Documentation builds
+docs/_build/
+docs/.doctrees/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# MacOS
+.AppleDouble
+.LSOverride
+
+# Windows
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Linux
+*~
+
+# Editor backups
+*.orig
+*.rej
+*.bak
+
+# Temporary files
+.temporary/
+.tmp/
+
+# Repository integration backups
+*_backup_ltm/
+
+# Custom configuration overrides
+config/local_*.json
+config/dev_*.json
+config/test_*.json
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# Performance data
+performance_data/
+metrics_data/
+
+# Integration test data
+integration_test_data/
+test_devices.json

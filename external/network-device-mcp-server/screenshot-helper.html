@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot Helper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .screenshot-item {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+        .screenshot-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .screenshot-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007cba;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 5px 10px 5px 0;
+        }
+        .screenshot-link:hover {
+            background: #005a8c;
+        }
+        .instructions {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.info { background: #cce7ff; color: #004085; border: 1px solid #99d6ff; }
+        .filename {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #e83e8c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Screenshot Helper for Network Management Platform</h1>
+        
+        <div class="status info">
+            <strong>Instructions:</strong> Click the links below to navigate to specific views, then take screenshots using your preferred tool (Windows + Shift + S, Cmd + Shift + 4, etc.)
+        </div>
+
+        <div class="screenshot-item">
+            <div class="screenshot-title">1. Main Dashboard Overview</div>
+            <a href="http://localhost:5000/" target="_blank" class="screenshot-link">📊 Open Dashboard</a>
+            <div class="instructions">
+                <strong>Filename:</strong> <span class="filename">noc-dashboard-overview.png</span><br>
+                <strong>Capture:</strong> Full interface with sidebar, stats grid, and brand cards
+            </div>
+        </div>
+
+        <div class="screenshot-item">
+            <div class="screenshot-title">2. Store Investigation</div>
+            <a href="http://localhost:5000/" target="_blank" class="screenshot-link" onclick="setTimeout(() => showSection('investigation'), 1000)">🔍 Open Investigation</a>
+            <div class="instructions">
+                <strong>Filename:</strong> <span class="filename">store-investigation.png</span><br>
+                <strong>Capture:</strong> Investigation form with brand selection and store ID input
+            </div>
+        </div>
+
+        <div class="screenshot-item">
+            <div class="screenshot-title">3. BWW Brand Overview</div>
+            <a href="http://localhost:5000/" target="_blank" class="screenshot-link" onclick="setTimeout(() => showSection('brand-BWW'), 1000)">🍗 Open BWW View</a>
+            <div class="instructions">
+                <strong>Filename:</strong> <span class="filename">brand-overview.png</span><br>
+                <strong>Capture:</strong> Buffalo Wild Wings brand page with infrastructure status
+            </div>
+        </div>
+
+        <div class="screenshot-item">
+            <div class="screenshot-title">4. Arby's Brand View</div>
+            <a href="http://localhost:5000/" target="_blank" class="screenshot-link" onclick="setTimeout(() => showSection('brand-ARBYS'), 1000)">🥪 Open Arby's View</a>
+            <div class="instructions">
+                <strong>Filename:</strong> <span class="filename">arbys-brand-view.png</span><br>
+                <strong>Capture:</strong> Arby's specific network management interface
+            </div>
+        </div>
+
+        <div class="screenshot-item">
+            <div class="screenshot-title">5. Sonic Brand View</div>
+            <a href="http://localhost:5000/" target="_blank" class="screenshot-link" onclick="setTimeout(() => showSection('brand-SONIC'), 1000)">🚗 Open Sonic View</a>
+            <div class="instructions">
+                <strong>Filename:</strong> <span class="filename">sonic-brand-view.png</span><br>
+                <strong>Capture:</strong> Sonic Drive-In network monitoring dashboard
+            </div>
+        </div>
+
+        <div class="screenshot-item">
+            <div class="screenshot-title">6. FortiManager Tools</div>
+            <a href="http://localhost:5000/" target="_blank" class="screenshot-link" onclick="setTimeout(() => showSection('fortimanager'), 1000)">🛡️ Open FortiManager</a>
+            <div class="instructions">
+                <strong>Filename:</strong> <span class="filename">fortimanager-tools.png</span><br>
+                <strong>Capture:</strong> FortiManager management interface
+            </div>
+        </div>
+
+        <div class="screenshot-item">
+            <div class="screenshot-title">7. FortiAnalyzer Interface</div>
+            <a href="http://localhost:5000/" target="_blank" class="screenshot-link" onclick="setTimeout(() => showSection('fortianalyzer'), 1000)">📈 Open FortiAnalyzer</a>
+            <div class="instructions">
+                <strong>Filename:</strong> <span class="filename">fortianalyzer-interface.png</span><br>
+                <strong>Capture:</strong> Log analysis and security intelligence dashboard
+            </div>
+        </div>
+
+        <div class="screenshot-item">
+            <div class="screenshot-title">8. Web Filters Management</div>
+            <a href="http://localhost:5000/" target="_blank" class="screenshot-link" onclick="setTimeout(() => showSection('webfilters'), 1000)">🌐 Open Web Filters</a>
+            <div class="instructions">
+                <strong>Filename:</strong> <span class="filename">web-filters-management.png</span><br>
+                <strong>Capture:</strong> Web filtering and content control interface
+            </div>
+        </div>
+
+        <div class="screenshot-item">
+            <div class="screenshot-title">9. Mobile View (Responsive)</div>
+            <a href="http://localhost:5000/" target="_blank" class="screenshot-link">📱 Open for Mobile</a>
+            <div class="instructions">
+                <strong>Filename:</strong> <span class="filename">mobile-responsive.png</span><br>
+                <strong>Capture:</strong> Use browser dev tools (F12) → device simulation for mobile view
+            </div>
+        </div>
+
+        <div class="screenshot-item">
+            <div class="screenshot-title">10. Voice Controls Detail</div>
+            <a href="http://localhost:5000/" target="_blank" class="screenshot-link">🎤 Open for Voice</a>
+            <div class="instructions">
+                <strong>Filename:</strong> <span class="filename">voice-controls-detail.png</span><br>
+                <strong>Capture:</strong> Focus on voice control panel in bottom-right corner, enable voice first
+            </div>
+        </div>
+
+        <div class="status success">
+            <strong>Pro Tips:</strong>
+            <ul>
+                <li>Take screenshots in full-screen mode (F11) for best quality</li>
+                <li>Use PNG format for crisp UI screenshots</li>
+                <li>Compress images to under 500KB using TinyPNG.com</li>
+                <li>Name files descriptively and consistently</li>
+                <li>Test voice controls before capturing voice-related screenshots</li>
+            </ul>
+        </div>
+
+        <div class="status info">
+            <strong>File Structure:</strong><br>
+            <code>docs/images/noc-dashboard-overview.png</code><br>
+            <code>docs/images/store-investigation.png</code><br>
+            <code>docs/images/brand-overview.png</code><br>
+            <code>docs/images/voice-controls-detail.png</code><br>
+            <code>docs/images/mobile-responsive.png</code><br>
+            <em>...and so on</em>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // This will work when called from the main application
+            if (typeof window.showSection === 'function') {
+                window.showSection(sectionId);
+            } else {
+                console.log(`Navigate to section: ${sectionId}`);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Device Management Dashboard</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/voice-interface.css">
+    <link rel="stylesheet" href="/static/css/voice-accessibility.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iIzIxMjEyMSIvPgo8cGF0aCBkPSJNOCAxMkgxNlY4SDhWMTJaTTggMjRIMTZWMjBIOFYyNFpNMjAgMTJIMjhWOEgyMFYxMlpNMjAgMjRIMjhWMjBIMjBWMjRaIiBmaWxsPSIjM0Y4MkY2Ii8+CjwvcG9nPgo=">
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-network-wired"></i>
+                    <span>Network Device Dashboard</span>
+                </div>
+                <div class="header-actions">
+                    <div class="connection-status" id="connectionStatus">
+                        <i class="fas fa-circle"></i>
+                        <span>Checking...</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="sidebar">
+            <div class="nav-section">
+                <h3><i class="fas fa-tachometer-alt"></i> Dashboard</h3>
+                <button class="nav-btn active" onclick="showSection('overview')">
+                    <i class="fas fa-chart-pie"></i>
+                    Overview
+                </button>
+                <button class="nav-btn" onclick="showSection('investigation')">
+                    <i class="fas fa-search"></i>
+                    Store Investigation
+                </button>
+            </div>
+            
+            <div class="nav-section">
+                <h3><i class="fas fa-store"></i> Brands</h3>
+                <button class="nav-btn" onclick="showBrandSection('BWW')">
+                    <i class="fas fa-utensils"></i>
+                    Buffalo Wild Wings
+                </button>
+                <button class="nav-btn" onclick="showBrandSection('ARBYS')">
+                    <i class="fas fa-hamburger"></i>
+                    Arby's
+                </button>
+                <button class="nav-btn" onclick="showBrandSection('SONIC')">
+                    <i class="fas fa-car"></i>
+                    Sonic Drive-In
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <h3><i class="fas fa-server"></i> Infrastructure</h3>
+                <button class="nav-btn" onclick="showSection('fortimanager')">
+                    <i class="fas fa-shield-alt"></i>
+                    FortiManager
+                </button>
+                <button class="nav-btn" onclick="showSection('devices')">
+                    <i class="fas fa-router"></i>
+                    Devices
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <h3><i class="fas fa-chart-line"></i> Analytics</h3>
+                <button class="nav-btn" onclick="showSection('fortianalyzer')">
+                    <i class="fas fa-chart-bar"></i>
+                    FortiAnalyzer
+                </button>
+                <button class="nav-btn" onclick="showSection('webfilters')">
+                    <i class="fas fa-filter"></i>
+                    Web Filters
+                </button>
+                <button class="nav-btn" onclick="showSection('log-analysis')">
+                    <i class="fas fa-search"></i>
+                    Log Analysis
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <h3><i class="fas fa-question-circle"></i> Help</h3>
+                <button class="nav-btn" onclick="showSection('documentation')">
+                    <i class="fas fa-book"></i>
+                    Documentation
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content" id="main">
+            <!-- Overview Section -->
+            <section id="overview" class="content-section active">
+                <div class="section-header">
+                    <h1>Network Infrastructure Overview</h1>
+                    <p>Monitor and manage your restaurant network devices across all brands</p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalStores">-</div>
+                            <div class="stat-label">Total Stores</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="securityEvents">-</div>
+                            <div class="stat-label">Security Events (24h)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="blockedUrls">-</div>
+                            <div class="stat-label">Blocked URLs (24h)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="healthyDevices">-</div>
+                            <div class="stat-label">Healthy Devices</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Brand Status Cards -->
+                <div class="brands-grid" id="brandsGrid">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Store Investigation Section -->
+            <section id="investigation" class="content-section">
+                <div class="section-header">
+                    <h1>Store Investigation</h1>
+                    <p>Comprehensive security analysis for any store location</p>
+                </div>
+
+                <div class="investigation-form">
+                    <div class="form-group">
+                        <label for="investigationBrand">Brand:</label>
+                        <select id="investigationBrand" class="form-control">
+                            <option value="">Select Brand</option>
+                            <option value="BWW">Buffalo Wild Wings</option>
+                            <option value="ARBYS">Arby's</option>
+                            <option value="SONIC">Sonic Drive-In</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="investigationStore">Store ID:</label>
+                        <input type="text" id="investigationStore" class="form-control" placeholder="e.g., 155">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="investigationPeriod">Analysis Period:</label>
+                        <select id="investigationPeriod" class="form-control">
+                            <option value="1h">Last Hour</option>
+                            <option value="24h" selected>Last 24 Hours</option>
+                            <option value="7d">Last 7 Days</option>
+                            <option value="30d">Last 30 Days</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary btn-lg" onclick="runInvestigation()">
+                            <i class="fas fa-search"></i>
+                            Start Investigation
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Investigation Results -->
+                <div id="investigationResults" class="investigation-results" style="display: none;">
+                    <div class="results-header">
+                        <h2>Investigation Results</h2>
+                        <div class="store-info" id="storeInfo"></div>
+                    </div>
+
+                    <div class="results-tabs">
+                        <button class="tab-btn active" onclick="showTab('security-health')">
+                            <i class="fas fa-heartbeat"></i>
+                            Security Health
+                        </button>
+                        <button class="tab-btn" onclick="showTab('url-blocking')">
+                            <i class="fas fa-ban"></i>
+                            URL Blocking
+                        </button>
+                        <button class="tab-btn" onclick="showTab('security-events')">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Security Events
+                        </button>
+                    </div>
+
+                    <div id="security-health" class="tab-content active"></div>
+                    <div id="url-blocking" class="tab-content"></div>
+                    <div id="security-events" class="tab-content"></div>
+                </div>
+            </section>
+
+            <!-- Brand Sections (BWW, ARBYS, SONIC) -->
+            <section id="brand-BWW" class="content-section brand-section">
+                <div class="section-header">
+                    <h1><i class="fas fa-utensils"></i> Buffalo Wild Wings</h1>
+                    <p>Network infrastructure overview for BWW locations</p>
+                </div>
+                <div class="brand-content" id="brand-BWW-content">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <section id="brand-ARBYS" class="content-section brand-section">
+                <div class="section-header">
+                    <h1><i class="fas fa-hamburger"></i> Arby's</h1>
+                    <p>Network infrastructure overview for Arby's locations</p>
+                </div>
+                <div class="brand-content" id="brand-ARBYS-content">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <section id="brand-SONIC" class="content-section brand-section">
+                <div class="section-header">
+                    <h1><i class="fas fa-car"></i> Sonic Drive-In</h1>
+                    <p>Network infrastructure overview for Sonic locations</p>
+                </div>
+                <div class="brand-content" id="brand-SONIC-content">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- FortiManager Section -->
+            <section id="fortimanager" class="content-section">
+                <div class="section-header">
+                    <h1><i class="fas fa-shield-alt"></i> FortiManager</h1>
+                    <p>Central management console overview</p>
+                </div>
+                <div id="fortimanagerContent">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Devices Section -->
+            <section id="devices" class="content-section">
+                <div class="section-header">
+                    <h1><i class="fas fa-router"></i> Network Devices</h1>
+                    <p>All managed network devices across brands</p>
+                </div>
+                <div id="devicesContent">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- FortiAnalyzer Section -->
+            <section id="fortianalyzer" class="content-section">
+                <div class="section-header">
+                    <h1><i class="fas fa-chart-bar"></i> FortiAnalyzer</h1>
+                    <p>Log collection, analysis, and security intelligence</p>
+                </div>
+                <div id="fortianalyzerContent">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Web Filters Section -->
+            <section id="webfilters" class="content-section">
+                <div class="section-header">
+                    <h1><i class="fas fa-filter"></i> Web Filters</h1>
+                    <p>Web filtering policies, SSL certificates, and content analysis</p>
+                </div>
+                <div id="webfiltersContent">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Log Analysis Section -->
+            <section id="log-analysis" class="content-section">
+                <div class="section-header">
+                    <h1><i class="fas fa-search"></i> Unified Log Analysis</h1>
+                    <p>Search and analyze logs from FortiAnalyzer and Web Filters</p>
+                </div>
+                
+                <div class="log-analysis-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="logSearchQuery">Search Query:</label>
+                            <input type="text" id="logSearchQuery" class="form-control" placeholder="e.g., SQL injection, blocked URLs, malware">
+                        </div>
+                        <div class="form-group">
+                            <label for="logSearchBrand">Brand:</label>
+                            <select id="logSearchBrand" class="form-control">
+                                <option value="">All Brands</option>
+                                <option value="BWW">Buffalo Wild Wings</option>
+                                <option value="ARBYS">Arby's</option>
+                                <option value="SONIC">Sonic Drive-In</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="logSearchTimeframe">Timeframe:</label>
+                            <select id="logSearchTimeframe" class="form-control">
+                                <option value="1h">Last Hour</option>
+                                <option value="24h" selected>Last 24 Hours</option>
+                                <option value="7d">Last 7 Days</option>
+                                <option value="30d">Last 30 Days</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="logSearchSource">Log Source:</label>
+                            <select id="logSearchSource" class="form-control">
+                                <option value="all">All Sources</option>
+                                <option value="fortianalyzer">FortiAnalyzer</option>
+                                <option value="webfilters">Web Filters</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-primary btn-lg" onclick="searchLogs()">
+                            <i class="fas fa-search"></i>
+                            Search Logs
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearLogSearch()">
+                            <i class="fas fa-times"></i>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Log Search Results -->
+                <div id="logSearchResults" class="log-search-results" style="display: none;">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Documentation Section -->
+            <section id="documentation" class="content-section">
+                <div class="section-header">
+                    <h1><i class="fas fa-book"></i> Documentation</h1>
+                    <p>How to use the Network Device Dashboard</p>
+                </div>
+
+                <div class="docs-content">
+                    <div class="doc-section">
+                        <h2>Quick Start Guide</h2>
+                        <div class="doc-card">
+                            <h3><i class="fas fa-search"></i> Store Investigation</h3>
+                            <p>Use the Store Investigation tool to analyze security events, URL blocking patterns, and overall security health for any restaurant location.</p>
+                            <ol>
+                                <li>Select the brand (BWW, Arby's, or Sonic)</li>
+                                <li>Enter the store ID number</li>
+                                <li>Choose analysis period</li>
+                                <li>Click "Start Investigation"</li>
+                            </ol>
+                        </div>
+
+                        <div class="doc-card">
+                            <h3><i class="fas fa-tachometer-alt"></i> Overview Dashboard</h3>
+                            <p>The Overview page provides a high-level view of your entire network infrastructure with key metrics and brand status.</p>
+                        </div>
+
+                        <div class="doc-card">
+                            <h3><i class="fas fa-store"></i> Brand Pages</h3>
+                            <p>Each brand has its own dedicated page showing FortiManager status, managed devices, and security overview.</p>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2>Available Tools</h2>
+                        <div class="tools-grid">
+                            <div class="tool-card">
+                                <h4>Security Health Check</h4>
+                                <p>Overall security posture assessment for any store location</p>
+                            </div>
+                            <div class="tool-card">
+                                <h4>URL Blocking Analysis</h4>
+                                <p>Analyze web filtering patterns and policy violations</p>
+                            </div>
+                            <div class="tool-card">
+                                <h4>Security Events</h4>
+                                <p>View IPS, antivirus, and application control events</p>
+                            </div>
+                            <div class="tool-card">
+                                <h4>FortiManager Status</h4>
+                                <p>Check central management console and managed devices</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <div class="loading-text">Processing...</div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="toast-container"></div>
+    </div>
+
+    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/fortianalyzer.js"></script>
+    <script src="/static/js/webfilters.js"></script>
+    <script src="/static/js/log-analysis.js"></script>
+    <script src="/static/js/voice-interface.js"></script>
+    <script src="/static/js/voice-commands.js"></script>
+    <script src="/static/js/voice-accessibility.js"></script>
+</body>
+</html>

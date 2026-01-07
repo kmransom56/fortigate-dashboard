@@ -1,0 +1,25 @@
+Comparing files ..\_snapshot_a212187_comprehensive_web_app.py and ..\_SNAPSHOT_830D669_COMPREHENSIVE_WEB_APP.PY
+***** ..\_snapshot_a212187_comprehensive_web_app.py
+        # Use the topology visualizer to build topology and transform to viz data
+        from utilities.topology_visualizer import build_topology_from_api_data
+        from enhanced_visualizer import create_vis_network_data, CONNECTION_STYLES
+        
+***** ..\_SNAPSHOT_830D669_COMPREHENSIVE_WEB_APP.PY
+        # Use the topology visualizer to build topology and transform to viz data
+    from utilities.topology_visualizer import build_topology_from_api_data
+    from enhanced_visualizer import create_vis_network_data
+        
+*****
+
+***** ..\_snapshot_a212187_comprehensive_web_app.py
+            'edges': viz.get('edges', []),
+            # Provide styles; template has safe defaults, but this improves fidelity
+            'connectionStyles': CONNECTION_STYLES,
+            # Device groups are optional and handled in template defaults
+            'deviceGroups': viz.get('deviceGroups', []),
+***** ..\_SNAPSHOT_830D669_COMPREHENSIVE_WEB_APP.PY
+            'edges': viz.get('edges', []),
+            'connectionStyles': viz.get('connectionStyles', {}),
+            'deviceGroups': viz.get('deviceGroups', []),
+*****
+

@@ -1,0 +1,32 @@
+# Core dependencies - install uvicorn without standard extras to avoid httptools build issues
+# Note: MCP package may need to be installed separately or may not be available
+uvicorn>=0.31.1
+httpx>=0.24.0
+python-dotenv>=1.0.0
+
+# Web framework
+flask>=3.0.0
+werkzeug>=3.0.0
+
+# Network device APIs
+requests>=2.31.0
+paramiko>=3.0.0
+netmiko>=4.0.0
+
+# Async support
+asyncio-mqtt>=0.13.0
+aiofiles>=23.0.0
+
+# Data handling
+pydantic>=2.0.0
+PyYAML>=6.0
+
+# Logging and monitoring
+structlog>=23.0.0
+
+# Development dependencies
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+flake8>=6.0.0
+
+flask-cors>=3.0.10

@@ -1,0 +1,30 @@
+# Web Dashboard Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    && update-ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies for the web server with SSL trust
+RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir \
+    fastapi==0.104.1 \
+    uvicorn[standard]==0.24.0 \
+    python-multipart==0.0.6 \
+    httpx==0.25.2 \
+    jinja2==3.1.2
+
+# Copy web application files
+COPY web/ ./web/
+COPY config/ ./config/
+
+# Copy the web server Python file
+COPY docker/web_server.py ./web_server.py
+
+EXPOSE 12000
+
+CMD ["python", "web_server.py"]

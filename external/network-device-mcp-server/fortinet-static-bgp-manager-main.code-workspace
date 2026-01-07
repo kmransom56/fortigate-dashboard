@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../fortinet-static-bgp-manager-main"
+		},
+		{
+			"path": "../fortinet-webfilters-web"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {}
+}

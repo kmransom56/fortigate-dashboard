@@ -1,0 +1,28 @@
+# No store data loaded - run FortiManager script first
+
+================================================================================
+
+# DEVICE CATEGORY DROPDOWN OPTIONS
+# Copy and paste these into Microsoft Forms dropdown:
+
+Point of Sale (POS) System
+Kitchen Display System (KDS)
+Media Players (Music/TV)
+Digital Menu Boards
+Drive-Thru Timer System
+Network/Internet/WiFi
+Kitchen Equipment (Connected)
+Security Cameras/Systems
+Phones/Communication
+Tablets/Mobile Devices
+Other Equipment
+
+================================================================================
+
+# PRIORITY LEVEL DROPDOWN OPTIONS
+# Copy and paste these into Microsoft Forms dropdown:
+
+🔴 CRITICAL - Store operations stopped/severe customer impact
+🟠 HIGH - Major functionality affected, workaround available
+🟡 MEDIUM - Minor functionality affected, minimal customer impact
+🟢 LOW - Enhancement request or non-urgent issue

@@ -1,0 +1,17 @@
+{
+  "name": "voice-enabled-network-management-noc",
+  "version": "1.0.0",
+  "description": "NOC-style Voice-Enabled Network Management Platform",
+  "main": "server_noc_simple.js",
+  "scripts": {
+    "start": "node server_noc_simple.js",
+    "noc": "node server_noc_simple.js"
+  },
+  "keywords": ["network-management", "noc", "voice-control"],
+  "author": "Network Management Team",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6"
+  }
+}

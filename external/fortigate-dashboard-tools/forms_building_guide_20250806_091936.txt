@@ -1,0 +1,307 @@
+# MICROSOFT FORMS BUILDING GUIDE - Service Desk Ticket Intake
+# Generated: 2025-08-06 09:19:36
+
+## FORM SETUP
+1. Go to forms.microsoft.com
+2. Click "New Form"
+3. Title: "Service Desk Ticket Intake Form"
+4. Description: "Submit service requests for restaurant equipment and technology issues"
+
+## SECTION 1: BASIC INFORMATION
+
+### Question 1: Store Location
+- Type: Choice (Dropdown)
+- Question: "Store Location *"
+- Mark as Required: ✅
+- Options: [Use store list generated above]
+
+### Question 2: Your Name
+- Type: Text
+- Question: "Your Name *" 
+- Mark as Required: ✅
+
+### Question 3: Your Role
+- Type: Choice (Dropdown)
+- Question: "Your Role *"
+- Mark as Required: ✅
+- Options:
+  Store Manager
+  Assistant Manager
+  Shift Leader
+  Team Member
+  Maintenance Staff
+
+### Question 4: Contact Phone
+- Type: Text
+- Question: "Contact Phone Number *"
+- Mark as Required: ✅
+
+### Question 5: Best Time to Contact
+- Type: Choice (Dropdown) 
+- Question: "Best Time to Contact You"
+- Options:
+  Anytime during business hours
+  Morning (6AM-11AM)
+  Lunch (11AM-2PM) 
+  Afternoon (2PM-6PM)
+  Evening (6PM-Close)
+  Emergency contact only
+
+## SECTION 2: ISSUE CLASSIFICATION
+
+### Question 6: Priority Level
+- Type: Choice (Dropdown)
+- Question: "Priority Level *"
+- Mark as Required: ✅
+- Options: [Use priority list generated above]
+
+### Question 7: Customer Service Impact
+- Type: Choice
+- Question: "Is this issue currently affecting customer service? *"
+- Mark as Required: ✅ 
+- Options: Yes / No
+
+### Question 8: Areas Affected
+- Type: Choice (Multiple answers)
+- Question: "Areas of the Restaurant Affected"
+- Options:
+  Front Counter/Lobby
+  Drive-Thru
+  Kitchen/Food Prep
+  Back Office  
+  Entire Store
+
+### Question 9: Device Category
+- Type: Choice (Dropdown)
+- Question: "Device Category *"
+- Mark as Required: ✅
+- Options: [Use device category list generated above]
+- NOTE: This will be used for branching logic
+
+## SECTION 3: ISSUE DETAILS
+
+### Question 10: Issue Description
+- Type: Long answer
+- Question: "Issue Description *"
+- Mark as Required: ✅
+- Description: "Please describe what's happening, what you expected to happen, and any error messages you see"
+
+### Question 11: When Started
+- Type: Date and time
+- Question: "When did this issue start? *"
+- Mark as Required: ✅
+
+### Question 12: Error Messages
+- Type: Long answer
+- Question: "Error Messages or Codes"
+- Description: "Write down any error messages exactly as they appear"
+
+### Question 13: Workaround Available
+- Type: Choice
+- Question: "Is there a workaround you're currently using?"
+- Options: Yes / No
+- Add branching: If Yes → Show text field "Describe the workaround"
+
+### Question 14: Previous Occurrences
+- Type: Choice (Dropdown)
+- Question: "Has this happened before?"
+- Options:
+  No, this is the first time
+  Yes, occasionally  
+  Yes, this happens regularly
+  Yes, this just started happening frequently
+
+### Question 15: Recent Changes
+- Type: Choice (Multiple answers)
+- Question: "Did anything change recently?"
+- Options:
+  New software update
+  New equipment installed
+  Power outage
+  Internet issues
+  Staff training/new procedures  
+  Nothing changed that I know of
+  Not sure
+
+## SECTION 4: DEVICE-SPECIFIC SECTIONS (BRANCHING LOGIC)
+
+### For POS Issues (Show if "Point of Sale" selected in Question 9)
+
+#### Question 16a: Which Register
+- Type: Text
+- Question: "Which Register/Terminal?"
+
+#### Question 16b: Payment Methods Affected  
+- Type: Choice (Multiple answers)
+- Question: "Payment Methods Affected"
+- Options:
+  Cash
+  Credit Cards
+  Debit Cards
+  Mobile Payments (Apple Pay, Google Pay)
+  Gift Cards
+  All payment methods
+
+### For Kitchen Display Issues (Show if "Kitchen Display System" selected)
+
+#### Question 17a: Which Display
+- Type: Choice (Dropdown)
+- Question: "Which Kitchen Display?"
+- Options:
+  Grill Station
+  Fry Station
+  Cold Station
+  Expo Station
+  Drive-Thru Kitchen Display
+
+#### Question 17b: Issue Type
+- Type: Choice (Multiple answers)
+- Question: "Issue Type"
+- Options:
+  Orders not appearing
+  Display frozen/blank
+  Wrong information showing
+  Touch screen not responding
+  Display too dim/bright
+
+### For Drive-Thru Issues (Show if "Drive-Thru Timer" selected)
+
+#### Question 18a: Which Lane
+- Type: Choice (Dropdown) 
+- Question: "Which Lane?"
+- Options:
+  Lane 1
+  Lane 2
+  Both Lanes
+
+#### Question 18b: Component
+- Type: Choice (Multiple answers)
+- Question: "Drive-Thru Component"
+- Options:
+  Order Taking (Headset/Speaker)
+  Timer Display
+  Customer Display Screen
+  Payment Window Equipment
+  Entire Drive-Thru System
+
+### For Menu Board Issues (Show if "Digital Menu Boards" selected)
+
+#### Question 19a: Which Board
+- Type: Choice (Multiple answers)
+- Question: "Which Menu Board?"
+- Options:
+  Drive-Thru Pre-Menu
+  Drive-Thru Main Menu  
+  Indoor Menu Board 1
+  Indoor Menu Board 2
+  All Menu Boards
+
+#### Question 19b: Problem Type
+- Type: Choice (Multiple answers)
+- Question: "Menu Board Problem"
+- Options:
+  Completely black/off
+  Wrong menu showing
+  Prices incorrect
+  Items missing
+  Display quality poor
+
+### For Network Issues (Show if "Network/Internet/WiFi" selected)
+
+#### Question 20a: What's Not Working
+- Type: Choice (Multiple answers)
+- Question: "What's Not Working?"
+- Options:
+  Complete internet outage
+  WiFi for customers
+  WiFi for staff devices
+  Specific equipment can't connect
+  Slow internet speeds
+  Intermittent connectivity
+
+## SECTION 5: BUSINESS IMPACT
+
+### Question 21: Customer Impact Level
+- Type: Choice (Dropdown)
+- Question: "Estimated Customer Impact"
+- Options:
+  No customer impact
+  Slight delays (under 2 minutes)
+  Moderate delays (2-5 minutes) 
+  Significant delays (over 5 minutes)
+  Unable to serve customers
+
+### Question 22: Can Take Orders
+- Type: Choice
+- Question: "Can you currently take orders?"
+- Options: Yes / No
+
+### Question 23: Can Process Payments
+- Type: Choice  
+- Question: "Can you currently process payments?"
+- Options: Yes / No
+
+### Question 24: Kitchen Operations
+- Type: Choice
+- Question: "Can the kitchen prepare food normally?"
+- Options: Yes / No
+
+### Question 25: Additional Comments
+- Type: Long answer
+- Question: "Additional Comments"
+- Description: "Any other information that might help resolve this issue quickly"
+
+## SECTION 6: ATTACHMENTS
+
+### Question 26: Photo Upload
+- Type: File upload
+- Question: "Photos of Error Messages or Equipment (Optional)"
+- Description: "You can attach photos of error screens, damaged equipment, or anything else that might help. 📱 Mobile users: You can take photos directly or choose from your photo library."
+- Settings:
+  - Max files: 5
+  - Max size: 10MB per file
+  - Allowed types: Images (.jpg, .jpeg, .png, .gif, .bmp), PDF
+
+## FORM SETTINGS
+
+### Response Options:
+- ✅ Record name
+- ✅ Allow multiple responses per person  
+- ✅ Send email receipt of response
+- ✅ Save progress and resume later
+
+### Access:
+- Select: "Only people in my organization"
+
+### Notifications:
+- ✅ Send email summary of new responses
+- Email: Retailnetworking@inspirebrands.com
+- Frequency: Each new response
+
+### Thank You Message:
+"Thank you for submitting your service request. Your ticket has been received and will be reviewed by our service desk team. For CRITICAL issues, please also call [your emergency number] immediately."
+
+## BRANCHING LOGIC SETUP
+
+1. After Question 9 (Device Category), click the "..." menu
+2. Select "Add branching"  
+3. Create separate paths for each device type
+4. Each branch should show only relevant device-specific questions
+5. All branches should merge back to Section 5 (Business Impact)
+
+## TESTING CHECKLIST
+
+- [ ] Test all dropdown options populate correctly
+- [ ] Test branching logic for each device type
+- [ ] Test file upload on mobile device
+- [ ] Verify email notifications work
+- [ ] Test form saves progress correctly
+- [ ] Submit test ticket and verify email receipt
+- [ ] Check Retailnetworking@inspirebrands.com receives summary
+
+## NOTES FOR POWER AUTOMATE INTEGRATION (Future)
+
+- Form ID will be available after creation for API calls
+- Response data will be in structured JSON format
+- Store location field will contain exact values from your FortiManager data
+- All dropdown selections will be available for routing/automation logic

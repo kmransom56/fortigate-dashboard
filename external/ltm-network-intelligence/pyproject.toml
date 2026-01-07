@@ -1,0 +1,178 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ltm-network-intelligence-platform"
+version = "2.0.0"
+description = "AI-powered network device management platform with Long Term Memory capabilities"
+authors = [
+    {name = "Keith Ransom", email = "kmransom52@gmail.com"},
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = [
+    "network-management", 
+    "fortigate", 
+    "meraki", 
+    "ai", 
+    "ltm", 
+    "automation", 
+    "observability",
+    "network-intelligence",
+    "network-automation"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10", 
+    "Programming Language :: Python :: 3.11",
+    "Topic :: System :: Networking",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "aiohttp>=3.9.0",
+    "asyncio>=3.4.3",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "neo4j>=5.14.0",
+    "pymilvus>=2.3.0",
+    "redis>=5.0.0",
+    "psycopg2-binary>=2.9.0",
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.13.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-multipart>=0.0.6",
+    "prometheus-client>=0.19.0",
+    "grafana-api>=1.0.3",
+    "cryptography>=41.0.0",
+    "python-dotenv>=1.0.0",
+    "click>=8.1.0",
+    "rich>=13.7.0",
+    "typer>=0.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+    "bandit>=1.7.5",
+]
+docs = [
+    "sphinx>=6.0.0",
+    "sphinx-rtd-theme>=1.2.0",
+    "myst-parser>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/kmransom56/ltm-network-intelligence-platform"
+Repository = "https://github.com/kmransom56/ltm-network-intelligence-platform.git"
+Documentation = "https://github.com/kmransom56/ltm-network-intelligence-platform/blob/main/docs/"
+"Bug Tracker" = "https://github.com/kmransom56/ltm-network-intelligence-platform/issues"
+
+[project.scripts]
+ltm-platform = "unified_network_intelligence:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "ltm_integration*",
+    "api_gateway*",
+    "monitoring*",
+    "security*",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["ltm_integration", "api_gateway", "monitoring", "security"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "test_*"]
+skips = ["B101", "B601"]  # Skip assert_used and shell_injection_process for tests
+
+[tool.bandit.assert_used]
+skips = ["*_test.py", "test_*.py"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_functions = ["test_*"]
+python_classes = ["Test*"]
+markers = [
+    "unit: marks tests as unit tests",
+    "integration: marks tests as integration tests",
+    "slow: marks tests as slow",
+    "network: marks tests that require network access",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/env/*",
+    "setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

@@ -1,0 +1,68 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+venv
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache/
+
+# Node
+node_modules
+npm-debug.log*
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Documentation
+*.md
+docs/
+
+# Backup and temporary files
+backup_*/
+*.bak
+*.tmp
+*.temp
+
+# Development files
+tests/
+.env.example
+migration plan.txt
+FastAPI Migration - Progress Summary.txt
+
+# Docker files (don't copy into containers)
+Dockerfile*
+docker-compose*.yml
+
+# Logs (will be created in containers)
+logs/
+*.log

@@ -1,0 +1,390 @@
+/**
+ * Voice Interface Styles
+ * Styling for voice controls and status indicators
+ */
+
+/* Voice Container */
+.voice-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-right: 1rem;
+}
+
+/* Voice Controls */
+.voice-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.voice-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.voice-btn:hover {
+    transform: scale(1.1);
+}
+
+.voice-btn:active {
+    transform: scale(0.95);
+}
+
+/* Voice Toggle Button */
+.voice-toggle.disabled {
+    background: #6c757d;
+    color: white;
+}
+
+.voice-toggle.enabled {
+    background: #28a745;
+    color: white;
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
+}
+
+/* Voice Listen Button */
+.voice-listen {
+    background: #007bff;
+    color: white;
+}
+
+.voice-listen:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.voice-listen.listening {
+    background: #dc3545;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+/* Voice Stop Button */
+.voice-stop {
+    background: #ffc107;
+    color: #212529;
+}
+
+.voice-stop:hover {
+    background: #e0a800;
+}
+
+/* Voice Help Button */
+.voice-help {
+    background: #17a2b8;
+    color: white;
+}
+
+.voice-help:hover {
+    background: #138496;
+}
+
+/* Voice Status */
+.voice-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-width: 120px;
+}
+
+.status-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+/* Voice Indicator */
+.voice-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.voice-indicator.disabled {
+    background: #6c757d;
+}
+
+.voice-indicator.ready {
+    background: #28a745;
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+}
+
+.voice-indicator.listening {
+    background: #dc3545;
+    animation: blink 0.8s infinite;
+}
+
+.voice-indicator.speaking {
+    background: #007bff;
+    animation: speak 1.2s infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+@keyframes speak {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+/* Voice Unsupported Message */
+.voice-unsupported-message {
+    margin-right: 1rem;
+}
+
+.voice-unsupported-message .alert {
+    margin: 0;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+}
+
+/* Voice Command Overlay */
+.voice-command-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(5px);
+}
+
+.voice-command-modal {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.voice-command-modal h3 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.voice-command-modal .listening-animation {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: #dc3545;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 1.5s infinite;
+}
+
+.voice-command-modal .listening-animation i {
+    font-size: 32px;
+    color: white;
+}
+
+/* Voice Command Suggestions */
+.voice-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    display: none;
+    z-index: 1000;
+}
+
+.voice-container:hover .voice-suggestions {
+    display: block;
+}
+
+.voice-suggestions h4 {
+    color: #ffffff;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.voice-suggestions ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.voice-suggestions li {
+    color: #cccccc;
+    font-size: 0.75rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.voice-suggestions li:last-child {
+    border-bottom: none;
+}
+
+.voice-suggestions .command {
+    color: #28a745;
+    font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .voice-container {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+    
+    .voice-controls {
+        justify-content: center;
+    }
+    
+    .voice-status {
+        justify-content: center;
+        min-width: auto;
+    }
+    
+    .status-text {
+        font-size: 0.75rem;
+    }
+    
+    .voice-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .voice-container {
+        display: none;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .voice-status {
+        background: rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .voice-suggestions {
+        background: rgba(20, 20, 20, 0.95);
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .voice-btn {
+        border: 2px solid currentColor;
+    }
+    
+    .voice-status {
+        border: 2px solid #ffffff;
+    }
+    
+    .voice-indicator {
+        border: 2px solid #ffffff;
+    }
+}
+
+/* Voice Activity Visualization */
+.voice-activity-bars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 20px;
+}
+
+.voice-bar {
+    width: 3px;
+    background: #28a745;
+    border-radius: 1px;
+    animation: voice-activity 0.8s infinite;
+    opacity: 0.3;
+}
+
+.voice-bar:nth-child(1) { animation-delay: 0s; }
+.voice-bar:nth-child(2) { animation-delay: 0.1s; }
+.voice-bar:nth-child(3) { animation-delay: 0.2s; }
+.voice-bar:nth-child(4) { animation-delay: 0.3s; }
+.voice-bar:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes voice-activity {
+    0%, 100% { height: 4px; opacity: 0.3; }
+    50% { height: 16px; opacity: 1; }
+}
+
+/* Voice Command Tooltip */
+.voice-tooltip {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.voice-btn:hover .voice-tooltip {
+    opacity: 1;
+}
+
+/* Voice Recognition States */
+.voice-processing {
+    position: relative;
+}
+
+.voice-processing::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid #007bff;
+    border-radius: 50%;
+    animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}

@@ -1,0 +1,6 @@
+IP_Address,Hostname,Status
+1.1.1.1,one.one.one.one,SUCCESS
+8.8.8.8,dns.google,SUCCESS
+127.0.0.1,localhost,SUCCESS
+192.168.1.1,N/A,NO_HOSTNAME
+208.67.222.222,resolver1.opendns.com,SUCCESS

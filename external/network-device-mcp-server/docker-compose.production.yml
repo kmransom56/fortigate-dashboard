@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend Server
+  fastapi-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.fastapi
+    container_name: network-device-fastapi
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./network_devices.db
+      - SECRET_KEY=your-super-secret-key-change-in-production
+      - ENVIRONMENT=production
+    volumes:
+      - fastapi_data:/app/data
+      - fastapi_logs:/app/logs
+      - ./config:/app/config:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Web Dashboard Server
+  web-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: network-device-dashboard
+    ports:
+      - "12000:12000"
+    volumes:
+      - ./web:/app/web:ro
+      - ./config:/app/config:ro
+    restart: unless-stopped
+    depends_on:
+      - fastapi-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:12000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Network Device MCP Server (Optional - for advanced users)
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    container_name: network-device-mcp
+    environment:
+      - ENVIRONMENT=production
+    volumes:
+      - ./config:/app/config:ro
+      - mcp_data:/app/data
+      - mcp_logs:/app/logs
+    restart: unless-stopped
+    depends_on:
+      - fastapi-server
+    profiles:
+      - advanced  # Only start with --profile advanced
+
+volumes:
+  fastapi_data:
+    driver: local
+  fastapi_logs:
+    driver: local
+  mcp_data:
+    driver: local
+  mcp_logs:
+    driver: local
+
+networks:
+  default:
+    name: network-device-net
+    driver: bridge

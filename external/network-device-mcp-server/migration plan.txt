@@ -1,0 +1,329 @@
+Migrate to FastAPI. The current directory is C:\Users\keith.ransom\CascadeProjects\network-device-mcp-server
+Check for any FastAPI-related files to understand the current setup better.
+
+I have a FastAPI application structure already set up in the fastapi_app directory.Take a look at the main FastAPI application file to understand the current setup.
+
+check the database models and API endpoints to understand what we need to migrate.
+
+Examine the Flask application to understand the current implementation.
+
+Migration Plan
+1. Project Structure
+Let's set up the FastAPI project structure:
+
+fastapi_app/
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── v1/
+│   │       ├── __init__.py
+│   │       ├── endpoints/
+│   │       │   ├── __init__.py
+│   │       │   ├── devices.py
+│   │       │   ├── fortimanager.py
+│   │       │   ├── fortianalyzer.py
+│   │       │   ├── webfilters.py
+│   │       │   └── ltm.py
+│   │       └── api_v1.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   └── security.py
+│   ├── db/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── models/
+│   │   └── session.py
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── device.py
+│   │   └── fortimanager.py
+│   └── services/
+│       ├── __init__.py
+│       ├── fortimanager_service.py
+│       └── webfilters_service.py
+├── tests/
+├── requirements/
+│   ├── base.txt
+│   └── dev.txt
+└── .env
+2. Key Files to Create/Update
+Core Configuration (app/core/config.py):
+python
+from pydantic_settings import BaseSettings
+from typing import Optional
+
+class Settings(BaseSettings):
+    PROJECT_NAME: str = "Network Device MCP Server"
+    API_V1_STR: str = "/api/v1"
+    SECRET_KEY: str = "your-secret-key"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
+    BACKEND_CORS_ORIGINS: list = ["*"]
+    
+    # Database
+    POSTGRES_SERVER: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+    SQLALCHEMY_DATABASE_URI: Optional[str] = None
+
+    class Config:
+        case_sensitive = True
+        env_file = ".env"
+
+settings = Settings()
+Database Models (app/db/base.py):
+python
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from app.core.config import settings
+
+SQLALCHEMY_DATABASE_URI = settings.SQLALCHEMY_DATABASE_URI
+
+engine = create_engine(SQLALCHEMY_DATABASE_URI)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+Example Endpoint (app/api/v1/endpoints/fortimanager.py):
+python
+from fastapi import APIRouter, Depends, HTTPException
+from typing import List
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
+from app.schemas.fortimanager import FortiManager, FortiManagerCreate
+from app.services import fortimanager_service
+
+router = APIRouter()
+
+@router.get("/fortimanager/", response_model=List[FortiManager])
+def list_fortimanager(
+    skip: int = 0, 
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    return fortimanager_service.get_fortimanagers(db, skip=skip, limit=limit)
+
+@router.get("/fortimanager/{fm_name}/adoms", response_model=List[str])
+def discover_fortimanager_adoms(
+    fm_name: str,
+    db: Session = Depends(get_db)
+):
+    adoms = fortimanager_service.discover_adoms(db, fm_name)
+    if not adoms:
+        raise HTTPException(status_code=404, detail="FortiManager not found")
+    return adoms
+3. Authentication
+Let's implement JWT authentication:
+
+python
+# app/core/security.py
+from datetime import datetime, timedelta
+from typing import Optional
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from app.core.config import settings
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(
+        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+    )
+    return encoded_jwt
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(
+            token, 
+            settings.SECRET_KEY, 
+            algorithms=[settings.ALGORITHM]
+        )
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+        
+    user = get_user(username)
+    if user is None:
+        raise credentials_exception
+    return user
+4. CORS and Middleware
+Update your main FastAPI app:
+
+python
+# app/main.py
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.core.config import settings
+from app.api.v1.api import api_router
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+)
+
+# Set up CORS
+if settings.BACKEND_CORS_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+# Include API router
+app.include_router(api_router, prefix=settings.API_V1_STR)
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+5. API Router
+Create the main API router:
+
+python
+# app/api/v1/api.py
+from fastapi import APIRouter
+from app.api.v1.endpoints import (
+    devices, 
+    fortimanager, 
+    fortianalyzer,
+    webfilters,
+    ltm
+)
+
+api_router = APIRouter()
+api_router.include_router(devices.router, prefix="/devices", tags=["devices"])
+api_router.include_router(fortimanager.router, prefix="/fortimanager", tags=["fortimanager"])
+api_router.include_router(fortianalyzer.router, prefix="/fortianalyzer", tags=["fortianalyzer"])
+api_router.include_router(webfilters.router, prefix="/webfilters", tags=["webfilters"])
+api_router.include_router(ltm.router, prefix="/ltm", tags=["ltm"])
+6. Error Handling
+Create a custom exception handler:
+
+python
+# app/core/exceptions.py
+from fastapi import Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from typing import Any, Dict
+
+class CustomException(Exception):
+    def __init__(self, status_code: int, message: str, details: Any = None):
+        self.status_code = status_code
+        self.message = message
+        self.details = details
+
+async def http_exception_handler(request: Request, exc: CustomException) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "message": exc.message,
+            "details": exc.details
+        }
+    )
+
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": exc.errors(), "body": exc.body}
+    )
+7. Logging Configuration
+python
+# app/core/logger.py
+import logging
+import sys
+from pathlib import Path
+from logging.handlers import RotatingFileHandler
+
+def setup_logging(log_file: Path = "app.log"):
+    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    formatter = logging.Formatter(log_format)
+    
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(formatter)
+    
+    # File handler
+    file_handler = RotatingFileHandler(
+        log_file, maxBytes=10485760, backupCount=5
+    )
+    file_handler.setFormatter(formatter)
+    
+    # Root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.addHandler(console_handler)
+    root_logger.addHandler(file_handler)
+    
+    # Disable uvicorn access logs
+    logging.getLogger("uvicorn.access").disabled = True
+    logging.getLogger("uvicorn.error").disabled = True
+    
+    return root_logger
+8. Dependencies
+Create a requirements/base.txt:
+
+fastapi==0.68.1
+uvicorn==0.15.0
+sqlalchemy==1.4.23
+pydantic==1.8.2
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.5
+python-dotenv==0.19.0
+psycopg2-binary==2.9.1
+httpx==0.19.0
+9. Running the Application
+Create a run.py in the root:
+
+python
+import uvicorn
+from app.core.config import settings
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )
+10. Migration Steps
+Set up the project structure as shown above
+Migrate models from SQLAlchemy to Pydantic schemas
+Convert Flask routes to FastAPI endpoints
+Update dependencies and database connections
+Test each endpoint thoroughly

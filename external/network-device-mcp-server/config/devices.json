@@ -1,0 +1,34 @@
+{
+  "fortigate": [
+    {
+      "name": "FortiGate-Main",
+      "host": "192.168.1.99",
+      "token": "your-fortigate-api-token-here",
+      "description": "Main FortiGate firewall"
+    }
+  ],
+  "fortimanager": [
+    {
+      "name": "FortiManager-Primary", 
+      "host": "192.168.1.100",
+      "username": "admin",
+      "password": "your-password-here",
+      "description": "Primary FortiManager instance"
+    }
+  ],
+  "meraki": [
+    {
+      "name": "Meraki-Dashboard",
+      "api_key": "your-meraki-api-key-here",
+      "org_id": "your-org-id-here",
+      "description": "Meraki cloud dashboard"
+    }
+  ],
+  "global_settings": {
+    "timeout": 30,
+    "max_retries": 3,
+    "log_level": "INFO",
+    "backup_path": "C:\\Users\\keith.ransom\\network-backups",
+    "report_path": "C:\\Users\\keith.ransom\\network-reports"
+  }
+}

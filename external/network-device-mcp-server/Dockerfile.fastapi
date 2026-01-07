@@ -1,0 +1,32 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    ca-certificates \
+    && update-ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Python to use the system certificates
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+
+# Install Python dependencies with trusted host
+COPY requirements-fastapi.txt .
+RUN pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+    --no-cache-dir -r requirements-fastapi.txt
+
+# Copy application code
+COPY ./fastapi_app /app
+
+# Create non-root user
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Expose port
+EXPOSE 8000
+
+# Run the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

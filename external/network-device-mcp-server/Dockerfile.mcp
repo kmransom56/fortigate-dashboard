@@ -1,0 +1,33 @@
+# MCP Server Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    && update-ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies with SSL trust
+RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir \
+    mcp \
+    httpx \
+    python-dotenv \
+    asyncio-mqtt
+
+# Copy source code and configuration
+COPY src/ ./src/
+COPY config/ ./config/
+COPY requirements.txt ./
+
+# Install any additional requirements
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Create data and logs directories
+RUN mkdir -p /app/data /app/logs
+
+EXPOSE 3000
+
+CMD ["python", "src/main.py"]
