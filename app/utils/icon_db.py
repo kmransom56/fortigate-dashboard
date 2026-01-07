@@ -9,6 +9,14 @@ DB_PATH = os.path.join(_APP_DIR, "static", "icons.db")
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS icons (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename TEXT,
+    path TEXT,
+    full_path TEXT,
+    size INTEGER,
+    hash TEXT,
+    width INTEGER,
+    height INTEGER,
+    modified INTEGER,
     manufacturer TEXT,
     device_type TEXT,
     slug TEXT,
@@ -288,6 +296,54 @@ def seed_default_icons():
                 "Ubiquiti Inc.",
                 "Ubiquiti Networks",
                 "Ubiquiti Networks Inc.",
+            ],
+        },
+        # Samsung
+        {
+            "icon_path": "icons/samsung.svg",
+            "title": "Samsung",
+            "source_url": "https://samsung.com/",
+            "tags": "vendor,samsung,phone,tablet,tv",
+            "aliases": [
+                "Samsung",
+                "Samsung Electronics",
+                "Samsung Electronics Co., Ltd.",
+            ],
+        },
+        # LG
+        {
+            "icon_path": "icons/lg.svg",
+            "title": "LG",
+            "source_url": "https://lg.com/",
+            "tags": "vendor,lg,tv,monitor",
+            "aliases": [
+                "LG",
+                "LG Electronics",
+                "LG Electronics Inc.",
+            ],
+        },
+        # Raspberry Pi
+        {
+            "icon_path": "icons/raspberry-pi.svg",
+            "title": "Raspberry Pi",
+            "source_url": "https://raspberrypi.org/",
+            "tags": "vendor,raspberry-pi,compute,server",
+            "aliases": [
+                "Raspberry Pi",
+                "Raspberry Pi Foundation",
+                "Raspberry Pi Trading Ltd",
+            ],
+        },
+        # Dell
+        {
+            "icon_path": "icons/dell.svg",
+            "title": "Dell",
+            "source_url": "https://dell.com/",
+            "tags": "vendor,dell,pc,server,laptop",
+            "aliases": [
+                "Dell",
+                "Dell Inc.",
+                "Dell Computer Corp.",
             ],
         },
     ]

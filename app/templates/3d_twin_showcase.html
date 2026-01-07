@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Digital Twin | Enterprise Network Viz</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #020617;
+            color: #f1f5f9;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            padding: 1rem 2rem;
+            background: rgba(15, 23, 42, 0.9);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%);
+        }
+
+        .giant-icon {
+            font-size: 8rem;
+            opacity: 0.2;
+        }
+
+        .overlay-ui {
+            position: absolute;
+            bottom: 2rem;
+            left: 2rem;
+            background: rgba(15, 23, 42, 0.8);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="d-flex align-items-center gap-3">
+            <a href="/enterprise/showcase" class="btn btn-sm btn-outline-light border-opacity-10 rounded-circle"
+                title="Back to Enterprise Command Center">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h5 class="mb-0 fw-bold">Site 001: 3D Digital Twin</h5>
+        </div>
+        <div class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2">
+            BABYLON.JS RENDERER ACTIVE
+        </div>
+    </div>
+
+    <!-- This is a placeholder for the actual BabylonJS canvas from the legacy repo -->
+    <div id="renderCanvas" class="d-flex align-items-center justify-content-center">
+        <div class="text-center">
+            <i class="fas fa-vr-cardboard mb-4 giant-icon"></i>
+            <h2 class="fw-light">3D Visualization Environment</h2>
+            <p class="text-secondary">Orchestrating BabylonJS components from
+                <code>legacy_repos/fortiap-switch-dashboard</code>
+            </p>
+            <div class="spinner-grow text-info mt-4" role="status"></div>
+        </div>
+    </div>
+
+    <div class="overlay-ui">
+        <h6 class="fw-bold mb-2">IMMERSIVE VIEW CONTROLS</h6>
+        <div class="small text-secondary mb-3">Rotate and zoom to inspect real-time port status and IoT connectivity.
+        </div>
+        <div class="d-grid gap-2">
+            <button class="btn btn-sm btn-primary rounded-pill">RESET CAMERA</button>
+            <button class="btn btn-sm btn-outline-light border-opacity-10 rounded-pill">TOGGLE HEATMAP</button>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="/static/css/custom.css">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Command Center | Inspire Brands Portfolio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(15, 23, 42, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-blue: #38bdf8;
+            --accent-green: #4ade80;
+            --accent-red: #f87171;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            background-color: #020617;
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #020617 100%);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(56, 189, 248, 0.1);
+        }
+
+        .header-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(to right, #fff, var(--accent-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .brand-pill {
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .brand-pill:hover {
+            border-color: var(--accent-blue);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .brand-pill.active {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: var(--accent-blue);
+        }
+
+        #topology-canvas {
+            height: 600px;
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            cursor: crosshair;
+        }
+
+        .device-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            z-index: 2;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .device-node:hover {
+            transform: scale(1.1);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+            z-index: 10;
+        }
+
+        .device-node.online {
+            border-color: var(--accent-green);
+        }
+
+        .device-node.online::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid var(--accent-green);
+            animation: pulse-green 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .node-label {
+            position: absolute;
+            top: 65px;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .connection-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-blue) 0%, transparent 100%);
+            transform-origin: 0 50%;
+            z-index: 1;
+            opacity: 0.4;
+        }
+
+        .sidebar {
+            border-right: 1px solid var(--glass-border);
+            height: calc(100vh - 100px);
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+
+        .scroll-custom::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scroll-custom::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .scroll-custom::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar border-bottom border-light border-opacity-10 py-3 mb-4">
+        <div class="container-fluid px-4">
+            <div class="d-flex align-items-center gap-3">
+                <span class="header-logo"><i class="fas fa-microchip me-2"></i>ANTIGRAVITY COMMAND</span>
+                <span
+                    class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 py-2 px-3">ENTERPRISE
+                    SCALE</span>
+            </div>
+            <div class="d-flex align-items-center gap-4">
+                <div class="text-end d-none d-md-block">
+                    <div class="text-secondary small fw-bold">SYSTEM STATUS</div>
+                    <div class="text-success small fw-bold"><i class="fas fa-circle me-1" style="font-size: 8px;"></i>
+                        GLOBAL HEALTH: 99.98%</div>
+                </div>
+                <div class="vr mx-2 opacity-25"></div>
+                <button class="btn btn-outline-light border-opacity-10 rounded-pill px-4">
+                    <i class="fas fa-user-shield me-2"></i> Keith Ransom
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 pb-5">
+        <div class="row g-4">
+            <!-- Sidebar Stats -->
+            <div class="col-lg-3">
+                <div class="d-flex flex-column gap-4">
+                    <div class="glass-card p-4">
+                        <div class="text-secondary small fw-bold mb-2">OPERATIONAL FOOTPRINT</div>
+                        <div class="stat-value text-white mb-2" id="total-locations">---</div>
+                        <div class="text-secondary small">MANAGED LOCATIONS</div>
+                    </div>
+
+                    <div class="glass-card p-4">
+                        <div class="text-secondary small fw-bold mb-3">PORTFOLIO HEALTH</div>
+                        <div id="brand-list" class="d-flex flex-column gap-2">
+                            <!-- Brands injected here -->
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-4">
+                        <div class="text-secondary small fw-bold mb-3">PLATFORM OPERATIONS AUDIT</div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-sm btn-primary rounded-pill mb-1" onclick="runPolicyAudit()">
+                                <i class="fas fa-shield-check me-2"></i> RUN POLICY SYNC
+                            </button>
+                            <a href="/enterprise/3d-twin" class="btn btn-sm btn-outline-info rounded-pill">
+                                <i class="fas fa-vr-cardboard me-2"></i> 3D DIGITAL TWIN
+                            </a>
+                        </div>
+                        <div id="audit-results" class="mt-3 small text-secondary">
+                            <!-- Audit summary injected here -->
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-4">
+                        <div class="text-secondary small fw-bold mb-3">SMART KITCHEN METRICS</div>
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small">IoT Uptime</span>
+                                <span class="text-success fw-bold">99.9%</span>
+                            </div>
+                            <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05);">
+                                <div class="progress-bar bg-success" style="width: 99%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small">Energy Saving Index</span>
+                                <span class="text-info fw-bold">+18%</span>
+                            </div>
+                            <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05);">
+                                <div class="progress-bar bg-info" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Canvas -->
+            <div class="col-lg-9">
+                <div class="glass-card h-100 p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h4 class="mb-1 fw-bold" id="canvas-title">Site 0: Global Lab</h4>
+                            <p class="text-secondary small mb-0">Visualizing real-time SD-WAN and Smart Kitchen topology
+                            </p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary border-opacity-25 rounded-pill px-3"
+                                onclick="loadSite('sonic', '001')">
+                                <i class="fas fa-random me-1"></i> SIMULATE SITE
+                            </button>
+                            <button class="btn btn-sm btn-outline-info border-opacity-25 rounded-pill px-3"
+                                onclick="loadRealSite()">
+                                <i class="fas fa-house me-1"></i> SITE 0 (LAB)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="topology-canvas">
+                        <!-- Canvas content injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentBrand = 'local';
+        let currentStore = '0';
+
+        async function init() {
+            await loadSummary();
+            await loadRealSite();
+        }
+
+        async function loadSummary() {
+            const resp = await fetch('/api/v1/enterprise/summary');
+            const data = await resp.json();
+
+            document.getElementById('total-locations').textContent = data.total_locations.toLocaleString();
+
+            const brandList = document.getElementById('brand-list');
+            brandList.innerHTML = '';
+
+            data.brand_stats.forEach(brand => {
+                const pill = document.createElement('div');
+                pill.className = `brand-pill ${currentBrand === brand.brand ? 'active' : ''}`;
+                pill.innerHTML = `
+                    <i class="${getBrandIcon(brand.brand)}"></i>
+                    <span class="flex-grow-1">${brand.name}</span>
+                    <span class="badge ${brand.integration.status === 'integrated' ? 'bg-success' : 'bg-secondary'} bg-opacity-10 border border-success border-opacity-25 x-small me-2" style="font-size: 0.6rem;">
+                        ${brand.integration.status.toUpperCase()}
+                    </span>
+                    <span class="small opacity-50">${brand.locations}</span>
+                `;
+                pill.onclick = () => loadSite(brand.brand, '001');
+                brandList.appendChild(pill);
+            });
+        }
+
+        function getBrandIcon(brand) {
+            const icons = { sonic: 'fas fa-car', arbys: 'fas fa-hamburger', bww: 'fas fa-drumstick-bite' };
+            return icons[brand] || 'fas fa-store';
+        }
+
+        async function loadRealSite() {
+            currentBrand = 'local';
+            document.getElementById('canvas-title').textContent = "Site 0: Keith's Lab";
+            const resp = await fetch('/api/v1/local/topology_data');
+            const data = await resp.json();
+            renderTopology(data);
+        }
+
+        async function loadSite(brand, storeId) {
+            currentBrand = brand;
+            const resp = await fetch(`/api/v1/enterprise/topology/${brand}/${storeId}`);
+            const data = await resp.json();
+            document.getElementById('canvas-title').textContent = `Site ${storeId}: ${brand.toUpperCase()}`;
+            renderTopology(data);
+            loadSummary(); // to update active pill
+        }
+
+        function renderTopology(data) {
+            const canvas = document.getElementById('topology-canvas');
+            canvas.innerHTML = '';
+
+            // Render connections first
+            data.connections.forEach(conn => {
+                const from = data.devices.find(d => d.id === conn.from);
+                const to = data.devices.find(d => d.id === conn.to);
+                if (from && to) {
+                    const line = document.createElement('div');
+                    line.className = 'connection-line';
+
+                    const dx = to.position.x - from.position.x;
+                    const dy = to.position.y - from.position.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+                    line.style.width = dist + 'px';
+                    line.style.left = (from.position.x + 30) + 'px';
+                    line.style.top = (from.position.y + 30) + 'px';
+                    line.style.transform = `rotate(${angle}deg)`;
+
+                    canvas.appendChild(line);
+                }
+            });
+
+            // Render devices
+            data.devices.forEach(dev => {
+                const node = document.createElement('div');
+                node.className = `device-node ${dev.status}`;
+                node.style.left = dev.position.x + 'px';
+                node.style.top = dev.position.y + 'px';
+
+                const icon = document.createElement('i');
+                icon.className = getIcon(dev.type);
+                node.appendChild(icon);
+
+                const label = document.createElement('div');
+                label.className = 'node-label';
+                label.textContent = dev.name;
+                node.appendChild(label);
+
+                canvas.appendChild(node);
+            });
+        }
+
+        function getIcon(type) {
+            const icons = {
+                fortigate: 'fas fa-shield-halved text-primary',
+                fortiswitch: 'fas fa-network-wired text-info',
+                server: 'fas fa-kitchen-set text-warning', // Used for IoT in showcase
+                endpoint: 'fas fa-cash-register text-success'
+            };
+            return icons[type] || 'fas fa-plug';
+        }
+
+        async function runPolicyAudit() {
+            const resultsDiv = document.getElementById('audit-results');
+            resultsDiv.innerHTML = '<div class="spinner-border spinner-border-sm text-primary me-2"></div> Running Cross-Vendor Audit...';
+
+            try {
+                const resp = await fetch('/api/v1/enterprise/policy-audit');
+                const data = await resp.json();
+
+                resultsDiv.innerHTML = `
+                    <div class="mt-2 p-2 rounded bg-white bg-opacity-5 border border-white border-opacity-10">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-bold text-white">Compliance</span>
+                            <span class="text-success">${data.summary.compliance_score}</span>
+                        </div>
+                        <div class="small mb-2">${data.summary.total_shared_policies} shared policies audited.</div>
+                        <div class="text-warning small"><i class="fas fa-exclamation-triangle me-1"></i> ${data.critical_violations[0].description}</div>
+                    </div>
+                `;
+            } catch (e) {
+                resultsDiv.innerHTML = '<span class="text-danger">Audit failed. Check service logs.</span>';
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

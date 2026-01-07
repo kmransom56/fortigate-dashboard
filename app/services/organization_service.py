@@ -73,6 +73,15 @@ class OrganizationService:
     def _load_organizations(self) -> Dict[str, Organization]:
         """Load organization configuration"""
         return {
+            "local": Organization(
+                id="local",
+                name="Home Lab",
+                brand=RestaurantBrand.SONIC, # Using Sonic as proxy for Fortinet-full
+                region="Local",
+                location_count=1,
+                infrastructure_type=InfrastructureType.MIXED, # Supports both for testing
+                created_at=datetime.now()
+            ),
             "sonic": Organization(
                 id="sonic",
                 name="Sonic Drive-In",

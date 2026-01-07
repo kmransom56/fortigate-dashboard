@@ -33,15 +33,25 @@ class ScrapedTopologyService:
         return None
 
     def get_topology_data(self) -> Dict[str, Any]:
-        """Get topology data from scraped HTML or fallback demo data"""
+        """Get topology data from scraped HTML or return empty state"""
         if self.scraped_html_path and os.path.exists(self.scraped_html_path):
             try:
                 return self._parse_scraped_html()
             except Exception as e:
                 logger.error(f"Failed to parse scraped HTML: {e}")
         
-        logger.info("Using fallback demo data")
-        return self._get_fallback_data()
+        logger.warning("No scraped HTML file found and fallback data is prohibited.")
+        return {
+            "devices": [],
+            "connections": [],
+            "metadata": {
+                "source": "none",
+                "timestamp": "none",
+                "device_count": 0,
+                "connection_count": 0,
+                "error": "No scraped HTML file found"
+            }
+        }
     
     def _parse_scraped_html(self) -> Dict[str, Any]:
         """Parse actual scraped HTML content"""
@@ -129,11 +139,20 @@ class ScrapedTopologyService:
                 "server": "#9c27b0"
             }
             
+            # Icon mapping to match existing files
+            icon_map = {
+                "fortigate": "/static/icons/FG-100F_101F.svg",
+                "fortiswitch": "/static/icons/FSW-124E.svg",
+                "endpoint": "/static/icons/nd/laptop.svg",
+                "server": "/static/icons/nd/server.svg"
+            }
+            
             return {
                 "id": device_id,
                 "type": device_type,
                 "name": name,
                 "position": {"x": x_pos, "y": y_pos},
+                "icon": icon_map.get(device_type, "/static/icons/Application.svg"),
                 "details": {
                     "deviceCount": device_count,
                     "color": color_map.get(device_type, "#2196f3"),
@@ -173,77 +192,6 @@ class ScrapedTopologyService:
         except Exception:
             pass
         return "unknown"
-    
-    def _get_fallback_data(self) -> Dict[str, Any]:
-        """Return enhanced fallback demo data"""
-        devices = [
-            {
-                "id": "fortigate_main",
-                "type": "fortigate", 
-                "name": "FortiGate Main",
-                "position": {"x": 400, "y": 100},
-                "details": {
-                    "deviceCount": 1, 
-                    "color": "#2196f3",
-                    "status": "online",
-                    "manufacturer": "Fortinet"
-                }
-            },
-            {
-                "id": "switch_1",
-                "type": "fortiswitch",
-                "name": "FortiSwitch 1", 
-                "position": {"x": 300, "y": 300},
-                "details": {
-                    "deviceCount": 3,
-                    "color": "#ff9800",
-                    "status": "online",
-                    "manufacturer": "Fortinet"
-                }
-            },
-            {
-                "id": "switch_2", 
-                "type": "fortiswitch",
-                "name": "FortiSwitch 2",
-                "position": {"x": 500, "y": 300},
-                "details": {
-                    "deviceCount": 6,
-                    "color": "#ff9800", 
-                    "status": "online",
-                    "manufacturer": "Fortinet"
-                }
-            },
-            {
-                "id": "endpoint_1",
-                "type": "endpoint",
-                "name": "Endpoints",
-                "position": {"x": 400, "y": 500},
-                "details": {
-                    "deviceCount": 12,
-                    "color": "#4caf50",
-                    "status": "online", 
-                    "manufacturer": "Generic"
-                }
-            }
-        ]
-        
-        connections = [
-            {"from": "fortigate_main", "to": "switch_1", "type": "ethernet", "status": "active"},
-            {"from": "fortigate_main", "to": "switch_2", "type": "ethernet", "status": "active"},
-            {"from": "switch_1", "to": "endpoint_1", "type": "ethernet", "status": "active"},
-            {"from": "switch_2", "to": "endpoint_1", "type": "ethernet", "status": "active"}
-        ]
-        
-        return {
-            "devices": devices,
-            "connections": connections,
-            "metadata": {
-                "source": "fallback",
-                "timestamp": "demo",
-                "device_count": len(devices),
-                "connection_count": len(connections)
-            }
-        }
 
 # Service instance
 _scraped_topology_service = None

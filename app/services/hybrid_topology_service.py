@@ -352,11 +352,11 @@ class HybridTopologyService:
         
         try:
             # Get current location infrastructure type (from organization service)
-            # For now, assume we're in home lab (FortiSwitch only) but this would
-            # dynamically determine based on organization
-            
-            # Get FortiSwitch data (for Sonic locations and home lab)
-            if org_filter is None or org_filter == "sonic":
+            if org_filter is None or org_filter == "local":
+                logger.info("Local lab mode: Skipping enterprise/Meraki discovery")
+                return self.get_comprehensive_topology()
+
+            if org_filter == "sonic":
                 try:
                     fortiswitch_data = self.get_comprehensive_topology()
                     if fortiswitch_data and not fortiswitch_data.get("error"):
@@ -370,7 +370,8 @@ class HybridTopologyService:
                     enterprise_data["api_info"]["errors"].append(f"FortiSwitch exception: {str(e)}")
             
             # Get Meraki data (for BWW and Arby's locations)
-            if org_filter is None or org_filter in ["bww", "arbys"]:
+            # SKIP Meraki for local lab to avoid unnecessary timeouts
+            if org_filter is not None and org_filter in ["bww", "arbys"]:
                 try:
                     meraki_data = self.meraki_service.get_switch_topology_data(org_filter)
                     if meraki_data and not meraki_data.get("error"):

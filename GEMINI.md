@@ -506,3 +506,25 @@ The global port registry is maintained at: `~/.config/port_registry.md`
 
 This registry is shared across all projects on the system to prevent port conflicts.
 
+
+## Testing and Quality Assurance
+
+### End-to-End Testing (Playwright)
+
+The project uses Playwright for comprehensive end-to-end testing of the dashboard and API integrations.
+
+#### Mandatory Testing Policy
+1.  **Feature Parity**: Every new UI feature or critical API endpoint must be accompanied by an E2E test.
+2.  **Pre-Deployment Check**: All tests must pass before merging or deploying new code.
+3.  **Root Cause Remediation**: Failing tests must be fixed at the source, not bypassed or muted.
+
+#### Test Execution
+- **Run all E2E tests**: `npx playwright test`
+- **Run in headed mode (visible browser)**: `npx playwright test --headed`
+- **Debug a specific test**: `npx playwright test tests/e2e/icon_library.spec.js --debug`
+
+#### Test Coverage Areas
+- **Topology View**: Connectivity, icon rendering, and device identification.
+- **Icon Library**: Search, filtering, and detail modal functionality.
+- **Multi-Tenancy**: Verification of data isolation between organizations.
+- **Error Handling**: Graceful degradation when APIs or databases are unavailable.

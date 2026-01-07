@@ -3,7 +3,7 @@ services:
     build: .
     container_name: fortigate-dashboard
     ports:
-      - "8001:8000"
+      - "11013:8000"
     environment:
       # Application
       - ENVIRONMENT=development
@@ -69,7 +69,7 @@ services:
     image: redis:7-alpine
     container_name: fortigate-redis
     ports:
-      - "6380:6379"
+      - "11014:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes --save 60 1000
@@ -91,7 +91,7 @@ services:
       - POSTGRES_PASSWORD=dashboard_pass
       - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
     ports:
-      - "5437:5432"
+      - "11016:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -113,8 +113,8 @@ services:
       - NEO4J_dbms_memory_heap_max__size=2G
       - NEO4J_dbms_memory_pagecache_size=512m
     ports:
-      - "7475:7474"
-      - "7688:7687"
+      - "11017:7474"
+      - "11018:7687"
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
@@ -138,7 +138,7 @@ services:
       - "--storage.tsdb.retention.time=15d"
       - "--web.enable-lifecycle"
     ports:
-      - "9091:9090"
+      - "11019:9090"
     volumes:
       - prometheus_data:/prometheus
     networks:
@@ -152,7 +152,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin_password
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
-      - "3001:3000"
+      - "11022:3000"
     volumes:
       - grafana_data:/var/lib/grafana
     depends_on:
@@ -165,8 +165,8 @@ services:
     image: nginx:alpine
     container_name: fortigate-nginx
     ports:
-      - "8081:80"
-      - "8443:443"
+      - "11023:80"
+      - "11024:443"
     volumes:
       - nginx_logs:/var/log/nginx
     depends_on:

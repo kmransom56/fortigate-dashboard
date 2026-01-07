@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,36 +12,36 @@
       background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    
+
     .topology-container {
       background: white;
       border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
       min-height: 800px;
       position: relative;
       overflow: hidden;
     }
-    
+
     .topology-header {
       background: linear-gradient(45deg, #FF6B35, #F7931E);
       color: white;
       padding: 1.5rem;
       border-radius: 20px 20px 0 0;
     }
-    
+
     .topology-controls {
       background: #f8f9fa;
       border-bottom: 1px solid #dee2e6;
       padding: 1rem;
     }
-    
+
     .topology-canvas {
       position: relative;
       height: 600px;
       background: radial-gradient(circle at center, #f8f9fa 0%, #ffffff 100%);
       overflow: hidden;
     }
-    
+
     /* Device Icons */
     .device-icon {
       position: absolute;
@@ -53,7 +54,7 @@
       cursor: move;
       z-index: 5;
     }
-    
+
     .connection-line {
       position: absolute;
       height: 2px;
@@ -61,16 +62,16 @@
       transform-origin: left center;
       z-index: 1;
     }
-    
+
     .connection-line.active {
       background: #4caf50;
       height: 3px;
     }
-    
+
     /* Tooltips */
     .device-tooltip {
       position: absolute;
-      background: rgba(17,24,39,0.95);
+      background: rgba(17, 24, 39, 0.95);
       color: #F9FAFB;
       padding: 12px 14px;
       border-radius: 10px;
@@ -81,14 +82,17 @@
       z-index: 30;
       pointer-events: none;
       opacity: 0;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      -webkit-backdrop-filter: blur(2px);
       backdrop-filter: blur(2px);
       transition: opacity 0.2s ease;
     }
-    
-    .device-tooltip.show { opacity: 1; }
-    
+
+    .device-tooltip.show {
+      opacity: 1;
+    }
+
     /* Filter Controls */
     .filter-button {
       border: 1px solid #d1d5db;
@@ -100,21 +104,21 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-    
+
     .filter-button.active {
       background: #2563eb;
       color: white;
       border-color: #2563eb;
     }
-    
+
     .filter-button:hover {
       background: #f3f4f6;
     }
-    
+
     .filter-button.active:hover {
       background: #1d4ed8;
     }
-    
+
     /* Status Indicators */
     .status-badge {
       position: absolute;
@@ -130,11 +134,19 @@
       justify-content: center;
       font-weight: bold;
     }
-    
-    .status-online { background: #10b981; }
-    .status-warning { background: #f59e0b; }
-    .status-critical { background: #ef4444; }
-    
+
+    .status-online {
+      background: #10b981;
+    }
+
+    .status-warning {
+      background: #f59e0b;
+    }
+
+    .status-critical {
+      background: #ef4444;
+    }
+
     /* Legend */
     .topology-legend {
       position: absolute;
@@ -143,27 +155,46 @@
       background: white;
       border-radius: 12px;
       padding: 1rem;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
       font-size: 12px;
       z-index: 25;
     }
-    
+
     .legend-item {
       display: flex;
       align-items: center;
       margin: 0.5rem 0;
     }
-    
+
     .legend-icon {
       width: 20px;
       height: 20px;
       border-radius: 50%;
       margin-right: 8px;
     }
-    
-    .legend-server { border-radius: 4px; }
+
+    .legend-server {
+      border-radius: 4px;
+    }
+
+    .time-range-select {
+      width: auto;
+    }
+
+    .ring-low {
+      border: 3px solid #10b981;
+    }
+
+    .ring-medium {
+      border: 3px solid #f59e0b;
+    }
+
+    .ring-high {
+      border: 3px solid #ef4444;
+    }
   </style>
 </head>
+
 <body>
   <div class="container-fluid p-4">
     <div class="topology-container">
@@ -193,7 +224,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Controls -->
       <div class="topology-controls">
         <div class="row align-items-center">
@@ -210,7 +241,7 @@
           <div class="col-md-6">
             <div class="d-flex justify-content-end align-items-center">
               <span class="me-2">Time Range:</span>
-              <select class="form-select form-select-sm" style="width: auto;">
+              <select class="form-select form-select-sm time-range-select" title="Select data time range">
                 <option value="now">Real-time</option>
                 <option value="5min">Last 5 minutes</option>
                 <option value="1hour">Last hour</option>
@@ -220,12 +251,12 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Topology Canvas -->
       <div class="topology-canvas" id="topologyCanvas">
         <!-- Connections will be drawn here -->
       </div>
-      
+
       <!-- Legend -->
       <div class="topology-legend">
         <h6 class="fw-bold mb-2">Device Legend</h6>
@@ -247,19 +278,19 @@
         </div>
         <hr class="my-2">
         <div class="legend-item">
-          <div class="legend-icon" style="border: 3px solid #10b981;"></div>
+          <div class="legend-icon ring-low"></div>
           <span>Low Risk</span>
         </div>
         <div class="legend-item">
-          <div class="legend-icon" style="border: 3px solid #f59e0b;"></div>
+          <div class="legend-icon ring-medium"></div>
           <span>Medium Risk</span>
         </div>
         <div class="legend-item">
-          <div class="legend-icon" style="border: 3px solid #ef4444;"></div>
+          <div class="legend-icon ring-high"></div>
           <span>High Risk</span>
         </div>
       </div>
-      
+
       <!-- Tooltip -->
       <div class="device-tooltip" id="deviceTooltip"></div>
     </div>
@@ -275,62 +306,73 @@
         this.connections = [];
         this.currentFilter = 'all';
         this.currentView = 'physical';
-        
+
+        // Get org_id from URL or default to 'local'
+        const urlParams = new URLSearchParams(window.location.search);
+        this.orgId = urlParams.get('org_id') || 'local';
+
         this.initializeTopology();
         this.bindEvents();
         this.startAutoRefresh();
       }
-      
+
       async initializeTopology() {
         try {
-          // Fetch real topology data from your FortiGate/FortiSwitch APIs
-          const response = await fetch('/api/scraped_topology');
+          console.log(`Loading topology for organization: ${this.orgId}`);
+          const response = await fetch(`/api/v1/${this.orgId}/topology_data`);
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
           const topologyData = await response.json();
-          
+
           if (!topologyData || (!topologyData.devices && !topologyData.connections)) {
+            // Try fallback to legacy if local
+            if (this.orgId === 'local') {
+              const fallback = await fetch('/api/scraped_topology');
+              if (fallback.ok) return await fallback.json();
+            }
             throw new Error('Empty or invalid topology data received');
           }
-          
+
           this.devices = topologyData.devices || [];
           this.connections = topologyData.connections || [];
-          
+
           console.log('Loaded topology:', this.devices.length, 'devices,', this.connections.length, 'connections');
-          
+
         } catch (error) {
           console.error('Failed to load topology data:', error);
           this.showError(error.message);
-          
-          // Fallback to sample data if API fails
+
+          // Fallback to minimal data if API fails
           this.devices = [
             {
               id: 'fg1',
               type: 'fortigate',
-              name: 'FortiGate-Main',
-              ip: '192.168.0.254',
+              name: 'Discovery Hub',
+              ip: '127.0.0.1',
               status: 'online',
               risk: 'low',
               position: { x: 400, y: 100 },
               connections: [],
               details: {
                 model: 'FortiGate',
-                status: 'API Connection Failed'
+                error: error.message
               }
             }
           ];
           this.connections = [];
         }
-        
+
         this.renderTopology();
       }
-      
+
       showError(message) {
+        // Only show if no devices loaded
+        if (this.devices.length > 0) return;
         this.canvas.innerHTML = `
           <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                      text-align: center; padding: 2rem; background: #fff; border-radius: 8px; 
-                      box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 400px;">
+                       text-align: center; padding: 2rem; background: #fff; border-radius: 8px; 
+                       box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 400px;">
             <div style="color: #dc3545; font-size: 2rem; margin-bottom: 1rem;">⚠️</div>
             <div style="color: #333; font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">Error Loading Topology</div>
             <div style="color: #666; font-size: 0.9rem;">${message}</div>
@@ -342,14 +384,14 @@
           </div>
         `;
       }
-      
+
       renderTopology() {
         // Clear canvas
         this.canvas.innerHTML = '';
-        
+
         // Draw connections first (behind devices)
         this.drawConnections();
-        
+
         // Draw devices
         this.devices.forEach(device => {
           if (this.shouldShowDevice(device)) {
@@ -357,60 +399,67 @@
           }
         });
       }
-      
+
       drawConnections() {
         this.connections.forEach(connection => {
           const fromDevice = this.devices.find(d => d.id === connection.from);
           const toDevice = this.devices.find(d => d.id === connection.to);
-          
+
           if (fromDevice && toDevice && this.shouldShowDevice(fromDevice) && this.shouldShowDevice(toDevice)) {
             this.createConnectionLine(fromDevice, toDevice);
           }
         });
       }
-      
+
       createConnectionLine(from, to) {
         const line = document.createElement('div');
         line.className = 'connection-line';
-        
+
         const dx = to.position.x - from.position.x;
         const dy = to.position.y - from.position.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-        
+
         line.style.left = `${from.position.x + 30}px`;
         line.style.top = `${from.position.y + 30}px`;
         line.style.width = `${distance}px`;
         line.style.transform = `rotate(${angle}deg)`;
-        
+
         // Add special styling for LAG or high-traffic connections
-        if (from.type === 'fortiswitch' || to.type === 'fortiswitch') {
+        if (from.type === 'fortiswitch' || to.type === 'fortiswitch' || from.type === 'fortigate') {
           line.classList.add('active');
         }
-        
+
         this.canvas.appendChild(line);
       }
-      
+
       createDeviceElement(device) {
         const element = document.createElement('div');
         element.className = `device-icon ${device.type} risk-${device.risk}`;
         element.style.left = `${device.position.x}px`;
         element.style.top = `${device.position.y}px`;
-        
+
         // Device icon: prefer manufacturer icon if available
-        const iconPath = device.details && device.details.iconPath ? device.details.iconPath : '';
+        const iconPath = device.icon || (device.details && device.details.iconPath ? device.details.iconPath : '');
         if (iconPath) {
           const img = document.createElement('img');
-          img.alt = device.details.iconTitle || device.name || device.type;
-          // Ensure the icon path is absolute to /static
+          img.alt = device.name || device.type;
+          // Ensure the icon path is absolute
           img.src = iconPath.startsWith('/') ? iconPath : `/static/${iconPath.replace(/^\/?/, '')}`;
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'contain';
+          img.onerror = () => {
+            img.style.display = 'none';
+            element.innerHTML = `<i class="${this.getDeviceIcon(device.type)}"></i>`;
+          };
           element.appendChild(img);
         } else {
           // Fallback to font-awesome
           const icon = this.getDeviceIcon(device.type);
           element.innerHTML = `<i class="${icon}"></i>`;
         }
-        
+
         // Status badge
         if (device.status !== 'online') {
           const badge = document.createElement('div');
@@ -418,102 +467,102 @@
           badge.innerHTML = device.status === 'warning' ? '!' : '×';
           element.appendChild(badge);
         }
-        
+
         // Event listeners
         element.addEventListener('mouseenter', (e) => this.showTooltip(e, device));
         element.addEventListener('mouseleave', () => this.hideTooltip());
         element.addEventListener('click', () => this.selectDevice(device));
-        
+
         // Make device draggable
         this.makeDraggable(element, device);
-        
+
         this.canvas.appendChild(element);
-        
+
         // Add device label
         const label = document.createElement('div');
         label.style.position = 'absolute';
-        label.style.left = `${device.position.x}px`;
-        label.style.top = `${device.position.y + 70}px`;
-        label.style.fontSize = '12px';
-        label.style.fontWeight = 'bold';
+        label.style.left = `${device.position.x - 20}px`;
+        label.style.top = `${device.position.y + 65}px`;
+        label.style.fontSize = '11px';
+        label.style.fontWeight = '600';
         label.style.textAlign = 'center';
-        label.style.width = '60px';
-        label.style.color = '#374151';
+        label.style.width = '100px';
+        label.style.color = '#1e293b';
+        label.style.textShadow = '0 1px 2px rgba(255,255,255,0.8)';
         label.textContent = device.name;
         this.canvas.appendChild(label);
       }
-      
+
       getDeviceIcon(type) {
         const icons = {
           fortigate: 'fas fa-shield-alt',
           fortiswitch: 'fas fa-network-wired',
+          fortiap: 'fas fa-wifi',
           endpoint: 'fas fa-desktop',
-          server: 'fas fa-server'
+          server: 'fas fa-server',
+          tablet: 'fas fa-tablet-alt'
         };
         return icons[type] || 'fas fa-question';
       }
-      
+
       showTooltip(event, device) {
         const tooltip = this.tooltip;
-        
+
         let content = `
-          <div class="fw-bold mb-2">${device.name}</div>
-          <div><strong>IP:</strong> ${device.ip}</div>
-          <div><strong>Status:</strong> <span class="text-${this.getStatusColor(device.status)}">${device.status}</span></div>
-          <div><strong>Risk:</strong> <span class="text-${this.getRiskColor(device.risk)}">${device.risk}</span></div>
+          <div class="fw-bold mb-2 pb-1 border-bottom">${device.name}</div>
+          <div class="mb-1"><strong>IP:</strong> ${device.ip}</div>
+          <div class="mb-1"><strong>Status:</strong> <span class="badge bg-${this.getStatusColor(device.status)}">${device.status}</span></div>
+          <div class="mb-1"><strong>Risk:</strong> <span class="badge bg-${this.getRiskColor(device.risk)}">${device.risk}</span></div>
         `;
-        
-        if (device.mac) {
-          content += `<div><strong>MAC:</strong> ${device.mac}</div>`;
+
+        const details = device.details || {};
+        if (details.mac) {
+          content += `<div class="mb-1"><strong>MAC:</strong> <code class="small">${details.mac}</code></div>`;
         }
-        
-        // Add device-specific details
-        Object.entries(device.details).forEach(([key, value]) => {
-          const label = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
-          content += `<div><strong>${label}:</strong> ${value}</div>`;
-        });
-        
+
+        if (details.manufacturer) {
+          content += `<div class="mb-1"><strong>Vendor:</strong> ${details.manufacturer}</div>`;
+        }
+
         tooltip.innerHTML = content;
         tooltip.style.left = `${device.position.x + 70}px`;
         tooltip.style.top = `${device.position.y}px`;
         tooltip.classList.add('show');
       }
-      
+
       hideTooltip() {
         this.tooltip.classList.remove('show');
       }
-      
+
       getStatusColor(status) {
         const colors = { online: 'success', warning: 'warning', critical: 'danger' };
         return colors[status] || 'secondary';
       }
-      
+
       getRiskColor(risk) {
         const colors = { low: 'success', medium: 'warning', high: 'danger', critical: 'danger' };
         return colors[risk] || 'secondary';
       }
-      
+
       shouldShowDevice(device) {
         if (this.currentFilter === 'all') return true;
-        
+
         switch (this.currentFilter) {
           case 'risk':
             return device.risk === 'medium' || device.risk === 'high' || device.risk === 'critical';
           case 'type':
-            return true; // Show all, but could filter by specific types
+            return true;
           case 'traffic':
-            return device.type === 'fortiswitch' || device.type === 'fortigate';
+            return ['fortiswitch', 'fortigate', 'fortiap'].includes(device.type);
           default:
             return true;
         }
       }
-      
+
       selectDevice(device) {
         console.log('Device selected:', device);
-        // Implement device selection logic here
-        // Could open device details panel, etc.
       }
-      
+
       bindEvents() {
         // Filter buttons
         document.querySelectorAll('.filter-button').forEach(button => {
@@ -524,7 +573,7 @@
             this.renderTopology();
           });
         });
-        
+
         // View toggle
         document.querySelectorAll('[data-view]').forEach(item => {
           item.addEventListener('click', (e) => {
@@ -535,119 +584,102 @@
             this.renderTopology();
           });
         });
-        
+
         // Refresh button
         document.getElementById('refreshTopology').addEventListener('click', () => {
           this.refreshData();
         });
       }
-      
+
       makeDraggable(element, device) {
         let isDragging = false;
         let startX, startY;
         let currentX = device.position.x;
         let currentY = device.position.y;
-        
+
         const onMouseDown = (e) => {
-          if (e.button !== 0) return; // Only left mouse button
-          
+          if (e.button !== 0) return;
+
           isDragging = true;
           startX = e.clientX - currentX;
           startY = e.clientY - currentY;
-          
+
           element.classList.add('dragging');
           this.hideTooltip();
-          
+
           document.addEventListener('mousemove', onMouseMove);
           document.addEventListener('mouseup', onMouseUp);
-          
+
           e.preventDefault();
           e.stopPropagation();
         };
-        
+
         const onMouseMove = (e) => {
           if (!isDragging) return;
-          
+
           const rect = this.canvas.getBoundingClientRect();
           currentX = Math.max(30, Math.min(rect.width - 90, e.clientX - startX));
           currentY = Math.max(30, Math.min(rect.height - 90, e.clientY - startY));
-          
+
           element.style.left = `${currentX}px`;
           element.style.top = `${currentY}px`;
-          
-          // Update device position
+
           device.position.x = currentX;
           device.position.y = currentY;
-          
-          // Update connections in real-time
+
           this.updateConnectionLines();
-          
+
           e.preventDefault();
         };
-        
+
         const onMouseUp = (e) => {
           if (!isDragging) return;
-          
+
           isDragging = false;
           element.classList.remove('dragging');
-          
+
           document.removeEventListener('mousemove', onMouseMove);
           document.removeEventListener('mouseup', onMouseUp);
-          
-          // Save new position (could be extended to save to backend)
-          console.log(`Device ${device.name} moved to position:`, {x: currentX, y: currentY});
-          
+
           e.preventDefault();
         };
-        
+
         element.addEventListener('mousedown', onMouseDown);
       }
-      
+
       updateConnectionLines() {
-        // Remove existing connection lines
         const existingLines = this.canvas.querySelectorAll('.connection-line');
         existingLines.forEach(line => line.remove());
-        
-        // Redraw all connections
         this.drawConnections();
       }
-      
+
       async refreshData() {
-        console.log('Refreshing topology data...');
+        console.log(`Refreshing topology for ${this.orgId}...`);
         try {
-          const response = await fetch('/api/topology_data');
+          const response = await fetch(`/api/v1/${this.orgId}/topology_data`);
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
           const topologyData = await response.json();
-          
-          if (!topologyData || (!topologyData.devices && !topologyData.connections)) {
-            throw new Error('Empty or invalid topology data received');
-          }
-          
           this.devices = topologyData.devices || [];
           this.connections = topologyData.connections || [];
-          
           this.renderTopology();
-          console.log('Topology refreshed successfully');
         } catch (error) {
-          console.error('Failed to refresh topology data:', error);
-          this.showError(`Failed to refresh: ${error.message}`);
+          console.error('Failed to refresh:', error);
         }
       }
-      
+
       startAutoRefresh() {
-        // Auto-refresh every 30 seconds
         setInterval(() => {
           this.refreshData();
         }, 30000);
       }
     }
-    
-    // Initialize topology when DOM is ready
+
     document.addEventListener('DOMContentLoaded', () => {
       new NetworkTopology();
     });
   </script>
 </body>
+
 </html>

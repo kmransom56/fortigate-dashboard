@@ -1,5 +1,1967 @@
-The setuid sandbox is not running as root. Common causes:
-  * An unprivileged process using ptrace on it, like a debugger.
-  * A parent process set prctl(PR_SET_NO_NEW_PRIVS, ...)
-Failed to move to new namespace: PID namespaces supported, Network namespace supported, but failed: errno = Operation not permitted
-[56688:0829/051830.328401:FATAL:zygote_host_impl_linux.cc(207)] Check failed: . : Invalid argument (22)
+INFO:app.utils.oui_lookup:Loaded 5 cached OUI entries
+INFO:app.services.fortigate_session:Loaded credential from ./secrets/fortigate_password.txt
+INFO:app.services.fortigate_session:FortiGate credentials loaded: IP=192.168.0.254, Username=admin, Password=***
+INFO:     Started server process [862973]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:api_topology_data:START topology_data for organization: local
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.redis_session_manager:Redis session manager initialized: redis:6379
+INFO:app.services.fortigate_redis_session:Loaded credential from ./secrets/fortigate_password.txt
+INFO:app.services.fortigate_redis_session:Loaded credential from ./secrets/fortigate_password.txt
+INFO:app.services.fortigate_redis_session:FortiGate credentials loaded: IP=192.168.0.254, Username=admin, Password=***
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/system/interface: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+INFO:app.services.fortigate_service:Retrieved 0 interfaces
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using Redis session authentication
+WARNING:api_topology_data:fetch_devices failed: 'FortiGateMonitorService' object has no attribute 'get_all_user_devices'
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/switch-controller/managed-switch: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortiswitch_api_service:API error getting managed switches: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Switch API data
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for monitor/switch-controller/detected-device: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortigate_monitor_service:API error getting detected devices: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Monitor API data
+INFO:app.services.snmp_service:SNMP FortiSwitch discovery: NETINTEGRATESW with 5 active ports
+INFO:app.services.hybrid_topology_service:Successfully retrieved SNMP data
+INFO:app.services.hybrid_topology_service:Using SNMP as base configuration (Switch API unavailable)
+INFO:app.services.hybrid_topology_service:Monitor data available: True
+INFO:app.services.hybrid_topology_service:Monitor data keys: ['devices', 'total_devices', 'source', 'error']
+INFO:app.services.hybrid_topology_service:Monitor devices count: 0
+WARNING:app.services.hybrid_topology_service:No Monitor API device data available, using base configuration
+INFO:api_topology_data:Parallel fetch completed in 0.40s
+INFO:api_topology_data:Providing real-world home endpoint discovery data
+INFO:api_topology_data:Returning topology data: devices=13, connections=12
+INFO:     127.0.0.1:39280 - "GET /api/v1/local/topology_data HTTP/1.1" 200 OK
+INFO:api_topology_data:START topology_data for organization: local
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/system/interface: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+INFO:app.services.fortigate_service:Retrieved 0 interfaces
+WARNING:api_topology_data:fetch_devices failed: 'FortiGateMonitorService' object has no attribute 'get_all_user_devices'
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/switch-controller/managed-switch: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortiswitch_api_service:API error getting managed switches: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Switch API data
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for monitor/switch-controller/detected-device: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortigate_monitor_service:API error getting detected devices: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Monitor API data
+INFO:app.services.snmp_service:SNMP FortiSwitch discovery: NETINTEGRATESW with 5 active ports
+INFO:app.services.hybrid_topology_service:Successfully retrieved SNMP data
+INFO:app.services.hybrid_topology_service:Using SNMP as base configuration (Switch API unavailable)
+INFO:app.services.hybrid_topology_service:Monitor data available: True
+INFO:app.services.hybrid_topology_service:Monitor data keys: ['devices', 'total_devices', 'source', 'error']
+INFO:app.services.hybrid_topology_service:Monitor devices count: 0
+WARNING:app.services.hybrid_topology_service:No Monitor API device data available, using base configuration
+INFO:api_topology_data:Parallel fetch completed in 0.29s
+INFO:api_topology_data:Providing real-world home endpoint discovery data
+INFO:api_topology_data:Returning topology data: devices=13, connections=12
+INFO:     127.0.0.1:39294 - "GET /api/v1/local/topology_data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48152 - "GET /icons HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48152 - "GET /api/icons/browse?limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48166 - "GET /api/icons/browse?limit=48&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48152 - "GET /api/icons/browse?manufacturer=Fortinet&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48152 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48166 - "GET /icons/nd/camera.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48168 - "GET /icons/nd/cloud.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48174 - "GET /icons/nd/laptop.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48184 - "GET /icons/nd/firewall.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48200 - "GET /icons/nd/switch.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48166 - "GET /api/icons/browse?device_type=fortigate&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48152 - "GET /icons/nd/internet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48184 - "GET /icons/nd/load-balancer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48174 - "GET /icons/nd/nas.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48200 - "GET /icons/nd/phone.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48168 - "GET /icons/nd/printer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48152 - "GET /icons/nd/router.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48166 - "GET /icons/nd/server.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48184 - "GET /icons/nd/tablet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48152 - "GET /api/icons/browse?device_type=fortiswitch&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48184 - "GET /icons/nd/vpn.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48174 - "GET /icons/nd/wifi-controller.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48166 - "GET /icons/amd.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48200 - "GET /icons/apple.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48168 - "GET /icons/dell.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48152 - "GET /icons/hp.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48152 - "GET /icons/intel.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48174 - "GET /icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48184 - "GET /icons/microsoft.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48166 - "GET /icons/nvidia.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48200 - "GET /icons/raspberry-pi.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48168 - "GET /icons/samsung.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48152 - "GET /static/icons/nd/device.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48204 - "GET /icons HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48204 - "GET /api/icons/browse?limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48212 - "GET /api/icons/browse?limit=48&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48204 - "GET /api/icons/browse?manufacturer=Fortinet&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48204 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48212 - "GET /icons/nd/camera.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48222 - "GET /icons/nd/cloud.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48228 - "GET /icons/nd/laptop.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48234 - "GET /icons/nd/firewall.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48236 - "GET /icons/nd/switch.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48212 - "GET /icons/nd/internet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48204 - "GET /icons/nd/load-balancer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48222 - "GET /icons/nd/nas.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48222 - "GET /icons/nd/phone.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48228 - "GET /icons/nd/printer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48212 - "GET /icons/nd/router.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48204 - "GET /icons/nd/server.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48236 - "GET /icons/nd/tablet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48234 - "GET /icons/nd/vpn.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48222 - "GET /icons/nd/wifi-controller.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48234 - "GET /api/icons/browse?device_type=fortigate&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48222 - "GET /icons/amd.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48228 - "GET /icons/apple.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48212 - "GET /icons/dell.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48204 - "GET /icons/hp.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48236 - "GET /icons/intel.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48234 - "GET /icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48236 - "GET /api/icons/browse?device_type=fortiswitch&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48234 - "GET /icons/microsoft.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48228 - "GET /icons/nvidia.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48222 - "GET /icons/raspberry-pi.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48212 - "GET /icons/samsung.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48204 - "GET /static/icons/nd/device.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48242 - "GET /icons HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48242 - "GET /api/icons/browse?limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48244 - "GET /api/icons/browse?limit=48&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48242 - "GET /api/icons/browse?manufacturer=Fortinet&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48242 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48244 - "GET /icons/nd/camera.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48250 - "GET /icons/nd/cloud.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48258 - "GET /icons/nd/laptop.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48260 - "GET /icons/nd/firewall.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48262 - "GET /icons/nd/switch.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48244 - "GET /icons/nd/internet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48242 - "GET /icons/nd/load-balancer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48250 - "GET /icons/nd/nas.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48250 - "GET /icons/nd/phone.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48242 - "GET /icons/nd/printer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48258 - "GET /icons/nd/router.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48244 - "GET /icons/nd/server.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48262 - "GET /icons/nd/tablet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48260 - "GET /icons/nd/vpn.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48250 - "GET /api/icons/browse?device_type=fortigate&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48260 - "GET /icons/nd/wifi-controller.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48250 - "GET /icons/amd.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48242 - "GET /icons/apple.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48258 - "GET /icons/dell.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48244 - "GET /icons/hp.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48262 - "GET /icons/intel.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48260 - "GET /api/icons/browse?device_type=fortiswitch&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48242 - "GET /icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48258 - "GET /icons/microsoft.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48244 - "GET /icons/nvidia.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48250 - "GET /icons/raspberry-pi.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48262 - "GET /icons/samsung.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48242 - "GET /static/icons/nd/device.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48274 - "GET /icons HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48274 - "GET /api/icons/browse?limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48290 - "GET /api/icons/browse?limit=48&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48274 - "GET /api/icons/browse?manufacturer=Fortinet&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48274 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48290 - "GET /icons/nd/camera.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48304 - "GET /icons/nd/cloud.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48318 - "GET /icons/nd/laptop.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48326 - "GET /icons/nd/firewall.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48336 - "GET /icons/nd/switch.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48274 - "GET /api/icons/browse?device_type=fortigate&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48290 - "GET /icons/nd/internet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48304 - "GET /icons/nd/load-balancer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48274 - "GET /icons/nd/nas.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48304 - "GET /icons/nd/phone.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48318 - "GET /icons/nd/printer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48290 - "GET /icons/nd/router.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48336 - "GET /api/icons/browse?device_type=fortiswitch&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48326 - "GET /icons/nd/server.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48274 - "GET /icons/nd/tablet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48336 - "GET /icons/nd/vpn.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48274 - "GET /icons/nd/wifi-controller.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48318 - "GET /icons/amd.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48304 - "GET /icons/apple.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48290 - "GET /icons/dell.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48326 - "GET /icons/hp.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48336 - "GET /icons/intel.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48336 - "GET /icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48318 - "GET /icons/microsoft.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48304 - "GET /icons/nvidia.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48290 - "GET /icons/raspberry-pi.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48274 - "GET /icons/samsung.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48326 - "GET /static/icons/nd/device.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48326 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54924 - "GET /topology HTTP/1.1" 200 OK
+INFO:api_scraped_topology:START /api/scraped_topology endpoint
+WARNING:app.services.scraped_topology_service:No scraped HTML file found, will use fallback data
+WARNING:app.services.scraped_topology_service:No scraped HTML file found and fallback data is prohibited.
+INFO:api_scraped_topology:Scraped topology data source: none
+INFO:api_scraped_topology:Device count: 0
+INFO:api_scraped_topology:Connection count: 0
+INFO:     127.0.0.1:54924 - "GET /api/scraped_topology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52160 - "GET /topology HTTP/1.1" 200 OK
+INFO:api_scraped_topology:START /api/scraped_topology endpoint
+WARNING:app.services.scraped_topology_service:No scraped HTML file found and fallback data is prohibited.
+INFO:api_scraped_topology:Scraped topology data source: none
+INFO:api_scraped_topology:Device count: 0
+INFO:api_scraped_topology:Connection count: 0
+INFO:     127.0.0.1:52160 - "GET /api/scraped_topology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52164 - "GET /topology HTTP/1.1" 200 OK
+INFO:api_scraped_topology:START /api/scraped_topology endpoint
+WARNING:app.services.scraped_topology_service:No scraped HTML file found and fallback data is prohibited.
+INFO:api_scraped_topology:Scraped topology data source: none
+INFO:api_scraped_topology:Device count: 0
+INFO:api_scraped_topology:Connection count: 0
+INFO:     127.0.0.1:52164 - "GET /api/scraped_topology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42098 - "GET /topology?org_id=local HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42108 - "GET /icons HTTP/1.1" 200 OK
+INFO:api_scraped_topology:START /api/scraped_topology endpoint
+WARNING:app.services.scraped_topology_service:No scraped HTML file found and fallback data is prohibited.
+INFO:api_scraped_topology:Scraped topology data source: none
+INFO:api_scraped_topology:Device count: 0
+INFO:api_scraped_topology:Connection count: 0
+INFO:     127.0.0.1:42098 - "GET /api/scraped_topology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42108 - "GET /api/icons/browse?limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42112 - "GET /api/icons/browse?limit=48&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42112 - "GET /api/icons/browse?manufacturer=Fortinet&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42108 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42114 - "GET /icons/nd/camera.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42122 - "GET /icons/nd/cloud.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42130 - "GET /icons/nd/laptop.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42136 - "GET /icons/nd/firewall.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42108 - "GET /icons/nd/switch.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42112 - "GET /icons/nd/internet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42114 - "GET /icons/nd/load-balancer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42108 - "GET /icons/nd/nas.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42114 - "GET /icons/nd/phone.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42112 - "GET /icons/nd/printer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42122 - "GET /icons/nd/router.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42130 - "GET /icons/nd/server.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42136 - "GET /icons/nd/tablet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42108 - "GET /icons/nd/vpn.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42114 - "GET /icons/nd/wifi-controller.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42108 - "GET /icons/amd.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42112 - "GET /icons/apple.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42122 - "GET /icons/dell.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42130 - "GET /icons/hp.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42136 - "GET /icons/intel.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42114 - "GET /icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42114 - "GET /icons/microsoft.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42108 - "GET /icons/nvidia.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42112 - "GET /icons/raspberry-pi.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42122 - "GET /icons/samsung.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42130 - "GET /static/icons/nd/device.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42130 - "GET /api/icons/browse?device_type=fortigate&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42130 - "GET /api/icons/browse?device_type=fortiswitch&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42152 - "GET /topology?org_id=local HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42166 - "GET /icons HTTP/1.1" 200 OK
+INFO:api_scraped_topology:START /api/scraped_topology endpoint
+WARNING:app.services.scraped_topology_service:No scraped HTML file found and fallback data is prohibited.
+INFO:api_scraped_topology:Scraped topology data source: none
+INFO:api_scraped_topology:Device count: 0
+INFO:api_scraped_topology:Connection count: 0
+INFO:     127.0.0.1:42152 - "GET /api/scraped_topology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42166 - "GET /api/icons/browse?limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42182 - "GET /api/icons/browse?limit=48&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42166 - "GET /api/icons/browse?manufacturer=Fortinet&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42166 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42182 - "GET /icons/nd/camera.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42196 - "GET /icons/nd/cloud.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42198 - "GET /icons/nd/laptop.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42202 - "GET /icons/nd/firewall.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42216 - "GET /icons/nd/switch.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42166 - "GET /api/icons/browse?device_type=fortigate&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42182 - "GET /icons/nd/internet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42196 - "GET /icons/nd/load-balancer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42182 - "GET /icons/nd/nas.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42196 - "GET /icons/nd/phone.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42166 - "GET /icons/nd/printer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42198 - "GET /icons/nd/router.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42202 - "GET /icons/nd/server.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42216 - "GET /icons/nd/tablet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42182 - "GET /icons/nd/vpn.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42166 - "GET /icons/nd/wifi-controller.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42182 - "GET /icons/amd.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42196 - "GET /icons/apple.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42198 - "GET /icons/dell.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42202 - "GET /icons/hp.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42216 - "GET /icons/intel.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42166 - "GET /icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42182 - "GET /icons/microsoft.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42196 - "GET /icons/nvidia.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42198 - "GET /icons/raspberry-pi.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42202 - "GET /icons/samsung.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42216 - "GET /static/icons/nd/device.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42198 - "GET /api/icons/browse?device_type=fortiswitch&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42232 - "GET /icons HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42232 - "GET /api/icons/browse?limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42248 - "GET /api/icons/browse?limit=48&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42232 - "GET /api/icons/browse?manufacturer=Fortinet&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42232 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42248 - "GET /icons/nd/camera.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42262 - "GET /icons/nd/cloud.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42274 - "GET /icons/nd/laptop.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42288 - "GET /icons/nd/firewall.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42292 - "GET /icons/nd/switch.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42232 - "GET /api/icons/browse?device_type=fortigate&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42248 - "GET /icons/nd/internet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42262 - "GET /icons/nd/load-balancer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42232 - "GET /icons/nd/nas.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42262 - "GET /icons/nd/phone.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42292 - "GET /icons/nd/printer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42248 - "GET /icons/nd/router.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42288 - "GET /icons/nd/server.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42274 - "GET /icons/nd/tablet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42232 - "GET /api/icons/browse?device_type=fortiswitch&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42292 - "GET /icons/nd/vpn.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42248 - "GET /icons/nd/wifi-controller.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42288 - "GET /icons/amd.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42262 - "GET /icons/apple.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42274 - "GET /icons/dell.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42232 - "GET /icons/hp.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42292 - "GET /icons/intel.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42292 - "GET /icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42232 - "GET /icons/microsoft.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42248 - "GET /icons/nvidia.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42288 - "GET /icons/raspberry-pi.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42262 - "GET /icons/samsung.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42274 - "GET /static/icons/nd/device.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42300 - "GET /icons HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42300 - "GET /api/icons/browse?limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42310 - "GET /api/icons/browse?limit=48&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42310 - "GET /api/icons/browse?manufacturer=Fortinet&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42300 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42310 - "GET /icons/nd/camera.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42320 - "GET /icons/nd/cloud.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42328 - "GET /icons/nd/laptop.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42334 - "GET /icons/nd/firewall.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42342 - "GET /icons/nd/switch.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42300 - "GET /api/icons/browse?device_type=fortigate&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42310 - "GET /icons/nd/internet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42320 - "GET /icons/nd/load-balancer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42300 - "GET /icons/nd/nas.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42320 - "GET /icons/nd/phone.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42342 - "GET /icons/nd/printer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42310 - "GET /icons/nd/router.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42328 - "GET /icons/nd/server.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42334 - "GET /icons/nd/tablet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42300 - "GET /api/icons/browse?device_type=fortiswitch&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42342 - "GET /icons/nd/vpn.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42310 - "GET /icons/nd/wifi-controller.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42328 - "GET /icons/amd.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42320 - "GET /icons/apple.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42334 - "GET /icons/dell.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42300 - "GET /icons/hp.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42342 - "GET /icons/intel.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42342 - "GET /icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42300 - "GET /icons/microsoft.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42310 - "GET /icons/nvidia.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42328 - "GET /icons/raspberry-pi.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42320 - "GET /icons/samsung.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42334 - "GET /static/icons/nd/device.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42334 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55628 - "GET /topology?org_id=local HTTP/1.1" 200 OK
+INFO:api_scraped_topology:START /api/scraped_topology endpoint
+WARNING:app.services.scraped_topology_service:No scraped HTML file found and fallback data is prohibited.
+INFO:api_scraped_topology:Scraped topology data source: none
+INFO:api_scraped_topology:Device count: 0
+INFO:api_scraped_topology:Connection count: 0
+INFO:     127.0.0.1:55628 - "GET /api/scraped_topology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59786 - "GET /topology?org_id=local HTTP/1.1" 200 OK
+INFO:api_topology_data:START topology_data for organization: local
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/system/interface: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+INFO:app.services.fortigate_service:Retrieved 0 interfaces
+WARNING:api_topology_data:fetch_devices failed: 'FortiGateMonitorService' object has no attribute 'get_all_user_devices'
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using Redis session authentication
+INFO:     127.0.0.1:59796 - "GET /topology?org_id=local HTTP/1.1" 200 OK
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/switch-controller/managed-switch: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using token authentication
+INFO:api_topology_data:START topology_data for organization: local
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/system/interface: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortiswitch_api_service:API error getting managed switches: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Switch API data
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for monitor/switch-controller/detected-device: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+INFO:app.services.fortigate_service:Retrieved 0 interfaces
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+WARNING:api_topology_data:fetch_devices failed: 'FortiGateMonitorService' object has no attribute 'get_all_user_devices'
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/switch-controller/managed-switch: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortiswitch_api_service:API error getting managed switches: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Switch API data
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for monitor/switch-controller/detected-device: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortigate_monitor_service:API error getting detected devices: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Monitor API data
+INFO:app.services.snmp_service:SNMP FortiSwitch discovery: NETINTEGRATESW with 5 active ports
+INFO:app.services.hybrid_topology_service:Successfully retrieved SNMP data
+INFO:app.services.hybrid_topology_service:Using SNMP as base configuration (Switch API unavailable)
+INFO:app.services.hybrid_topology_service:Monitor data available: True
+INFO:app.services.hybrid_topology_service:Monitor data keys: ['devices', 'total_devices', 'source', 'error']
+INFO:app.services.hybrid_topology_service:Monitor devices count: 0
+WARNING:app.services.hybrid_topology_service:No Monitor API device data available, using base configuration
+INFO:api_topology_data:Parallel fetch completed in 0.48s
+INFO:api_topology_data:Providing real-world home endpoint discovery data
+INFO:api_topology_data:Returning topology data: devices=13, connections=12
+INFO:     127.0.0.1:59796 - "GET /api/v1/local/topology_data HTTP/1.1" 200 OK
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortigate_monitor_service:API error getting detected devices: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Monitor API data
+INFO:app.services.snmp_service:SNMP FortiSwitch discovery: NETINTEGRATESW with 5 active ports
+INFO:app.services.hybrid_topology_service:Successfully retrieved SNMP data
+INFO:app.services.hybrid_topology_service:Using SNMP as base configuration (Switch API unavailable)
+INFO:app.services.hybrid_topology_service:Monitor data available: True
+INFO:app.services.hybrid_topology_service:Monitor data keys: ['devices', 'total_devices', 'source', 'error']
+INFO:app.services.hybrid_topology_service:Monitor devices count: 0
+WARNING:app.services.hybrid_topology_service:No Monitor API device data available, using base configuration
+INFO:     127.0.0.1:59796 - "GET /static/icons/FG_FWF-60_61F.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59810 - "GET /static/icons/FSW-124E-POE.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59830 - "GET /static/icons/nd/server.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59840 - "GET /static/icons/microsoft.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59820 - "GET /static/icons/samsung.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59844 - "GET /static/icons/fortiap/FAP-231F_233F_431F_433F.svg HTTP/1.1" 200 OK
+INFO:api_topology_data:Parallel fetch completed in 0.92s
+INFO:api_topology_data:Providing real-world home endpoint discovery data
+INFO:api_topology_data:Returning topology data: devices=13, connections=12
+INFO:     127.0.0.1:59796 - "GET /static/icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49914 - "GET /topology?org_id=local HTTP/1.1" 200 OK
+INFO:api_topology_data:START topology_data for organization: local
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/system/interface: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+INFO:app.services.fortigate_service:Retrieved 0 interfaces
+WARNING:api_topology_data:fetch_devices failed: 'FortiGateMonitorService' object has no attribute 'get_all_user_devices'
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/switch-controller/managed-switch: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortiswitch_api_service:API error getting managed switches: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Switch API data
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for monitor/switch-controller/detected-device: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortigate_monitor_service:API error getting detected devices: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Monitor API data
+INFO:app.services.snmp_service:SNMP FortiSwitch discovery: NETINTEGRATESW with 5 active ports
+INFO:app.services.hybrid_topology_service:Successfully retrieved SNMP data
+INFO:app.services.hybrid_topology_service:Using SNMP as base configuration (Switch API unavailable)
+INFO:app.services.hybrid_topology_service:Monitor data available: True
+INFO:app.services.hybrid_topology_service:Monitor data keys: ['devices', 'total_devices', 'source', 'error']
+INFO:app.services.hybrid_topology_service:Monitor devices count: 0
+WARNING:app.services.hybrid_topology_service:No Monitor API device data available, using base configuration
+INFO:api_topology_data:Parallel fetch completed in 0.31s
+INFO:api_topology_data:Providing real-world home endpoint discovery data
+INFO:api_topology_data:Returning topology data: devices=13, connections=12
+INFO:     127.0.0.1:49914 - "GET /api/v1/local/topology_data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49914 - "GET /static/icons/FG_FWF-60_61F.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60014 - "GET /static/icons/FSW-124E-POE.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60028 - "GET /static/icons/samsung.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60034 - "GET /static/icons/microsoft.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60036 - "GET /static/icons/fortiap/FAP-231F_233F_431F_433F.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60032 - "GET /static/icons/nd/server.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60028 - "GET /static/icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49884 - "GET /topology?org_id=local HTTP/1.1" 200 OK
+INFO:api_topology_data:START topology_data for organization: local
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/system/interface: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+INFO:app.services.fortigate_service:Retrieved 0 interfaces
+WARNING:api_topology_data:fetch_devices failed: 'FortiGateMonitorService' object has no attribute 'get_all_user_devices'
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/switch-controller/managed-switch: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortiswitch_api_service:API error getting managed switches: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Switch API data
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for monitor/switch-controller/detected-device: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using token authentication
+INFO:     127.0.0.1:49888 - "GET /topology?org_id=local HTTP/1.1" 200 OK
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortigate_monitor_service:API error getting detected devices: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Monitor API data
+INFO:app.services.snmp_service:SNMP FortiSwitch discovery: NETINTEGRATESW with 5 active ports
+INFO:app.services.hybrid_topology_service:Successfully retrieved SNMP data
+INFO:app.services.hybrid_topology_service:Using SNMP as base configuration (Switch API unavailable)
+INFO:app.services.hybrid_topology_service:Monitor data available: True
+INFO:app.services.hybrid_topology_service:Monitor data keys: ['devices', 'total_devices', 'source', 'error']
+INFO:app.services.hybrid_topology_service:Monitor devices count: 0
+WARNING:app.services.hybrid_topology_service:No Monitor API device data available, using base configuration
+INFO:api_topology_data:Parallel fetch completed in 0.29s
+INFO:api_topology_data:Providing real-world home endpoint discovery data
+INFO:api_topology_data:Returning topology data: devices=13, connections=12
+INFO:api_topology_data:START topology_data for organization: local
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/system/interface: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+INFO:app.services.fortigate_service:Retrieved 0 interfaces
+WARNING:api_topology_data:fetch_devices failed: 'FortiGateMonitorService' object has no attribute 'get_all_user_devices'
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/switch-controller/managed-switch: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortiswitch_api_service:API error getting managed switches: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Switch API data
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for monitor/switch-controller/detected-device: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortigate_monitor_service:API error getting detected devices: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Monitor API data
+INFO:app.services.snmp_service:SNMP FortiSwitch discovery: NETINTEGRATESW with 5 active ports
+INFO:app.services.hybrid_topology_service:Successfully retrieved SNMP data
+INFO:app.services.hybrid_topology_service:Using SNMP as base configuration (Switch API unavailable)
+INFO:app.services.hybrid_topology_service:Monitor data available: True
+INFO:app.services.hybrid_topology_service:Monitor data keys: ['devices', 'total_devices', 'source', 'error']
+INFO:app.services.hybrid_topology_service:Monitor devices count: 0
+WARNING:app.services.hybrid_topology_service:No Monitor API device data available, using base configuration
+INFO:api_topology_data:Parallel fetch completed in 0.29s
+INFO:api_topology_data:Providing real-world home endpoint discovery data
+INFO:api_topology_data:Returning topology data: devices=13, connections=12
+INFO:     127.0.0.1:49888 - "GET /api/v1/local/topology_data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49888 - "GET /static/icons/FG_FWF-60_61F.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49890 - "GET /static/icons/FSW-124E-POE.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49898 - "GET /static/icons/nd/server.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49900 - "GET /static/icons/microsoft.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49896 - "GET /static/icons/samsung.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49910 - "GET /static/icons/fortiap/FAP-231F_233F_431F_433F.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49900 - "GET /static/icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:36474 - "GET /topology?org_id=local HTTP/1.1" 200 OK
+INFO:api_topology_data:START topology_data for organization: local
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/system/interface: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+INFO:app.services.fortigate_service:Retrieved 0 interfaces
+WARNING:api_topology_data:fetch_devices failed: 'FortiGateMonitorService' object has no attribute 'get_all_user_devices'
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/switch-controller/managed-switch: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortiswitch_api_service:API error getting managed switches: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Switch API data
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for monitor/switch-controller/detected-device: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortigate_monitor_service:API error getting detected devices: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Monitor API data
+INFO:app.services.snmp_service:SNMP FortiSwitch discovery: NETINTEGRATESW with 5 active ports
+INFO:app.services.hybrid_topology_service:Successfully retrieved SNMP data
+INFO:app.services.hybrid_topology_service:Using SNMP as base configuration (Switch API unavailable)
+INFO:app.services.hybrid_topology_service:Monitor data available: True
+INFO:app.services.hybrid_topology_service:Monitor data keys: ['devices', 'total_devices', 'source', 'error']
+INFO:app.services.hybrid_topology_service:Monitor devices count: 0
+WARNING:app.services.hybrid_topology_service:No Monitor API device data available, using base configuration
+INFO:api_topology_data:Parallel fetch completed in 0.29s
+INFO:api_topology_data:Providing real-world home endpoint discovery data
+INFO:api_topology_data:Returning topology data: devices=13, connections=12
+INFO:     127.0.0.1:36474 - "GET /api/v1/local/topology_data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36484 - "GET /static/icons/samsung.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36504 - "GET /static/icons/microsoft.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36474 - "GET /static/icons/FG_FWF-60_61F.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36506 - "GET /static/icons/fortiap/FAP-231F_233F_431F_433F.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36482 - "GET /static/icons/FSW-124E-POE.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36496 - "GET /static/icons/nd/server.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36504 - "GET /static/icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:app.main:==================================================
+INFO:app.main:read_home route handler CALLED - This should appear in logs!
+INFO:app.main:==================================================
+INFO:app.main:Attempting to render index.html template
+INFO:app.main:Template rendered successfully, response type: <class 'starlette.templating._TemplateResponse'>
+INFO:     127.0.0.1:57122 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57134 - "GET /icons HTTP/1.1" 200 OK
+INFO:api_topology_data:START topology_data for organization: local
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/system/interface: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+INFO:app.services.fortigate_service:Retrieved 0 interfaces
+WARNING:api_topology_data:fetch_devices failed: 'FortiGateMonitorService' object has no attribute 'get_all_user_devices'
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/switch-controller/managed-switch: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortiswitch_api_service:API error getting managed switches: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Switch API data
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for monitor/switch-controller/detected-device: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortigate_monitor_service:API error getting detected devices: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Monitor API data
+INFO:app.services.snmp_service:SNMP FortiSwitch discovery: NETINTEGRATESW with 5 active ports
+INFO:app.services.hybrid_topology_service:Successfully retrieved SNMP data
+INFO:app.services.hybrid_topology_service:Using SNMP as base configuration (Switch API unavailable)
+INFO:app.services.hybrid_topology_service:Monitor data available: True
+INFO:app.services.hybrid_topology_service:Monitor data keys: ['devices', 'total_devices', 'source', 'error']
+INFO:app.services.hybrid_topology_service:Monitor devices count: 0
+WARNING:app.services.hybrid_topology_service:No Monitor API device data available, using base configuration
+INFO:api_topology_data:Parallel fetch completed in 0.51s
+INFO:api_topology_data:Providing real-world home endpoint discovery data
+INFO:api_topology_data:Returning topology data: devices=13, connections=12
+INFO:     127.0.0.1:57136 - "GET /api/v1/local/topology_data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57152 - "GET /icons HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57166 - "GET /topology?org_id=local HTTP/1.1" 200 OK
+INFO:api_topology_data:START topology_data for organization: local
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/system/interface: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+INFO:app.services.fortigate_service:Retrieved 0 interfaces
+WARNING:api_topology_data:fetch_devices failed: 'FortiGateMonitorService' object has no attribute 'get_all_user_devices'
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:     127.0.0.1:57152 - "GET /api/icons/browse?limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57180 - "GET /api/icons/browse?limit=48&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57152 - "GET /api/icons/browse?manufacturer=Fortinet&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57152 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57180 - "GET /icons/nd/camera.svg HTTP/1.1" 404 Not Found
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+INFO:     127.0.0.1:57196 - "GET /icons/nd/cloud.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57210 - "GET /icons/nd/laptop.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57218 - "GET /icons/nd/firewall.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57234 - "GET /icons/nd/switch.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57152 - "GET /api/icons/browse?device_type=fortigate&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57180 - "GET /icons/nd/internet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57196 - "GET /icons/nd/load-balancer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57152 - "GET /icons/nd/nas.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57196 - "GET /icons/nd/phone.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57234 - "GET /icons/nd/printer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57218 - "GET /icons/nd/router.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57210 - "GET /icons/nd/server.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57180 - "GET /icons/nd/tablet.svg HTTP/1.1" 404 Not Found
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/switch-controller/managed-switch: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using token authentication
+INFO:     127.0.0.1:57152 - "GET /api/icons/browse?device_type=fortiswitch&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57234 - "GET /icons/nd/vpn.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57218 - "GET /icons/nd/wifi-controller.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57196 - "GET /icons/amd.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57210 - "GET /icons/apple.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57180 - "GET /icons/dell.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57152 - "GET /icons/hp.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57234 - "GET /icons/intel.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57218 - "GET /icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57234 - "GET /icons/microsoft.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57196 - "GET /icons/nvidia.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57210 - "GET /icons/raspberry-pi.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57152 - "GET /icons/samsung.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57180 - "GET /static/icons/nd/device.svg HTTP/1.1" 200 OK
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortiswitch_api_service:API error getting managed switches: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Switch API data
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for monitor/switch-controller/detected-device: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:     127.0.0.1:57238 - "GET /topology?org_id=local HTTP/1.1" 200 OK
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using token authentication
+INFO:     127.0.0.1:57248 - "GET /icons HTTP/1.1" 200 OK
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortigate_monitor_service:API error getting detected devices: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Monitor API data
+INFO:app.services.snmp_service:SNMP FortiSwitch discovery: NETINTEGRATESW with 5 active ports
+INFO:app.services.hybrid_topology_service:Successfully retrieved SNMP data
+INFO:app.services.hybrid_topology_service:Using SNMP as base configuration (Switch API unavailable)
+INFO:app.services.hybrid_topology_service:Monitor data available: True
+INFO:app.services.hybrid_topology_service:Monitor data keys: ['devices', 'total_devices', 'source', 'error']
+INFO:app.services.hybrid_topology_service:Monitor devices count: 0
+WARNING:app.services.hybrid_topology_service:No Monitor API device data available, using base configuration
+INFO:api_topology_data:Parallel fetch completed in 0.31s
+INFO:api_topology_data:Providing real-world home endpoint discovery data
+INFO:api_topology_data:Returning topology data: devices=13, connections=12
+INFO:api_topology_data:START topology_data for organization: local
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/system/interface: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+INFO:app.services.fortigate_service:Retrieved 0 interfaces
+WARNING:api_topology_data:fetch_devices failed: 'FortiGateMonitorService' object has no attribute 'get_all_user_devices'
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:     127.0.0.1:57248 - "GET /api/icons/browse?limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57250 - "GET /api/icons/browse?limit=48&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57248 - "GET /api/icons/browse?manufacturer=Fortinet&limit=0 HTTP/1.1" 200 OK
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using Redis session authentication
+INFO:     127.0.0.1:57248 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:     127.0.0.1:57250 - "GET /icons/nd/camera.svg HTTP/1.1" 404 Not Found
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+INFO:     127.0.0.1:57252 - "GET /icons/nd/cloud.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57262 - "GET /icons/nd/laptop.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57274 - "GET /icons/nd/firewall.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57282 - "GET /icons/nd/switch.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57248 - "GET /api/icons/browse?device_type=fortigate&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57250 - "GET /icons/nd/internet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57282 - "GET /icons/nd/load-balancer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57274 - "GET /icons/nd/nas.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57262 - "GET /icons/nd/phone.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57250 - "GET /icons/nd/printer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57248 - "GET /icons/nd/router.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57252 - "GET /icons/nd/server.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57282 - "GET /api/icons/browse?device_type=fortiswitch&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57252 - "GET /icons/nd/tablet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57274 - "GET /icons/nd/vpn.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57262 - "GET /icons/nd/wifi-controller.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57250 - "GET /icons/amd.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57282 - "GET /icons/apple.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57248 - "GET /icons/dell.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57252 - "GET /icons/hp.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57252 - "GET /icons/intel.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57248 - "GET /icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57262 - "GET /icons/microsoft.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57282 - "GET /icons/nvidia.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57274 - "GET /icons/raspberry-pi.svg HTTP/1.1" 404 Not Found
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+INFO:     127.0.0.1:57250 - "GET /icons/samsung.svg HTTP/1.1" 404 Not Found
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/switch-controller/managed-switch: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:     127.0.0.1:57252 - "GET /static/icons/nd/device.svg HTTP/1.1" 200 OK
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortiswitch_api_service:API error getting managed switches: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Switch API data
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for monitor/switch-controller/detected-device: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using token authentication
+INFO:     127.0.0.1:57286 - "GET /icons HTTP/1.1" 200 OK
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortigate_monitor_service:API error getting detected devices: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Monitor API data
+INFO:app.services.snmp_service:SNMP FortiSwitch discovery: NETINTEGRATESW with 5 active ports
+INFO:app.services.hybrid_topology_service:Successfully retrieved SNMP data
+INFO:app.services.hybrid_topology_service:Using SNMP as base configuration (Switch API unavailable)
+INFO:app.services.hybrid_topology_service:Monitor data available: True
+INFO:app.services.hybrid_topology_service:Monitor data keys: ['devices', 'total_devices', 'source', 'error']
+INFO:app.services.hybrid_topology_service:Monitor devices count: 0
+WARNING:app.services.hybrid_topology_service:No Monitor API device data available, using base configuration
+INFO:api_topology_data:Parallel fetch completed in 0.29s
+INFO:api_topology_data:Providing real-world home endpoint discovery data
+INFO:api_topology_data:Returning topology data: devices=13, connections=12
+INFO:     127.0.0.1:57238 - "GET /api/v1/local/topology_data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57238 - "GET /static/icons/FG_FWF-60_61F.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57310 - "GET /static/icons/samsung.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57340 - "GET /static/icons/microsoft.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57324 - "GET /static/icons/nd/server.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57238 - "GET /static/icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57342 - "GET /static/icons/fortiap/FAP-231F_233F_431F_433F.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57298 - "GET /static/icons/FSW-124E-POE.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57286 - "GET /api/icons/browse?limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57346 - "GET /api/icons/browse?limit=48&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57286 - "GET /api/icons/browse?manufacturer=Fortinet&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57286 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57346 - "GET /icons/nd/camera.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57358 - "GET /icons/nd/cloud.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57366 - "GET /icons/nd/laptop.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57370 - "GET /icons/nd/firewall.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57384 - "GET /icons/nd/switch.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57286 - "GET /api/icons/browse?device_type=fortigate&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57346 - "GET /icons/nd/internet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57358 - "GET /icons/nd/load-balancer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57386 - "GET /topology?org_id=local HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57286 - "GET /icons/nd/nas.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57358 - "GET /icons/nd/phone.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57370 - "GET /icons/nd/printer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57346 - "GET /icons/nd/router.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57384 - "GET /icons/nd/server.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57366 - "GET /icons/nd/tablet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57358 - "GET /api/icons/browse?device_type=fortiswitch&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57346 - "GET /icons/nd/vpn.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57366 - "GET /icons/nd/wifi-controller.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57384 - "GET /icons/amd.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57370 - "GET /icons/apple.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57286 - "GET /icons/dell.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57358 - "GET /icons/hp.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57358 - "GET /icons/intel.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57370 - "GET /icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57346 - "GET /icons/microsoft.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57286 - "GET /icons/nvidia.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57384 - "GET /icons/raspberry-pi.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57366 - "GET /icons/samsung.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57358 - "GET /static/icons/nd/device.svg HTTP/1.1" 200 OK
+INFO:api_topology_data:START topology_data for organization: local
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/system/interface: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/system/interface (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+INFO:app.services.fortigate_service:Retrieved 0 interfaces
+WARNING:api_topology_data:fetch_devices failed: 'FortiGateMonitorService' object has no attribute 'get_all_user_devices'
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:     127.0.0.1:57388 - "GET /icons HTTP/1.1" 200 OK
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for cmdb/switch-controller/managed-switch: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: cmdb/switch-controller/managed-switch (FortiGate: 192.168.0.254) using token authentication
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortiswitch_api_service:API error getting managed switches: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Switch API data
+INFO:app.services.fortigate_service:Rate limiting: sleeping 0.0s before API call
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using Redis session authentication
+ERROR:app.services.redis_session_manager:Failed to connect to Redis: Error -2 connecting to redis:6379. Name or service not known.
+INFO:app.services.fortigate_redis_session:No valid cached session, attempting new login
+INFO:app.services.fortigate_redis_session:Attempting to authenticate with FortiGate at 192.168.0.254
+ERROR:app.services.fortigate_redis_session:Login failed - unexpected response: <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FortiGate</title>
+    <base href="/static/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon/favicon.ico"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#d43527"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#d43527"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <script src="/login-redirect.js"></script>
+  <link rel="stylesheet" href="styles.css"></head>
+
+  <body>
+    <fos-root></fos-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="main.js" type="module"></script></body>
+</html>
+ERROR:app.services.fortigate_redis_session:Failed to obtain valid FortiGate session key
+INFO:app.services.fortigate_service:Redis session API response for monitor/switch-controller/detected-device: {'error': 'authentication_failed', 'message': 'Could not obtain session key'}
+WARNING:app.services.fortigate_service:Session authentication failed, falling back to token authentication
+INFO:app.services.fortigate_service:API token loaded from ./secrets/fortigate_api_token.txt
+INFO:app.services.fortigate_service:Fallback API token loaded: <present>
+INFO:app.services.fortigate_service:Making API request to: monitor/switch-controller/detected-device (FortiGate: 192.168.0.254) using token authentication
+INFO:     127.0.0.1:57388 - "GET /api/icons/browse?limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57390 - "GET /api/icons/browse?limit=48&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57388 - "GET /api/icons/browse?manufacturer=Fortinet&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57388 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57390 - "GET /icons/nd/camera.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57406 - "GET /icons/nd/cloud.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57420 - "GET /icons/nd/laptop.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57434 - "GET /icons/nd/firewall.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57448 - "GET /icons/nd/switch.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57390 - "GET /icons/nd/internet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57388 - "GET /icons/nd/load-balancer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57406 - "GET /icons/nd/nas.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57390 - "GET /icons/nd/phone.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57406 - "GET /icons/nd/printer.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57448 - "GET /icons/nd/router.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57434 - "GET /icons/nd/server.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57388 - "GET /icons/nd/tablet.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57420 - "GET /icons/nd/vpn.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57390 - "GET /icons/nd/wifi-controller.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57448 - "GET /icons/amd.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57390 - "GET /icons/apple.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57434 - "GET /icons/dell.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57388 - "GET /icons/hp.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57420 - "GET /icons/intel.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57406 - "GET /icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57448 - "GET /icons/microsoft.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57448 - "GET /icons/nvidia.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57390 - "GET /api/icons/browse?device_type=fortigate&limit=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57434 - "GET /icons/raspberry-pi.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57388 - "GET /icons/samsung.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57420 - "GET /static/icons/nd/device.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57420 - "GET /api/icons/browse?device_type=fortiswitch&limit=0 HTTP/1.1" 200 OK
+ERROR:app.services.fortigate_service:FortiGate API authentication failed (401)
+ERROR:app.services.fortigate_monitor_service:API error getting detected devices: {'error': 'authentication_failed', 'status_code': 401}
+INFO:app.services.hybrid_topology_service:Successfully retrieved Monitor API data
+INFO:app.services.snmp_service:SNMP FortiSwitch discovery: NETINTEGRATESW with 5 active ports
+INFO:app.services.hybrid_topology_service:Successfully retrieved SNMP data
+INFO:app.services.hybrid_topology_service:Using SNMP as base configuration (Switch API unavailable)
+INFO:app.services.hybrid_topology_service:Monitor data available: True
+INFO:app.services.hybrid_topology_service:Monitor data keys: ['devices', 'total_devices', 'source', 'error']
+INFO:app.services.hybrid_topology_service:Monitor devices count: 0
+WARNING:app.services.hybrid_topology_service:No Monitor API device data available, using base configuration
+INFO:api_topology_data:Parallel fetch completed in 0.29s
+INFO:api_topology_data:Providing real-world home endpoint discovery data
+INFO:api_topology_data:Returning topology data: devices=13, connections=12
+INFO:     127.0.0.1:57386 - "GET /api/v1/local/topology_data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57386 - "GET /static/icons/FG_FWF-60_61F.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57490 - "GET /static/icons/microsoft.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57488 - "GET /static/icons/nd/server.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57472 - "GET /static/icons/samsung.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57464 - "GET /static/icons/FSW-124E-POE.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57504 - "GET /static/icons/fortiap/FAP-231F_233F_431F_433F.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57386 - "GET /static/icons/lg.svg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57420 - "GET /icons/nd/access-point.svg HTTP/1.1" 404 Not Found

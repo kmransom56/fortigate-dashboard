@@ -1,0 +1,18 @@
+/* custom.css – extracted inline styles for enterprise_showcase.html */
+
+.icon-small {
+    font-size: 8px;
+}
+
+.progress-bg {
+    height: 6px;
+    background: rgba(255,255,255,0.05);
+}
+
+.progress-bar-width-99 {
+    width: 99%;
+}
+
+.progress-bar-width-75 {
+    width: 75%;
+}

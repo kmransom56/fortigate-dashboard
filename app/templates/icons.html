@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,18 +10,26 @@
     <style>
         .glass-morphism {
             background: rgba(255, 255, 255, 0.1);
+            -webkit-backdrop-filter: blur(10px);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+
         .icon-card:hover {
             transform: scale(1.02);
             transition: all 0.2s ease;
         }
+
         .icon-preview {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
+
+        .hidden-initial {
+            display: none;
+        }
     </style>
 </head>
+
 <body class="bg-gradient-to-br from-blue-900 via-purple-900 to-gray-900 min-h-screen">
     <!-- Navigation -->
     <nav class="glass-morphism p-4 mb-6">
@@ -48,25 +57,24 @@
                 <!-- Search Bar -->
                 <div class="flex-1">
                     <div class="relative">
-                        <input 
-                            type="text" 
-                            id="search-input"
+                        <input type="text" id="search-input"
                             class="w-full bg-white bg-opacity-10 text-white placeholder-gray-300 rounded-lg p-3 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            placeholder="Search icons by name, manufacturer, or tags..."
-                        >
+                            placeholder="Search icons by name, manufacturer, or tags...">
                         <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
                     </div>
                 </div>
-                
+
                 <!-- Filters -->
                 <div class="flex gap-4">
-                    <select id="manufacturer-filter" class="bg-white bg-opacity-10 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <select id="manufacturer-filter" title="Filter by Manufacturer"
+                        class="bg-white bg-opacity-10 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
                         <option value="">All Manufacturers</option>
                         <option value="Fortinet">Fortinet</option>
                         <option value="Generic">Generic</option>
                     </select>
-                    
-                    <select id="device-type-filter" class="bg-white bg-opacity-10 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+
+                    <select id="device-type-filter" title="Filter by Device Type"
+                        class="bg-white bg-opacity-10 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
                         <option value="">All Device Types</option>
                         <option value="fortigate">FortiGate</option>
                         <option value="fortiswitch">FortiSwitch</option>
@@ -74,8 +82,9 @@
                         <option value="endpoint">Endpoint</option>
                         <option value="server">Server</option>
                     </select>
-                    
-                    <button id="clear-filters" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+
+                    <button id="clear-filters"
+                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
                         <i class="fas fa-times mr-2"></i>Clear
                     </button>
                 </div>
@@ -126,20 +135,24 @@
             </div>
 
             <!-- Icon Grid -->
-            <div id="icons-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4" style="display: none;">
+            <div id="icons-grid"
+                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 hidden-initial">
                 <!-- Icons will be loaded here dynamically -->
             </div>
 
             <!-- Pagination -->
-            <div id="pagination" class="flex justify-center mt-8" style="display: none;">
+            <div id="pagination" class="flex justify-center mt-8 hidden-initial">
                 <div class="flex space-x-2">
-                    <button id="prev-page" class="glass-morphism px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors" disabled>
+                    <button id="prev-page"
+                        class="glass-morphism px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors"
+                        disabled>
                         <i class="fas fa-chevron-left"></i>
                     </button>
                     <span id="page-info" class="glass-morphism px-4 py-2 rounded-lg text-white">
                         Page 1
                     </span>
-                    <button id="next-page" class="glass-morphism px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors">
+                    <button id="next-page"
+                        class="glass-morphism px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
@@ -152,18 +165,18 @@
         <div class="glass-morphism rounded-lg p-8 max-w-2xl w-full max-h-96 overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-white text-xl font-bold" id="modal-title">Icon Details</h3>
-                <button id="close-modal" class="text-gray-400 hover:text-white">
+                <button id="close-modal" aria-label="Close Details Modal" class="text-gray-400 hover:text-white">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            
+
             <div class="flex flex-col md:flex-row gap-6">
                 <div class="flex-shrink-0">
                     <div class="icon-preview w-32 h-32 rounded-lg flex items-center justify-center">
                         <img id="modal-icon" src="" alt="" class="w-24 h-24 object-contain">
                     </div>
                 </div>
-                
+
                 <div class="flex-1 text-white">
                     <div class="space-y-3">
                         <div>
@@ -212,7 +225,7 @@
         const nextPageBtn = document.getElementById('next-page');
         const pageInfo = document.getElementById('page-info');
         const resultsCount = document.getElementById('results-count');
-        
+
         // Modal elements
         const iconModal = document.getElementById('icon-modal');
         const closeModalBtn = document.getElementById('close-modal');
@@ -224,7 +237,7 @@
         const modalTags = document.getElementById('modal-tags');
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadStatistics();
             loadIcons();
             setupEventListeners();
@@ -236,7 +249,7 @@
             manufacturerFilter.addEventListener('change', handleFilterChange);
             deviceTypeFilter.addEventListener('change', handleFilterChange);
             clearFiltersBtn.addEventListener('click', clearFilters);
-            
+
             // Pagination events
             prevPageBtn.addEventListener('click', () => {
                 if (currentPage > 0) {
@@ -244,12 +257,12 @@
                     loadIcons();
                 }
             });
-            
+
             nextPageBtn.addEventListener('click', () => {
                 currentPage++;
                 loadIcons();
             });
-            
+
             // Modal events
             closeModalBtn.addEventListener('click', closeModal);
             iconModal.addEventListener('click', (e) => {
@@ -299,24 +312,24 @@
             try {
                 const response = await fetch('/api/icons/browse?limit=0');
                 const data = await response.json();
-                
+
                 document.getElementById('total-icons').textContent = data.total;
-                
+
                 // Load Fortinet specific stats
                 const fortinetResponse = await fetch('/api/icons/browse?manufacturer=Fortinet&limit=0');
                 const fortinetData = await fortinetResponse.json();
                 document.getElementById('fortinet-icons').textContent = fortinetData.total;
-                
+
                 // Load FortiGate stats
                 const fortigateResponse = await fetch('/api/icons/browse?device_type=fortigate&limit=0');
                 const fortigateData = await fortigateResponse.json();
                 document.getElementById('fortigate-icons').textContent = fortigateData.total;
-                
+
                 // Load FortiSwitch stats  
                 const fortiswitchResponse = await fetch('/api/icons/browse?device_type=fortiswitch&limit=0');
                 const fortiswitchData = await fortiswitchResponse.json();
                 document.getElementById('fortiswitch-icons').textContent = fortiswitchData.total;
-                
+
             } catch (error) {
                 console.error('Error loading statistics:', error);
             }
@@ -324,54 +337,54 @@
 
         async function loadIcons() {
             showLoading(true);
-            
+
             try {
                 const params = new URLSearchParams({
                     limit: 48,
                     offset: currentPage * 48
                 });
-                
+
                 if (currentFilters.manufacturer) {
                     params.append('manufacturer', currentFilters.manufacturer);
                 }
                 if (currentFilters.device_type) {
                     params.append('device_type', currentFilters.device_type);
                 }
-                
+
                 const response = await fetch(`/api/icons/browse?${params}`);
                 const data = await response.json();
-                
+
                 displayIcons(data.icons);
                 updatePagination(data);
-                
+
             } catch (error) {
                 console.error('Error loading icons:', error);
                 iconsGrid.innerHTML = '<div class="col-span-full text-center text-red-400">Error loading icons</div>';
             }
-            
+
             showLoading(false);
         }
 
         async function searchIcons() {
             showLoading(true);
-            
+
             try {
                 const params = new URLSearchParams({
                     q: currentFilters.search,
                     limit: 48
                 });
-                
+
                 const response = await fetch(`/api/icons/search?${params}`);
                 const data = await response.json();
-                
+
                 displayIcons(data.icons);
                 updateSearchResults(data);
-                
+
             } catch (error) {
                 console.error('Error searching icons:', error);
                 iconsGrid.innerHTML = '<div class="col-span-full text-center text-red-400">Error searching icons</div>';
             }
-            
+
             showLoading(false);
         }
 
@@ -380,10 +393,12 @@
                 iconsGrid.innerHTML = '<div class="col-span-full text-center text-gray-400">No icons found</div>';
                 return;
             }
-            
-            iconsGrid.innerHTML = icons.map(icon => `
+
+            iconsGrid.innerHTML = icons.map(icon => {
+                const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(icon))));
+                return `
                 <div class="icon-card glass-morphism rounded-lg p-4 text-center cursor-pointer hover:bg-white hover:bg-opacity-10 transition-all"
-                     onclick="showIconDetails(${JSON.stringify(icon).replace(/"/g, '&quot;')})">
+                     onclick="showIconDetails('${b64}')">
                     <div class="icon-preview w-16 h-16 mx-auto rounded-lg mb-3 flex items-center justify-center">
                         <img src="/${icon.icon_path}" alt="${icon.title}" class="w-12 h-12 object-contain" 
                              onerror="this.src='/static/icons/nd/device.svg'">
@@ -395,7 +410,8 @@
                         ${icon.manufacturer || 'Unknown'}
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function showLoading(show) {
@@ -413,12 +429,12 @@
         function updatePagination(data) {
             totalIcons = data.total;
             const totalPages = Math.ceil(data.total / 48);
-            
+
             prevPageBtn.disabled = currentPage === 0;
             nextPageBtn.disabled = !data.has_more;
-            
+
             pageInfo.textContent = `Page ${currentPage + 1} of ${totalPages}`;
-            
+
             const start = currentPage * 48 + 1;
             const end = Math.min((currentPage + 1) * 48, data.total);
             resultsCount.textContent = `Showing ${start}-${end} of ${data.total} icons`;
@@ -429,23 +445,24 @@
             resultsCount.textContent = `Found ${data.count} icons matching "${data.query}"`;
         }
 
-        function showIconDetails(icon) {
+        function showIconDetails(b64) {
+            const icon = JSON.parse(decodeURIComponent(escape(atob(b64))));
             modalTitle.textContent = icon.title;
             modalIcon.src = '/' + icon.icon_path;
             modalIcon.alt = icon.title;
             modalManufacturer.textContent = icon.manufacturer || 'Unknown';
             modalDeviceType.textContent = icon.device_type || 'Unknown';
             modalPath.textContent = icon.icon_path;
-            
+
             // Display tags
             if (icon.tags && icon.tags.length > 0) {
-                modalTags.innerHTML = icon.tags.map(tag => 
+                modalTags.innerHTML = icon.tags.map(tag =>
                     `<span class="inline-block bg-blue-500 bg-opacity-20 text-blue-200 px-2 py-1 rounded text-xs mr-1 mb-1">${tag}</span>`
                 ).join('');
             } else {
                 modalTags.innerHTML = '<span class="text-gray-400 text-sm">No tags</span>';
             }
-            
+
             iconModal.classList.remove('hidden');
         }
 
@@ -454,4 +471,5 @@
         }
     </script>
 </body>
+
 </html>
