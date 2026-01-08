@@ -1,0 +1,49 @@
+2026-01-06 18:10:33,256 - __main__ - INFO - Starting application test suite...
+2026-01-06 18:10:33,256 - __main__ - INFO - 
+2026-01-06 18:10:33,256 - __main__ - INFO - ============================================================
+2026-01-06 18:10:33,256 - __main__ - INFO - Testing Imports
+2026-01-06 18:10:33,256 - __main__ - INFO - ============================================================
+2026-01-06 18:10:33,256 - __main__ - INFO - Testing meraki_tui import...
+2026-01-06 18:10:33,720 - __main__ - INFO - ✓ meraki_tui imported successfully
+2026-01-06 18:10:33,720 - __main__ - INFO - Testing mcp_client import...
+2026-01-06 18:10:33,720 - __main__ - INFO - ✓ mcp_client imported successfully
+2026-01-06 18:10:33,721 - __main__ - INFO - Testing reusable framework import...
+2026-01-06 18:10:33,721 - __main__ - INFO - ✓ reusable framework imported successfully
+2026-01-06 18:10:33,722 - __main__ - INFO - 
+2026-01-06 18:10:33,722 - __main__ - INFO - ============================================================
+2026-01-06 18:10:33,722 - __main__ - INFO - Testing Initialization
+2026-01-06 18:10:33,722 - __main__ - INFO - ============================================================
+2026-01-06 18:10:33,722 - __main__ - INFO - Testing MCP wrapper initialization...
+2026-01-06 18:10:33,723 - __main__ - INFO - ✓ MCP wrapper initialized
+2026-01-06 18:10:33,723 - __main__ - INFO - Testing API call (get organizations)...
+2026-01-06 18:10:34,259 - mcp.server.lowlevel.server - DEBUG - Initializing server 'Meraki Magic MCP - Full API'
+2026-01-06 18:10:34,259 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-01-06 18:10:34,260 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-01-06 18:10:34,261 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-01-06 18:10:34,261 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-01-06 18:10:34,261 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-01-06 18:10:34,261 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-01-06 18:10:34,261 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+Registered hybrid MCP: 12 common tools + call_meraki_api for full API access (804+ methods)
+2026-01-06 18:10:34,323 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.meraki.com:443
+2026-01-06 18:10:34,666 - urllib3.connectionpool - DEBUG - https://api.meraki.com:443 "GET /api/v1/organizations HTTP/1.1" 200 None
+2026-01-06 18:10:34,671 - __main__ - INFO - ✓ Got 7 organizations
+2026-01-06 18:10:34,671 - __main__ - INFO - Testing TUI initialization...
+2026-01-06 18:10:34,671 - __main__ - INFO - ✓ TUI class can be instantiated
+2026-01-06 18:10:34,671 - __main__ - INFO - Testing AI assistant initialization...
+2026-01-06 18:10:34,671 - reusable.simple_ai - INFO - Auto-detected backend: openai
+2026-01-06 18:10:34,672 - reusable.agent_framework_wrapper - INFO - Set OPENAI_API_KEY from key manager
+2026-01-06 18:10:34,672 - reusable.agent_framework_wrapper - INFO - Set ANTHROPIC_API_KEY from key manager
+2026-01-06 18:10:34,673 - reusable.simple_ai - WARNING - Backend openai not available
+2026-01-06 18:10:34,673 - __main__ - WARNING - ⚠ AI assistant not available (no API keys)
+2026-01-06 18:10:34,673 - __main__ - INFO - 
+2026-01-06 18:10:34,673 - __main__ - INFO - ============================================================
+2026-01-06 18:10:34,673 - __main__ - INFO - Testing MCP Server
+2026-01-06 18:10:34,673 - __main__ - INFO - ============================================================
+2026-01-06 18:10:34,673 - __main__ - INFO - Testing MCP server import...
+2026-01-06 18:10:34,674 - __main__ - INFO - ✓ MCP server file exists
+2026-01-06 18:10:34,674 - __main__ - INFO - 
+2026-01-06 18:10:34,674 - __main__ - INFO - ============================================================
+2026-01-06 18:10:34,674 - __main__ - INFO - Test Summary
+2026-01-06 18:10:34,674 - __main__ - INFO - ============================================================
+2026-01-06 18:10:34,674 - __main__ - INFO - ✓ All tests passed!

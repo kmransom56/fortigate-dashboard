@@ -68,5 +68,7 @@ idna==3.10
 uvloop==0.21.0
 
 # Icon Management System Dependencies
-# (SVG processing and optimization handled by system packages in Dockerfile)beautifulsoup4
-lxml
+# (SVG processing and optimization handled by system packages in Dockerfile)
+beautifulsoup4==4.14.3
+lxml==6.0.2
+cryptography>=43.0.0

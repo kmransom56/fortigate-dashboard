@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "Meraki_Curated": {
+      "command": "python3",
+      "args": [
+        "/media/keith/DATASTORE/meraki-magic-mcp/meraki-mcp.py"
+      ]
+    },
+    "Meraki_Full_API": {
+      "command": "python3",
+      "args": [
+        "/media/keith/DATASTORE/meraki-magic-mcp/meraki-mcp-dynamic.py"
+      ]
+    }
+  }
+}

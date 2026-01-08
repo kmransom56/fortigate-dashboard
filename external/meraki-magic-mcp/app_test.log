@@ -1,0 +1,213 @@
+2026-01-06 18:10:33,256 - __main__ - INFO - Starting application test suite...
+2026-01-06 18:10:33,256 - __main__ - INFO - 
+2026-01-06 18:10:33,256 - __main__ - INFO - ============================================================
+2026-01-06 18:10:33,256 - __main__ - INFO - Testing Imports
+2026-01-06 18:10:33,256 - __main__ - INFO - ============================================================
+2026-01-06 18:10:33,256 - __main__ - INFO - Testing meraki_tui import...
+2026-01-06 18:10:33,720 - __main__ - INFO - ✓ meraki_tui imported successfully
+2026-01-06 18:10:33,720 - __main__ - INFO - Testing mcp_client import...
+2026-01-06 18:10:33,720 - __main__ - INFO - ✓ mcp_client imported successfully
+2026-01-06 18:10:33,721 - __main__ - INFO - Testing reusable framework import...
+2026-01-06 18:10:33,721 - __main__ - INFO - ✓ reusable framework imported successfully
+2026-01-06 18:10:33,722 - __main__ - INFO - 
+2026-01-06 18:10:33,722 - __main__ - INFO - ============================================================
+2026-01-06 18:10:33,722 - __main__ - INFO - Testing Initialization
+2026-01-06 18:10:33,722 - __main__ - INFO - ============================================================
+2026-01-06 18:10:33,722 - __main__ - INFO - Testing MCP wrapper initialization...
+2026-01-06 18:10:33,723 - __main__ - INFO - ✓ MCP wrapper initialized
+2026-01-06 18:10:33,723 - __main__ - INFO - Testing API call (get organizations)...
+2026-01-06 18:10:34,259 - mcp.server.lowlevel.server - DEBUG - Initializing server 'Meraki Magic MCP - Full API'
+2026-01-06 18:10:34,259 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-01-06 18:10:34,260 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-01-06 18:10:34,261 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-01-06 18:10:34,261 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-01-06 18:10:34,261 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-01-06 18:10:34,261 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-01-06 18:10:34,261 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-01-06 18:10:34,323 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.meraki.com:443
+2026-01-06 18:10:34,666 - urllib3.connectionpool - DEBUG - https://api.meraki.com:443 "GET /api/v1/organizations HTTP/1.1" 200 None
+2026-01-06 18:10:34,671 - __main__ - INFO - ✓ Got 7 organizations
+2026-01-06 18:10:34,671 - __main__ - INFO - Testing TUI initialization...
+2026-01-06 18:10:34,671 - __main__ - INFO - ✓ TUI class can be instantiated
+2026-01-06 18:10:34,671 - __main__ - INFO - Testing AI assistant initialization...
+2026-01-06 18:10:34,671 - reusable.simple_ai - INFO - Auto-detected backend: openai
+2026-01-06 18:10:34,672 - reusable.agent_framework_wrapper - INFO - Set OPENAI_API_KEY from key manager
+2026-01-06 18:10:34,672 - reusable.agent_framework_wrapper - INFO - Set ANTHROPIC_API_KEY from key manager
+2026-01-06 18:10:34,673 - reusable.simple_ai - WARNING - Backend openai not available
+2026-01-06 18:10:34,673 - __main__ - WARNING - ⚠ AI assistant not available (no API keys)
+2026-01-06 18:10:34,673 - __main__ - INFO - 
+2026-01-06 18:10:34,673 - __main__ - INFO - ============================================================
+2026-01-06 18:10:34,673 - __main__ - INFO - Testing MCP Server
+2026-01-06 18:10:34,673 - __main__ - INFO - ============================================================
+2026-01-06 18:10:34,673 - __main__ - INFO - Testing MCP server import...
+2026-01-06 18:10:34,674 - __main__ - INFO - ✓ MCP server file exists
+2026-01-06 18:10:34,674 - __main__ - INFO - 
+2026-01-06 18:10:34,674 - __main__ - INFO - ============================================================
+2026-01-06 18:10:34,674 - __main__ - INFO - Test Summary
+2026-01-06 18:10:34,674 - __main__ - INFO - ============================================================
+2026-01-06 18:10:34,674 - __main__ - INFO - ✓ All tests passed!
+2026-01-06 18:18:23,697 - __main__ - INFO - Starting application test suite...
+2026-01-06 18:18:23,697 - __main__ - INFO - 
+2026-01-06 18:18:23,697 - __main__ - INFO - ============================================================
+2026-01-06 18:18:23,697 - __main__ - INFO - Testing Imports
+2026-01-06 18:18:23,698 - __main__ - INFO - ============================================================
+2026-01-06 18:18:23,698 - __main__ - INFO - Testing meraki_tui import...
+2026-01-06 18:18:24,234 - __main__ - INFO - ✓ meraki_tui imported successfully
+2026-01-06 18:18:24,235 - __main__ - INFO - Testing mcp_client import...
+2026-01-06 18:18:24,235 - __main__ - INFO - ✓ mcp_client imported successfully
+2026-01-06 18:18:24,235 - __main__ - INFO - Testing reusable framework import...
+2026-01-06 18:18:24,235 - __main__ - INFO - ✓ reusable framework imported successfully
+2026-01-06 18:18:24,235 - __main__ - INFO - 
+2026-01-06 18:18:24,235 - __main__ - INFO - ============================================================
+2026-01-06 18:18:24,235 - __main__ - INFO - Testing Initialization
+2026-01-06 18:18:24,235 - __main__ - INFO - ============================================================
+2026-01-06 18:18:24,235 - __main__ - INFO - Testing MCP wrapper initialization...
+2026-01-06 18:18:24,235 - __main__ - INFO - ✓ MCP wrapper initialized
+2026-01-06 18:18:24,236 - __main__ - INFO - Testing API call (get organizations)...
+2026-01-06 18:18:24,815 - mcp.server.lowlevel.server - DEBUG - Initializing server 'Meraki Magic MCP - Full API'
+2026-01-06 18:18:24,815 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-01-06 18:18:24,816 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-01-06 18:18:24,816 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-01-06 18:18:24,816 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-01-06 18:18:24,816 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-01-06 18:18:24,818 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-01-06 18:18:24,818 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-01-06 18:18:24,874 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.meraki.com:443
+2026-01-06 18:18:25,269 - urllib3.connectionpool - DEBUG - https://api.meraki.com:443 "GET /api/v1/organizations HTTP/1.1" 200 None
+2026-01-06 18:18:25,277 - __main__ - INFO - ✓ Got 7 organizations
+2026-01-06 18:18:25,279 - __main__ - INFO - Testing TUI initialization...
+2026-01-06 18:18:25,280 - __main__ - INFO - ✓ TUI class can be instantiated
+2026-01-06 18:18:25,280 - __main__ - INFO - Testing AI assistant initialization...
+2026-01-06 18:18:25,281 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11434
+2026-01-06 18:18:25,282 - reusable.simple_ai - INFO - Auto-detected backend: openai
+2026-01-06 18:18:25,284 - reusable.agent_framework_wrapper - INFO - Set OPENAI_API_KEY from key manager
+2026-01-06 18:18:25,288 - reusable.agent_framework_wrapper - INFO - Set ANTHROPIC_API_KEY from key manager
+2026-01-06 18:18:25,289 - reusable.simple_ai - WARNING - Backend openai not available
+2026-01-06 18:18:25,289 - __main__ - WARNING - ⚠ AI assistant not available (no API keys)
+2026-01-06 18:18:25,289 - __main__ - INFO - 
+2026-01-06 18:18:25,290 - __main__ - INFO - ============================================================
+2026-01-06 18:18:25,290 - __main__ - INFO - Testing MCP Server
+2026-01-06 18:18:25,290 - __main__ - INFO - ============================================================
+2026-01-06 18:18:25,290 - __main__ - INFO - Testing MCP server import...
+2026-01-06 18:18:25,291 - __main__ - INFO - ✓ MCP server file exists
+2026-01-06 18:18:25,291 - __main__ - INFO - 
+2026-01-06 18:18:25,291 - __main__ - INFO - ============================================================
+2026-01-06 18:18:25,291 - __main__ - INFO - Test Summary
+2026-01-06 18:18:25,291 - __main__ - INFO - ============================================================
+2026-01-06 18:18:25,292 - __main__ - INFO - ✓ All tests passed!
+2026-01-06 18:21:33,515 - __main__ - INFO - Starting application test suite...
+2026-01-06 18:21:33,857 - __main__ - INFO - 
+2026-01-06 18:21:33,857 - __main__ - INFO - ============================================================
+2026-01-06 18:21:33,857 - __main__ - INFO - Testing Imports
+2026-01-06 18:21:33,857 - __main__ - INFO - ============================================================
+2026-01-06 18:21:33,857 - __main__ - INFO - Testing meraki_tui import...
+2026-01-06 18:21:34,541 - __main__ - INFO - ✓ meraki_tui imported successfully
+2026-01-06 18:21:34,541 - __main__ - INFO - Testing mcp_client import...
+2026-01-06 18:21:34,541 - __main__ - INFO - ✓ mcp_client imported successfully
+2026-01-06 18:21:34,541 - __main__ - INFO - Testing reusable framework import...
+2026-01-06 18:21:34,541 - __main__ - INFO - ✓ reusable framework imported successfully
+2026-01-06 18:21:34,541 - __main__ - INFO - 
+2026-01-06 18:21:34,542 - __main__ - INFO - ============================================================
+2026-01-06 18:21:34,542 - __main__ - INFO - Testing Initialization
+2026-01-06 18:21:34,542 - __main__ - INFO - ============================================================
+2026-01-06 18:21:34,542 - __main__ - INFO - Testing MCP wrapper initialization...
+2026-01-06 18:21:34,542 - __main__ - INFO - ✓ MCP wrapper initialized
+2026-01-06 18:21:34,542 - __main__ - INFO - Testing API call (get organizations)...
+2026-01-06 18:21:35,155 - mcp.server.lowlevel.server - DEBUG - Initializing server 'Meraki Magic MCP - Full API'
+2026-01-06 18:21:35,156 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-01-06 18:21:35,157 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-01-06 18:21:35,157 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-01-06 18:21:35,157 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-01-06 18:21:35,157 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-01-06 18:21:35,157 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-01-06 18:21:35,158 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-01-06 18:21:35,214 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.meraki.com:443
+2026-01-06 18:21:35,616 - urllib3.connectionpool - DEBUG - https://api.meraki.com:443 "GET /api/v1/organizations HTTP/1.1" 200 None
+2026-01-06 18:21:35,617 - __main__ - INFO - ✓ Got 7 organizations
+2026-01-06 18:21:35,617 - __main__ - INFO - Testing TUI initialization...
+2026-01-06 18:21:35,617 - __main__ - INFO - ✓ TUI class can be instantiated
+2026-01-06 18:21:35,618 - __main__ - INFO - Testing AI assistant initialization...
+2026-01-06 18:21:35,619 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11435
+2026-01-06 18:21:35,625 - urllib3.connectionpool - DEBUG - http://localhost:11435 "GET /api/tags HTTP/1.1" 200 None
+2026-01-06 18:21:35,626 - reusable.simple_ai - INFO - Auto-detected backend: ollama
+2026-01-06 18:21:35,629 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11435
+2026-01-06 18:21:35,631 - urllib3.connectionpool - DEBUG - http://localhost:11435 "GET /api/tags HTTP/1.1" 200 None
+2026-01-06 18:21:35,632 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11435
+2026-01-06 18:21:35,635 - urllib3.connectionpool - DEBUG - http://localhost:11435 "GET /api/tags HTTP/1.1" 200 None
+2026-01-06 18:21:35,637 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11435
+2026-01-06 18:21:35,640 - urllib3.connectionpool - DEBUG - http://localhost:11435 "GET /api/tags HTTP/1.1" 200 None
+2026-01-06 18:21:35,641 - reusable.agent_framework_wrapper - INFO - Ollama initialized with model: qwen2.5-coder:7b-instruct-q4_K_M at http://localhost:11435
+2026-01-06 18:21:35,642 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11435
+2026-01-06 18:21:35,645 - urllib3.connectionpool - DEBUG - http://localhost:11435 "GET /api/tags HTTP/1.1" 200 None
+2026-01-06 18:21:35,646 - __main__ - INFO - ✓ AI assistant initialized
+2026-01-06 18:21:35,646 - __main__ - INFO - 
+2026-01-06 18:21:35,646 - __main__ - INFO - ============================================================
+2026-01-06 18:21:35,646 - __main__ - INFO - Testing MCP Server
+2026-01-06 18:21:35,647 - __main__ - INFO - ============================================================
+2026-01-06 18:21:35,647 - __main__ - INFO - Testing MCP server import...
+2026-01-06 18:21:35,647 - __main__ - INFO - ✓ MCP server file exists
+2026-01-06 18:21:35,647 - __main__ - INFO - 
+2026-01-06 18:21:35,647 - __main__ - INFO - ============================================================
+2026-01-06 18:21:35,647 - __main__ - INFO - Test Summary
+2026-01-06 18:21:35,647 - __main__ - INFO - ============================================================
+2026-01-06 18:21:35,647 - __main__ - INFO - ✓ All tests passed!
+2026-01-06 18:27:41,598 - __main__ - INFO - Starting application test suite...
+2026-01-06 18:27:41,598 - __main__ - INFO - 
+2026-01-06 18:27:41,599 - __main__ - INFO - ============================================================
+2026-01-06 18:27:41,599 - __main__ - INFO - Testing Imports
+2026-01-06 18:27:41,599 - __main__ - INFO - ============================================================
+2026-01-06 18:27:41,599 - __main__ - INFO - Testing meraki_tui import...
+2026-01-06 18:27:42,047 - __main__ - INFO - ✓ meraki_tui imported successfully
+2026-01-06 18:27:42,047 - __main__ - INFO - Testing mcp_client import...
+2026-01-06 18:27:42,047 - __main__ - INFO - ✓ mcp_client imported successfully
+2026-01-06 18:27:42,047 - __main__ - INFO - Testing reusable framework import...
+2026-01-06 18:27:42,047 - __main__ - INFO - ✓ reusable framework imported successfully
+2026-01-06 18:27:42,047 - __main__ - INFO - 
+2026-01-06 18:27:42,047 - __main__ - INFO - ============================================================
+2026-01-06 18:27:42,047 - __main__ - INFO - Testing Initialization
+2026-01-06 18:27:42,047 - __main__ - INFO - ============================================================
+2026-01-06 18:27:42,047 - __main__ - INFO - Testing MCP wrapper initialization...
+2026-01-06 18:27:42,048 - __main__ - INFO - ✓ MCP wrapper initialized
+2026-01-06 18:27:42,048 - __main__ - INFO - Testing API call (get organizations)...
+2026-01-06 18:27:42,541 - mcp.server.lowlevel.server - DEBUG - Initializing server 'Meraki Magic MCP - Full API'
+2026-01-06 18:27:42,542 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-01-06 18:27:42,542 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-01-06 18:27:42,542 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-01-06 18:27:42,542 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-01-06 18:27:42,543 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-01-06 18:27:42,543 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-01-06 18:27:42,543 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-01-06 18:27:42,594 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.meraki.com:443
+2026-01-06 18:27:42,914 - urllib3.connectionpool - DEBUG - https://api.meraki.com:443 "GET /api/v1/organizations HTTP/1.1" 200 None
+2026-01-06 18:27:42,916 - __main__ - INFO - ✓ Got 7 organizations
+2026-01-06 18:27:42,916 - __main__ - INFO - Testing TUI initialization...
+2026-01-06 18:27:42,916 - __main__ - INFO - ✓ TUI class can be instantiated
+2026-01-06 18:27:42,916 - __main__ - INFO - Testing AI assistant initialization...
+2026-01-06 18:27:42,921 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11435
+2026-01-06 18:27:42,924 - urllib3.connectionpool - DEBUG - http://localhost:11435 "GET /api/tags HTTP/1.1" 200 None
+2026-01-06 18:27:42,925 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11435
+2026-01-06 18:27:42,928 - urllib3.connectionpool - DEBUG - http://localhost:11435 "GET /api/tags HTTP/1.1" 200 None
+2026-01-06 18:27:42,929 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11435
+2026-01-06 18:27:42,934 - urllib3.connectionpool - DEBUG - http://localhost:11435 "GET /api/tags HTTP/1.1" 200 None
+2026-01-06 18:27:42,935 - reusable.simple_ai - INFO - Auto-detected backend: ollama
+2026-01-06 18:27:42,938 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11435
+2026-01-06 18:27:42,940 - urllib3.connectionpool - DEBUG - http://localhost:11435 "GET /api/tags HTTP/1.1" 200 None
+2026-01-06 18:27:42,941 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11435
+2026-01-06 18:27:42,944 - urllib3.connectionpool - DEBUG - http://localhost:11435 "GET /api/tags HTTP/1.1" 200 None
+2026-01-06 18:27:42,946 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11435
+2026-01-06 18:27:42,949 - urllib3.connectionpool - DEBUG - http://localhost:11435 "GET /api/tags HTTP/1.1" 200 None
+2026-01-06 18:27:42,950 - reusable.agent_framework_wrapper - INFO - Ollama initialized with model: qwen2.5-coder:7b-instruct-q4_K_M at http://localhost:11435
+2026-01-06 18:27:42,951 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:11435
+2026-01-06 18:27:42,954 - urllib3.connectionpool - DEBUG - http://localhost:11435 "GET /api/tags HTTP/1.1" 200 None
+2026-01-06 18:27:42,954 - __main__ - INFO - ✓ AI assistant initialized
+2026-01-06 18:27:42,955 - __main__ - INFO - 
+2026-01-06 18:27:42,955 - __main__ - INFO - ============================================================
+2026-01-06 18:27:42,955 - __main__ - INFO - Testing MCP Server
+2026-01-06 18:27:42,955 - __main__ - INFO - ============================================================
+2026-01-06 18:27:42,955 - __main__ - INFO - Testing MCP server import...
+2026-01-06 18:27:42,956 - __main__ - INFO - ✓ MCP server file exists
+2026-01-06 18:27:42,956 - __main__ - INFO - 
+2026-01-06 18:27:42,956 - __main__ - INFO - ============================================================
+2026-01-06 18:27:42,956 - __main__ - INFO - Test Summary
+2026-01-06 18:27:42,956 - __main__ - INFO - ============================================================
+2026-01-06 18:27:42,956 - __main__ - INFO - ✓ All tests passed!

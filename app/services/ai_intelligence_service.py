@@ -3,7 +3,17 @@ import logging
 from typing import Dict, Any
 
 # Add the meraki-magic-mcp reusable package to PYTHONPATH
-sys.path.append('/media/keith/DATASTORE/meraki-magic-mcp/reusable')
+import os
+# Dynamic path resolution for vendored dependencies
+EXTERNAL_ROOT = os.getenv("EXTERNAL_ROOT", "/media/keith/DATASTORE")
+if EXTERNAL_ROOT.startswith("."):
+    EXTERNAL_ROOT = os.path.abspath(EXTERNAL_ROOT)
+
+MERAKI_MAGIC_PATH = os.path.join(EXTERNAL_ROOT, "meraki-magic-mcp", "reusable")
+
+# Add the meraki-magic-mcp reusable package to PYTHONPATH
+if MERAKI_MAGIC_PATH not in sys.path:
+    sys.path.append(MERAKI_MAGIC_PATH)
 
 try:
     from ai_assistant import AIAssistant
