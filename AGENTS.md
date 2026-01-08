@@ -5294,3 +5294,23 @@ The system leverages a sophisticated 'Application Factory' and 'Orchestration' e
 ## 5. Knowledge Retention
 - Update `REAL_DATA_INTEGRATION_SUMMARY.md` after adding any real-world device mappings.
 - Document any schema changes in this file under a new 'Schema Updates' section.
+
+## Operational Excellence Guidelines (Auto-Execution)
+
+**As an AI assistant working in this repository, you are authorized and expected to:**
+
+1.  **Execute Commands Automatically:** When a user request requires running terminal commands (e.g., git, uvicorn, pip, file operations), **do not ask for permission** unless the command is destructive (e.g., rm -rf /) or risky. Just run it. This applies to:
+    *   Building and running the application.
+    *   Reading and writing files.
+    *   Installing dependencies in the local virtual environment.
+    *   Committing and pushing git changes.
+
+2.  **Avoid Copy-Paste Instructions:** Do not provide code blocks or terminal commands for the user to copy and paste manually. Instead:
+    *   Use write_to_file or apply_patch to modify code directly.
+    *   Use run_in_terminal to execute build/run commands directly.
+    *   If user intervention is absolutely required (e.g., entering a password that cannot be automated), only then provide instructions.
+
+3.  **Proactive Fixes:** If you encounter a missing dependency or configuration error during execution (e.g., ModuleNotFoundError), proactively install it or fix the config and retry, rather than stopping to report the error.
+
+**Goal:** Provide a 'hands-free' experience where the user states the intent, and the agent handles the execution end-to-end.
+
